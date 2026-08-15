@@ -1,0 +1,722 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>L.I.P.A.S. - Lunar Impact & Predictive Analysis System</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=Syne:wght@600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles/theme.css">
+  <link rel="stylesheet" href="styles/main.css">
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { min-height: 100%; font-family: var(--font-ui); color: var(--text); background: var(--void); }
+    body {
+      background:
+        radial-gradient(ellipse 90% 55% at 8% -8%, rgba(40, 90, 140, 0.32), transparent 55%),
+        radial-gradient(ellipse 70% 50% at 95% 8%, rgba(30, 55, 90, 0.28), transparent 52%),
+        linear-gradient(180deg, #0d121a 0%, #0b0e13 45%, #0a1018 100%);
+      background-attachment: fixed;
+    }
+    body::before {
+      content: "";
+      position: fixed; inset: 0; pointer-events: none; opacity: 0.035; z-index: 0;
+      background-image:
+        linear-gradient(rgba(180, 210, 240, 0.55) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(180, 210, 240, 0.55) 1px, transparent 1px);
+      background-size: 52px 52px;
+      mask-image: radial-gradient(ellipse at 50% 25%, black 12%, transparent 70%);
+    }
+
+    .loading-screen {
+      position: fixed; inset: 0; z-index: 9999;
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      background: #0b0e13; transition: opacity 0.45s var(--ease), visibility 0.45s;
+    }
+    .loading-screen.hidden { opacity: 0; visibility: hidden; pointer-events: none; }
+    .load-ring {
+      width: 52px; height: 52px; border-radius: 50%;
+      border: 2px solid rgba(110, 182, 255, 0.15); border-top-color: var(--steel);
+      animation: spin 0.85s linear infinite; margin-bottom: 18px;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .load-label {
+      font-family: var(--font-display); letter-spacing: 0.18em; font-size: 11px;
+      color: var(--steel); text-transform: uppercase;
+    }
+
+    .shell {
+      position: relative; z-index: 1;
+      max-width: 1180px; margin: 0 auto; padding: 28px 22px 80px;
+    }
+
+    /* Hero - brand first, one composition */
+    .hero {
+      min-height: min(78vh, 720px);
+      display: grid;
+      grid-template-columns: 1.05fr 0.95fr;
+      gap: 36px;
+      align-items: center;
+      padding: 36px 0 48px;
+      animation: rise 0.7s var(--ease) both;
+    }
+    @keyframes rise {
+      from { opacity: 0; transform: translateY(12px); }
+      to { opacity: 1; transform: none; }
+    }
+    .hero-brand {
+      font-family: var(--font-display);
+      font-weight: 800;
+      font-size: clamp(2.6rem, 6.5vw, 4.4rem);
+      letter-spacing: -0.03em;
+      line-height: 0.95;
+      margin-bottom: 18px;
+    }
+    .hero-brand em {
+      font-style: normal;
+      color: var(--steel);
+      display: block;
+      font-size: 0.42em;
+      letter-spacing: 0.22em;
+      margin-top: 10px;
+      font-weight: 700;
+      text-transform: uppercase;
+    }
+    .hero h1 {
+      font-family: var(--font-display);
+      font-size: clamp(1.15rem, 2.2vw, 1.45rem);
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      color: var(--text);
+      margin-bottom: 12px;
+      max-width: 28ch;
+    }
+    .hero p {
+      color: var(--muted);
+      font-size: 14px;
+      line-height: 1.55;
+      max-width: 42ch;
+      margin-bottom: 26px;
+    }
+    .cta-row { display: flex; flex-wrap: wrap; gap: 10px; }
+    .btn {
+      display: inline-flex; align-items: center; justify-content: center;
+      font-family: var(--font-ui); font-weight: 600; font-size: 13px;
+      letter-spacing: 0.03em; padding: 12px 20px; text-decoration: none;
+      border: none; cursor: pointer;
+      transition: transform 0.15s var(--ease), opacity 0.15s;
+    }
+    .btn:hover { transform: translateY(-1px); }
+    .btn-primary { background: linear-gradient(180deg, #5aa8f0, #2f6fad); color: #fff; }
+    .btn-ghost {
+      background: transparent; border: 1px solid var(--line-strong); color: var(--steel);
+    }
+
+    .hero-visual {
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 280px;
+    }
+    .moon-caption {
+      margin-top: 18px;
+      font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase;
+      color: var(--dim); white-space: nowrap; font-weight: 600;
+    }
+
+    .status-strip {
+      display: flex; flex-wrap: wrap; gap: 10px 18px;
+      padding: 12px 16px; margin-bottom: 28px;
+      border-left: 3px solid var(--steel-dim);
+      background: linear-gradient(90deg, rgba(26, 51, 88, 0.4), transparent);
+      font-size: 12px; color: var(--muted);
+      animation: rise 0.7s var(--ease) 0.08s both;
+    }
+    .status-strip strong { color: var(--steel); font-weight: 600; }
+    .status-dot {
+      display: inline-block; width: 7px; height: 7px; border-radius: 50%;
+      background: var(--go); margin-right: 6px;
+      box-shadow: 0 0 8px rgba(62, 207, 142, 0.5);
+    }
+
+    .section-head {
+      display: flex; align-items: end; justify-content: space-between;
+      gap: 16px; margin-bottom: 16px;
+      animation: rise 0.65s var(--ease) 0.12s both;
+    }
+    .section-head h2 {
+      font-family: var(--font-display); font-size: clamp(1.4rem, 2.5vw, 1.85rem);
+      font-weight: 800; letter-spacing: -0.02em;
+    }
+    .section-head h2 em { font-style: normal; color: var(--steel); }
+    .section-head p { color: var(--muted); font-size: 13px; max-width: 40ch; line-height: 1.4; }
+    .section-meta {
+      font-size: 11px; color: var(--dim); text-align: right;
+      font-variant-numeric: tabular-nums; letter-spacing: 0.04em;
+    }
+    .section-meta strong { display: block; color: var(--steel); font-size: 12px; margin-bottom: 2px; }
+
+    /* Apple Weather-style metric grid */
+    .weather-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+      margin-bottom: 40px;
+      animation: rise 0.7s var(--ease) 0.16s both;
+    }
+    .wx-card {
+      background: linear-gradient(165deg, rgba(28, 37, 51, 0.94), rgba(18, 24, 33, 0.97));
+      border: 1px solid var(--line);
+      padding: 16px 16px 14px;
+      cursor: pointer;
+      position: relative;
+      overflow: hidden;
+      text-align: left;
+      font-family: var(--font-ui);
+      color: var(--text);
+      transition: border-color 0.2s, transform 0.2s var(--ease), background 0.2s;
+      min-height: 148px;
+    }
+    .wx-card::after {
+      content: ""; position: absolute; top: 0; left: 0; right: 0; height: 1px;
+      background: linear-gradient(90deg, transparent, rgba(110, 182, 255, 0.3), transparent);
+    }
+    .wx-card:hover {
+      border-color: var(--line-strong);
+      transform: translateY(-2px);
+    }
+    .wx-card.active {
+      border-color: var(--steel);
+      background: linear-gradient(165deg, rgba(32, 48, 72, 0.98), rgba(18, 24, 33, 0.99));
+      box-shadow: 0 0 0 1px rgba(110, 182, 255, 0.15);
+    }
+    .wx-card .wx-label {
+      font-size: 10px; font-weight: 600; letter-spacing: 0.14em;
+      text-transform: uppercase; color: var(--dim); margin-bottom: 10px;
+    }
+    .wx-card .wx-value {
+      font-family: var(--font-display);
+      font-size: clamp(1.55rem, 3vw, 2rem);
+      font-weight: 800; letter-spacing: -0.03em; line-height: 1;
+      margin-bottom: 6px;
+    }
+    .wx-card .wx-unit { font-size: 0.45em; font-weight: 600; color: var(--muted); margin-left: 4px; }
+    .wx-card .wx-status {
+      font-size: 12px; font-weight: 600; margin-bottom: 8px;
+    }
+    .wx-card .wx-status.go { color: var(--go); }
+    .wx-card .wx-status.caution { color: var(--caution); }
+    .wx-card .wx-status.nogo { color: var(--nogo); }
+    .wx-card .wx-spark {
+      display: block; width: 100%; height: 36px; margin-top: 4px;
+    }
+    .wx-detail {
+      display: none;
+      margin: -28px 0 40px;
+      padding: 18px 20px;
+      background: linear-gradient(165deg, rgba(28, 37, 51, 0.94), rgba(18, 24, 33, 0.97));
+      border: 1px solid var(--line-strong);
+      animation: rise 0.35s var(--ease) both;
+    }
+    .wx-detail.open { display: block; }
+    .wx-detail h3 {
+      font-family: var(--font-display); font-size: 1.1rem; font-weight: 700;
+      margin-bottom: 6px;
+    }
+    .wx-detail p { color: var(--muted); font-size: 13px; line-height: 1.5; max-width: 70ch; }
+    .wx-detail .wx-actions { margin-top: 14px; display: flex; flex-wrap: wrap; gap: 8px; }
+
+    .pill-row { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 28px; }
+    .pill {
+      background: transparent; border: 1px solid var(--line); color: var(--muted);
+      font-family: var(--font-ui); font-size: 12px; font-weight: 500;
+      padding: 8px 14px; cursor: pointer; text-decoration: none;
+      transition: color 0.15s, border-color 0.15s, background 0.15s;
+    }
+    .pill:hover, .pill.active {
+      color: var(--void); background: var(--steel); border-color: var(--steel); font-weight: 600;
+    }
+
+    .cap-grid {
+      display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px;
+      margin-bottom: 48px;
+    }
+    .cap {
+      background: linear-gradient(165deg, rgba(28, 37, 51, 0.9), rgba(18, 24, 33, 0.95));
+      border: 1px solid var(--line); padding: 18px;
+      transition: border-color 0.2s, transform 0.2s var(--ease);
+    }
+    .cap:hover { border-color: var(--line-strong); transform: translateY(-2px); }
+    .cap .cap-k {
+      font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase;
+      color: var(--dim); margin-bottom: 8px; font-weight: 600;
+    }
+    .cap h3 {
+      font-family: var(--font-display); font-size: 1.05rem; font-weight: 700;
+      margin-bottom: 8px; letter-spacing: -0.02em;
+    }
+    .cap p { font-size: 13px; color: var(--muted); line-height: 1.45; }
+
+    .stat-row {
+      display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px;
+      margin-bottom: 48px;
+    }
+    .stat {
+      padding: 18px 16px; border: 1px solid var(--line);
+      background: var(--ink); text-align: center;
+    }
+    .stat .n {
+      font-family: var(--font-display); font-size: 1.8rem; font-weight: 800;
+      color: var(--steel); letter-spacing: -0.03em;
+    }
+    .stat .l {
+      font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase;
+      color: var(--dim); margin-top: 6px; font-weight: 600;
+    }
+
+    .extra-section { margin-bottom: 48px; }
+    .pipeline {
+      display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px;
+    }
+    .pipe-step {
+      background: linear-gradient(165deg, rgba(28, 37, 51, 0.94), rgba(18, 24, 33, 0.97));
+      border: 1px solid var(--line); padding: 16px; position: relative;
+    }
+    .pipe-step::after {
+      content: ""; position: absolute; top: 0; left: 0; right: 0; height: 1px;
+      background: linear-gradient(90deg, transparent, rgba(110, 182, 255, 0.3), transparent);
+    }
+    .pipe-step .num {
+      font-family: var(--font-display); font-size: 11px; font-weight: 700;
+      color: var(--steel); letter-spacing: 0.12em; margin-bottom: 8px;
+    }
+    .pipe-step h3 {
+      font-family: var(--font-display); font-size: 1rem; font-weight: 700;
+      margin-bottom: 6px; letter-spacing: -0.01em;
+    }
+    .pipe-step p { font-size: 12px; color: var(--muted); line-height: 1.45; }
+    .dest-grid {
+      display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px;
+    }
+    .dest {
+      display: block; text-decoration: none; color: inherit;
+      background: linear-gradient(165deg, rgba(28, 37, 51, 0.94), rgba(18, 24, 33, 0.97));
+      border: 1px solid var(--line); padding: 18px;
+      transition: border-color 0.2s, transform 0.2s var(--ease);
+    }
+    .dest:hover { border-color: var(--line-strong); transform: translateY(-2px); }
+    .dest .k {
+      font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase;
+      color: var(--dim); font-weight: 600; margin-bottom: 8px;
+    }
+    .dest h3 {
+      font-family: var(--font-display); font-size: 1.05rem; font-weight: 700;
+      margin-bottom: 6px;
+    }
+    .dest p { font-size: 12px; color: var(--muted); line-height: 1.45; }
+    .dest .go { margin-top: 12px; font-size: 12px; font-weight: 600; color: var(--steel); }
+    .why-panel {
+      background: linear-gradient(165deg, rgba(28, 37, 51, 0.94), rgba(18, 24, 33, 0.97));
+      border: 1px solid var(--line); padding: 20px 22px; border-left: 3px solid var(--steel-dim);
+    }
+    .why-panel p { color: var(--muted); font-size: 14px; line-height: 1.55; max-width: 70ch; }
+    .why-panel p + p { margin-top: 12px; }
+    .why-panel strong { color: var(--text); font-weight: 600; }
+
+    .footer {
+      border-top: 1px solid var(--line); padding-top: 28px;
+      display: flex; flex-wrap: wrap; justify-content: space-between; gap: 20px;
+      font-size: 12px; color: var(--dim);
+    }
+    .footer a { color: var(--muted); text-decoration: none; margin-right: 14px; }
+    .footer a:hover { color: var(--steel); }
+
+    @media (max-width: 900px) {
+      .hero { grid-template-columns: 1fr; min-height: auto; padding-top: 20px; }
+      .hero-visual { order: -1; min-height: 220px; }
+      .moon-anim { width: min(160px, 48vw); height: min(160px, 48vw); }
+      .weather-grid { grid-template-columns: repeat(2, 1fr); }
+      .cap-grid { grid-template-columns: 1fr; }
+      .stat-row { grid-template-columns: repeat(2, 1fr); }
+      .pipeline { grid-template-columns: 1fr 1fr; }
+      .dest-grid { grid-template-columns: 1fr; }
+    }
+    @media (max-width: 520px) {
+      .weather-grid { grid-template-columns: 1fr; }
+      .pipeline { grid-template-columns: 1fr; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      .moon-anim__glow, .moon-anim__orbit, .moon-anim__disc, .moon-anim__surface,
+      .moon-anim__shade, .hero, .weather-grid { animation: none !important; }
+    }
+  </style>
+</head>
+<body>
+  <div class="loading-screen" id="loadingScreen">
+    <div class="load-ring"></div>
+    <div class="load-label">L.I.P.A.S.</div>
+  </div>
+
+  <div id="lipas-topnav" data-active=""></div>
+
+  <div class="shell">
+    <section class="hero" aria-label="Introduction">
+      <div>
+        <div class="hero-brand">L.I.P.A.S.<em>Lunar ops intelligence</em></div>
+        <h1>Hybrid ML + physics hazard forecasting for the Moon.</h1>
+        <p>Real SWPC-driven predictions, deterministic thermal baselines, animated map overlays, and EVA windows - built for Artemis-class surface operations.</p>
+        <div class="cta-row">
+          <a class="btn btn-primary" href="doctype.html">Launch Dashboard</a>
+          <a class="btn btn-ghost" href="mission_planning.html">Plan an EVA</a>
+        </div>
+      </div>
+      <div class="hero-visual" aria-hidden="true">
+        <div class="moon-anim">
+          <div class="moon-anim__glow"></div>
+          <div class="moon-anim__orbit"></div>
+          <div class="moon-anim__disc">
+            <div class="moon-anim__surface"></div>
+            <div class="moon-anim__shade"></div>
+            <div class="moon-anim__face">
+              <span class="eye l"></span>
+              <span class="eye r"></span>
+              <span class="smile"></span>
+            </div>
+          </div>
+        </div>
+        <div class="moon-caption">Luna · ops companion</div>
+      </div>
+    </section>
+
+    <div class="status-strip" id="statusStrip">
+      <span><span class="status-dot"></span><strong>System</strong> · hybrid pipeline ready</span>
+      <span><strong>UTC</strong> · <span id="utcClock">-</span></span>
+      <span><strong>Hazards</strong> · 6 channels live</span>
+      <span><strong>Sites</strong> · 38 selenographic points</span>
+    </div>
+
+    <div class="section-head">
+      <div>
+        <h2>Lunar <em>conditions</em></h2>
+        <p>Apple Weather-style glance cards. Tap any hazard for detail and a 24-hour jump into the dashboard.</p>
+      </div>
+      <div class="section-meta">
+        <strong id="condStamp">Nowcasting</strong>
+        Overview · equatorial reference
+      </div>
+    </div>
+
+    <div class="pill-row" role="tablist" aria-label="Forecast horizon">
+      <button type="button" class="pill active" data-horizon="now">Now</button>
+      <button type="button" class="pill" data-horizon="24h">24-hour forecast</button>
+      <button type="button" class="pill" data-horizon="7d">7-day outlook</button>
+      <a class="pill" href="doctype.html#slider-section">Open full forecast →</a>
+    </div>
+
+    <div class="weather-grid" id="weatherGrid" role="list"></div>
+    <div class="wx-detail" id="wxDetail" hidden></div>
+
+    <div class="section-head">
+      <div>
+        <h2>Mission <em>stack</em></h2>
+        <p>Everything from ingestion to globe overlays in one operational surface.</p>
+      </div>
+    </div>
+    <div class="cap-grid">
+      <article class="cap">
+        <div class="cap-k">Predict</div>
+        <h3>Temporal ML + physics</h3>
+        <p>72-hour windows, ~18 features, Platt/isotonic calibration, and a locked 0.25 physics weight on Stefan-Boltzmann / Apollo baselines.</p>
+      </article>
+      <article class="cap">
+        <div class="cap-k">Visualize</div>
+        <h3>Topo + Cesium Moon</h3>
+        <p>Animated hazard blobs on LRO imagery and a hardened lunar ellipsoid globe with CTX tiles.</p>
+      </article>
+      <article class="cap">
+        <div class="cap-k">Operate</div>
+        <h3>EVA mission planner</h3>
+        <p>Coordinate-driven GO / CAUTION / NO-GO windows, zone ranking, and clean PDF mission reports.</p>
+      </article>
+    </div>
+
+    <div class="stat-row">
+      <div class="stat"><div class="n">38</div><div class="l">Map sites</div></div>
+      <div class="stat"><div class="n">6</div><div class="l">Hazard types</div></div>
+      <div class="stat"><div class="n">72h</div><div class="l">ML window</div></div>
+      <div class="stat"><div class="n">0.25</div><div class="l">Physics lock</div></div>
+    </div>
+
+    <div class="extra-section">
+      <div class="section-head">
+        <div>
+          <h2>Why <em>L.I.P.A.S.</em></h2>
+          <p>Lunar surface work needs hazard forecasts that stay physically honest.</p>
+        </div>
+      </div>
+      <div class="why-panel">
+        <p><strong>The Moon is hostile by default</strong> - no atmosphere, no magnetic shield, extreme day/night temperatures, and continuous micrometeoroid flux. Solar storms can spike radiation with little warning for EVA crews.</p>
+        <p><strong>L.I.P.A.S. closes that gap</strong> by blending NOAA/SWPC-driven machine learning with deterministic thermal physics, then exposing the result on maps, a 3D globe, and an EVA mission planner you can actually act on.</p>
+      </div>
+    </div>
+
+    <div class="extra-section">
+      <div class="section-head">
+        <div>
+          <h2>How it <em>works</em></h2>
+          <p>From space-weather feed to a GO / CAUTION / NO-GO call.</p>
+        </div>
+      </div>
+      <div class="pipeline">
+        <article class="pipe-step">
+          <div class="num">01</div>
+          <h3>Ingest</h3>
+          <p>SWPC streams and site metadata enter a clean, scaler-matched data pipeline.</p>
+        </article>
+        <article class="pipe-step">
+          <div class="num">02</div>
+          <h3>Predict</h3>
+          <p>Temporal ML over a 72-hour window with lat, lon, and local solar time features.</p>
+        </article>
+        <article class="pipe-step">
+          <div class="num">03</div>
+          <h3>Calibrate</h3>
+          <p>Physics weight locked at 0.25 - Stefan-Boltzmann dayside, Apollo nightside curves.</p>
+        </article>
+        <article class="pipe-step">
+          <div class="num">04</div>
+          <h3>Operate</h3>
+          <p>Dashboard overlays, Cesium globe, and Mission Planner EVA windows with PDF reports.</p>
+        </article>
+      </div>
+    </div>
+
+    <div class="extra-section">
+      <div class="section-head">
+        <div>
+          <h2>Explore the <em>suite</em></h2>
+          <p>Jump into the tool that matches what you need next.</p>
+        </div>
+      </div>
+      <div class="dest-grid">
+        <a class="dest" href="doctype.html">
+          <div class="k">Operations</div>
+          <h3>Dashboard</h3>
+          <p>Site picker, hazard overlays, 24-hour channels, multi-day forecast, and graphs.</p>
+          <div class="go">Open Dashboard →</div>
+        </a>
+        <a class="dest" href="mission_planning.html">
+          <div class="k">Planning</div>
+          <h3>Mission Planner</h3>
+          <p>Coordinate-driven EVA windows, equipment hazards, and zone ranking.</p>
+          <div class="go">Plan an EVA →</div>
+        </a>
+        <a class="dest" href="cesium_map.html">
+          <div class="k">Globe</div>
+          <h3>3D Moon</h3>
+          <p>Lunar ellipsoid globe with terrain and imagery for spatial context.</p>
+          <div class="go">Open Globe →</div>
+        </a>
+        <a class="dest" href="sources.html">
+          <div class="k">Provenance</div>
+          <h3>Data Sources</h3>
+          <p>NOAA SWPC, NASA LRO, and the providers behind the pipeline.</p>
+          <div class="go">View sources →</div>
+        </a>
+      </div>
+    </div>
+
+    <footer class="footer">
+      <div>
+        <a href="doctype.html">Dashboard</a>
+        <a href="mission_planning.html">Mission Planner</a>
+        <a href="cesium_map.html">Globe</a>
+        <a href="sources.html">Sources</a>
+      </div>
+      <div>© 2026 L.I.P.A.S. · NOAA SWPC · NASA LRO</div>
+    </footer>
+  </div>
+
+  <script src="js/navbar.js" defer></script>
+  <script>
+    (function () {
+      const HAZARDS = [
+        {
+          id: "radiation",
+          label: "Radiation",
+          value: "0.06",
+          unit: "µSv/h",
+          status: "go",
+          statusText: "Quiet GCR",
+          spark: [0.05, 0.052, 0.055, 0.058, 0.057, 0.06, 0.059, 0.061, 0.06, 0.058, 0.057, 0.056],
+          detail: "Galactic cosmic-ray baseline with solar modulation. Hybrid ML + physics refinement available on the Dashboard for any site.",
+          dash: "doctype.html#slider-section",
+        },
+        {
+          id: "solar",
+          label: "Solar activity",
+          value: "B1.2",
+          unit: "flare class",
+          status: "go",
+          statusText: "Quiet Sun",
+          spark: [2, 2.2, 1.8, 2.5, 3, 2.8, 2.4, 2.1, 1.9, 2.3, 2.6, 2.2],
+          detail: "NOAA/SWPC-linked solar drivers feed the temporal model. Elevated M/X-class risk shortens EVA windows in Mission Planner.",
+          dash: "doctype.html#slider-section",
+        },
+        {
+          id: "temperature",
+          label: "Surface temp",
+          value: "214",
+          unit: "K",
+          status: "caution",
+          statusText: "Dayside climb",
+          spark: [190, 198, 205, 212, 218, 222, 220, 216, 210, 206, 202, 214],
+          detail: "Dayside follows Stefan-Boltzmann equilibrium; nightside uses Apollo polynomial curves. Pick a site on the Dashboard for local solar time.",
+          dash: "doctype.html#metricsPanel",
+        },
+        {
+          id: "dust",
+          label: "Dust activity",
+          value: "1.4",
+          unit: "index",
+          status: "go",
+          statusText: "Low lofting",
+          spark: [1.1, 1.2, 1.3, 1.5, 1.6, 1.4, 1.3, 1.2, 1.4, 1.5, 1.3, 1.4],
+          detail: "Electrostatic lofting rises near the terminator. Keep seals and radiators in mind when the index trends above ~3.",
+          dash: "doctype.html#warningsContainer",
+        },
+        {
+          id: "micrometeorites",
+          label: "Micrometeoroids",
+          value: "1.8",
+          unit: "/m²·day",
+          status: "caution",
+          statusText: "Slightly elevated",
+          spark: [1.5, 1.6, 1.7, 1.9, 2.0, 1.8, 1.7, 1.8, 1.9, 1.8, 1.7, 1.8],
+          detail: "Continuous flux with mild orbital-position modulation. Long EVA and exposed arrays should use hardened windows.",
+          dash: "doctype.html#forecastContainer",
+        },
+        {
+          id: "moonquakes",
+          label: "Seismic",
+          value: "1.2",
+          unit: "M eq.",
+          status: "go",
+          statusText: "Background only",
+          spark: [0.8, 1.0, 0.9, 1.1, 1.3, 1.2, 1.0, 0.9, 1.1, 1.2, 1.0, 1.2],
+          detail: "Deep and thermal quakes stay low magnitude versus Earth, but habitats and precision instruments still track elevated periods.",
+          dash: "doctype.html#warningsContainer",
+        },
+      ];
+
+      const horizonMult = { now: 1, "24h": 1.08, "7d": 1.15 };
+      let horizon = "now";
+      let activeId = null;
+
+      function sparkPath(values) {
+        const w = 120, h = 36, pad = 2;
+        const min = Math.min(...values), max = Math.max(...values);
+        const span = max - min || 1;
+        const pts = values.map((v, i) => {
+          const x = pad + (i / (values.length - 1)) * (w - pad * 2);
+          const y = h - pad - ((v - min) / span) * (h - pad * 2);
+          return `${x.toFixed(1)},${y.toFixed(1)}`;
+        });
+        return `M${pts.join(" L")}`;
+      }
+
+      function scaleValue(h, raw) {
+        if (typeof raw !== "string" || /[A-Z]/i.test(raw) && /[0-9]/.test(raw) && raw.includes(".")) {
+          if (h === "24h") return "C1.0";
+          if (h === "7d") return "C2-M";
+          return raw;
+        }
+        const n = parseFloat(raw);
+        if (Number.isNaN(n)) return raw;
+        const m = horizonMult[h] || 1;
+        const v = n * m;
+        return Number.isInteger(n) ? String(Math.round(v)) : v.toFixed(n < 10 ? 2 : 0).replace(/\.00$/, "");
+      }
+
+      function renderGrid() {
+        const grid = document.getElementById("weatherGrid");
+        grid.innerHTML = HAZARDS.map((h) => {
+          const val = scaleValue(horizon, h.value);
+          const spark = h.spark.map((v, i) => v * (1 + i * (horizon === "7d" ? 0.01 : 0.004)));
+          return `
+            <button type="button" class="wx-card${activeId === h.id ? " active" : ""}" data-id="${h.id}" role="listitem" aria-pressed="${activeId === h.id}">
+              <div class="wx-label">${h.label}</div>
+              <div class="wx-value">${val}<span class="wx-unit">${h.unit}</span></div>
+              <div class="wx-status ${h.status}">${h.statusText}</div>
+              <svg class="wx-spark" viewBox="0 0 120 36" preserveAspectRatio="none" aria-hidden="true">
+                <path d="${sparkPath(spark)}" fill="none" stroke="#6eb6ff" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" opacity="0.85"/>
+              </svg>
+            </button>`;
+        }).join("");
+      }
+
+      function showDetail(id) {
+        const h = HAZARDS.find((x) => x.id === id);
+        const box = document.getElementById("wxDetail");
+        if (!h) {
+          box.classList.remove("open");
+          box.hidden = true;
+          return;
+        }
+        activeId = id;
+        box.hidden = false;
+        box.classList.add("open");
+        box.innerHTML = `
+          <h3>${h.label}</h3>
+          <p>${h.detail}</p>
+          <div class="wx-actions">
+            <a class="btn btn-primary" href="${h.dash}">View 24h on Dashboard</a>
+            <a class="btn btn-ghost" href="mission_planning.html">Check EVA window</a>
+          </div>`;
+        renderGrid();
+      }
+
+      document.getElementById("weatherGrid").addEventListener("click", (e) => {
+        const card = e.target.closest(".wx-card");
+        if (!card) return;
+        const id = card.dataset.id;
+        if (activeId === id) {
+          activeId = null;
+          document.getElementById("wxDetail").classList.remove("open");
+          document.getElementById("wxDetail").hidden = true;
+          renderGrid();
+        } else {
+          showDetail(id);
+        }
+      });
+
+      document.querySelectorAll(".pill[data-horizon]").forEach((btn) => {
+        btn.addEventListener("click", () => {
+          document.querySelectorAll(".pill[data-horizon]").forEach((b) => b.classList.remove("active"));
+          btn.classList.add("active");
+          horizon = btn.dataset.horizon;
+          document.getElementById("condStamp").textContent =
+            horizon === "now" ? "Nowcasting" : horizon === "24h" ? "Next 24 hours" : "7-day outlook";
+          renderGrid();
+          if (activeId) showDetail(activeId);
+        });
+      });
+
+      function tick() {
+        const el = document.getElementById("utcClock");
+        if (el) el.textContent = new Date().toISOString().replace("T", " ").slice(0, 19) + "Z";
+      }
+      tick();
+      setInterval(tick, 1000);
+      renderGrid();
+
+      window.addEventListener("load", () => {
+        setTimeout(() => document.getElementById("loadingScreen").classList.add("hidden"), 700);
+      });
+    })();
+  </script>
+</body>
+</html>

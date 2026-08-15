@@ -1,0 +1,1248 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>L.I.P.A.S. - Globe</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=Syne:wght@600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles/theme.css">
+  <link rel="stylesheet" href="styles/main.css">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    html, body {
+      height: 100%;
+      font-family: var(--font-ui, "IBM Plex Sans", system-ui, sans-serif);
+      background: var(--void, #0b0e13);
+      color: var(--text, #e6eef8);
+      overflow: hidden;
+    }
+    body > .topnav { position: relative; z-index: 1100; }
+
+    #cesiumContainer {
+      width: 100%;
+      height: calc(100vh - 56px);
+      background: #0b0e13;
+    }
+
+    .map-controls {
+      position: fixed;
+      top: 72px;
+      right: 20px;
+      z-index: 1000;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      max-height: calc(100vh - 100px);
+      overflow-y: auto;
+    }
+
+    .loc-search-panel {
+      position: fixed;
+      top: 72px;
+      left: 20px;
+      z-index: 1000;
+      width: min(300px, calc(100vw - 40px));
+      background: linear-gradient(165deg, rgba(28, 37, 51, 0.95), rgba(18, 24, 33, 0.98));
+      border: 1px solid rgba(140, 170, 200, 0.18);
+      border-left: 3px solid rgba(110, 182, 255, 0.35);
+      padding: 12px 12px 10px;
+      box-shadow: 0 12px 36px rgba(0, 0, 0, 0.4);
+      overflow: hidden;
+    }
+    .loc-search-panel::after {
+      content: "";
+      position: absolute;
+      top: 0; left: 0; right: 0; height: 1px;
+      background: linear-gradient(90deg, transparent, rgba(110, 182, 255, 0.35), transparent);
+    }
+    .loc-search-panel .control-title {
+      margin-bottom: 10px;
+      font-family: var(--font-display, Syne, sans-serif);
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--steel, #6eb6ff);
+    }
+    #locSearchInput {
+      width: 100%;
+      padding: 11px 12px;
+      background: linear-gradient(165deg, rgba(28, 37, 51, 0.95), rgba(18, 24, 33, 0.98));
+      border: 1px solid rgba(140, 170, 200, 0.18);
+      border-radius: 0;
+      color: var(--text, #e6eef8);
+      font-family: var(--font-ui, "IBM Plex Sans", system-ui, sans-serif);
+      font-size: 14px;
+      outline: none;
+      transition: border-color 0.15s, box-shadow 0.15s;
+    }
+    #locSearchInput::placeholder {
+      color: var(--dim, #5c7088);
+    }
+    #locSearchInput:hover,
+    #locSearchInput:focus {
+      border-color: rgba(110, 182, 255, 0.45);
+      box-shadow: 0 0 0 3px rgba(110, 182, 255, 0.1);
+      background: linear-gradient(165deg, rgba(28, 37, 51, 0.98), rgba(18, 24, 33, 1));
+    }
+    #locSearchResults {
+      margin-top: 8px;
+      max-height: 240px;
+      overflow-y: auto;
+      display: none;
+      border-top: 1px solid rgba(140, 170, 200, 0.12);
+      padding-top: 6px;
+    }
+    #locSearchResults.show { display: block; }
+    .loc-result {
+      padding: 9px 10px;
+      cursor: pointer;
+      border: 1px solid transparent;
+      border-left: 2px solid transparent;
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--text, #e6eef8);
+      margin-bottom: 2px;
+    }
+    .loc-result:hover, .loc-result.active {
+      background: rgba(110, 182, 255, 0.1);
+      border-color: rgba(110, 182, 255, 0.22);
+      border-left-color: var(--steel, #6eb6ff);
+    }
+    .loc-result small {
+      display: block;
+      margin-top: 3px;
+      color: var(--muted, #8fa3b8);
+      font-size: 11px;
+      font-weight: 400;
+      line-height: 1.35;
+    }
+
+    #locHoverCard {
+      position: fixed;
+      z-index: 1200;
+      display: none;
+      min-width: 200px;
+      max-width: 280px;
+      padding: 12px 14px;
+      pointer-events: none;
+      background: linear-gradient(165deg, rgba(28, 37, 51, 0.97), rgba(14, 18, 26, 0.99));
+      border: 1px solid var(--line-strong, rgba(120, 170, 220, 0.35));
+      box-shadow: 0 12px 32px rgba(0, 0, 0, 0.45);
+    }
+    #locHoverCard.show { display: block; }
+    #locHoverCard.pinned {
+      pointer-events: auto;
+      top: 148px;
+      left: 20px;
+      right: auto;
+    }
+    #locHoverCard h4 {
+      font-family: var(--font-display, Syne, sans-serif);
+      font-size: 14px;
+      font-weight: 700;
+      margin-bottom: 4px;
+      color: var(--text, #e6eef8);
+    }
+    #locHoverCard .coords {
+      font-size: 11px;
+      color: var(--dim, #5c7088);
+      letter-spacing: 0.04em;
+      margin-bottom: 6px;
+    }
+    #locHoverCard .summary {
+      font-size: 12px;
+      color: var(--muted, #8fa3b8);
+      line-height: 1.4;
+      margin-bottom: 8px;
+    }
+    #locHoverCard .hov-status {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      margin-bottom: 8px;
+    }
+    #locHoverCard .hov-status .dot {
+      width: 8px; height: 8px; border-radius: 50%;
+      background: var(--go, #3ecf8e);
+    }
+    #locHoverCard .hov-status.caution .dot { background: var(--caution, #e0b14a); }
+    #locHoverCard .hov-status.nogo .dot { background: var(--nogo, #e25b5b); }
+    #locHoverCard .hov-hazards {
+      display: flex; flex-wrap: wrap; gap: 4px;
+      margin-bottom: 8px;
+    }
+    #locHoverCard .hov-hazards span {
+      font-size: 10px; font-weight: 600;
+      padding: 2px 6px;
+      background: rgba(110, 182, 255, 0.1);
+      border: 1px solid rgba(110, 182, 255, 0.22);
+      color: var(--text, #e6eef8);
+    }
+    #locHoverCard .hov-meta {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 6px 10px;
+      margin-bottom: 8px;
+      font-size: 11px;
+      color: var(--muted, #8fa3b8);
+    }
+    #locHoverCard .hov-meta strong {
+      display: block;
+      color: var(--text, #e6eef8);
+      font-size: 13px;
+      font-weight: 700;
+    }
+    #locHoverCard .loc-actions {
+      display: none;
+      margin-top: 10px;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+    #locHoverCard.pinned .loc-actions { display: flex; }
+    #locHoverCard .loc-dash-btn,
+    #locHoverCard .loc-close-btn {
+      font-family: var(--font-ui);
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      padding: 7px 10px;
+      border: 1px solid rgba(110, 182, 255, 0.35);
+      cursor: pointer;
+      text-decoration: none;
+      color: var(--text, #e6eef8);
+      background: rgba(110, 182, 255, 0.12);
+    }
+    #locHoverCard .loc-dash-btn:hover { background: rgba(110, 182, 255, 0.22); }
+    #locHoverCard .loc-close-btn {
+      background: transparent;
+      border-color: rgba(140, 170, 200, 0.22);
+      color: var(--muted, #8fa3b8);
+    }
+
+    .control-panel,
+    .legend-panel {
+      background: linear-gradient(165deg, rgba(28, 37, 51, 0.96), rgba(14, 18, 26, 0.98));
+      border: 1px solid var(--line-strong, rgba(120, 170, 220, 0.28));
+      padding: 14px 15px;
+      min-width: 200px;
+      position: relative;
+      box-shadow: 0 12px 36px rgba(0, 0, 0, 0.4);
+    }
+    .control-panel::after,
+    .legend-panel::after {
+      content: "";
+      position: absolute;
+      top: 0; left: 0; right: 0; height: 1px;
+      background: linear-gradient(90deg, transparent, rgba(110, 182, 255, 0.4), transparent);
+    }
+
+    .control-title,
+    .legend-title {
+      font-family: var(--font-display, Syne, sans-serif);
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--steel, #6eb6ff);
+      margin-bottom: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.14em;
+    }
+
+    .control-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 9px;
+    }
+    .control-item:last-child { margin-bottom: 0; }
+
+    .control-item label {
+      font-size: 13px;
+      color: var(--text, #e6eef8);
+      cursor: pointer;
+    }
+
+    .control-item input[type="checkbox"] {
+      width: 15px;
+      height: 15px;
+      accent-color: var(--steel, #6eb6ff);
+      cursor: pointer;
+    }
+
+    .control-item select {
+      width: 100%;
+      padding: 8px 10px;
+      background: var(--ink, #121821);
+      border: 1px solid var(--line-strong, rgba(120, 170, 220, 0.28));
+      color: var(--text, #e6eef8);
+      font-family: var(--font-ui);
+      font-size: 13px;
+      cursor: pointer;
+      outline: none;
+    }
+    .control-item select:focus {
+      border-color: var(--steel);
+      box-shadow: 0 0 0 3px rgba(110, 182, 255, 0.12);
+    }
+
+    .legend-panel {
+      position: fixed;
+      bottom: 20px;
+      left: 20px;
+      z-index: 1000;
+      min-width: 180px;
+    }
+
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 8px;
+      font-size: 13px;
+      color: var(--muted, #8fa3b8);
+    }
+    .legend-item:last-child { margin-bottom: 0; }
+
+    .legend-color {
+      width: 12px;
+      height: 12px;
+      flex-shrink: 0;
+      box-shadow: 0 0 0 1px rgba(0,0,0,0.35);
+    }
+    .legend-color.radiation { background: #ff6a4a; }
+    .legend-color.micrometeorites { background: #ffc24a; }
+    .legend-color.dust { background: #c8a86a; }
+    .legend-color.moonquakes { background: #9b6cff; }
+    .legend-color.temperature { background: #4ab0ff; }
+    .legend-color.solar { background: #ffd060; }
+    .legend-color.sep { background: #ff6ea0; }
+    .legend-color.cme { background: #ff8a40; }
+
+    body.embed-mode .topnav,
+    body.embed-mode #lipas-topnav,
+    body.embed-mode .loading-screen .load-label,
+    body.embed-mode .loc-search-panel,
+    body.embed-mode #viewModePanel,
+    body.embed-mode #locHoverCard { display: none !important; }
+    body.embed-mode #cesiumContainer { height: 100vh; }
+    body.embed-mode .map-controls { top: 12px; right: 12px; max-height: calc(100vh - 24px); }
+    body.embed-mode .legend-panel { bottom: 12px; left: 12px; }
+
+    .globe-fail {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: 100%;
+      padding: 40px;
+      text-align: center;
+      color: var(--muted);
+      font-size: 14px;
+      line-height: 1.5;
+      max-width: 420px;
+      margin: 0 auto;
+    }
+    .globe-fail strong {
+      display: block;
+      color: var(--steel);
+      font-family: var(--font-display);
+      margin-bottom: 8px;
+      font-size: 16px;
+    }
+
+    @media (max-width: 720px) {
+      .map-controls {
+        top: auto;
+        bottom: 90px;
+        right: 12px;
+        left: 12px;
+        flex-direction: row;
+        flex-wrap: wrap;
+        max-height: none;
+      }
+      .control-panel { min-width: 140px; flex: 1; }
+      .legend-panel { display: none; }
+      .loc-search-panel { top: 64px; left: 12px; width: calc(100vw - 24px); }
+    }
+  </style>
+  <link rel="stylesheet" href="https://unpkg.com/cesium@1.130/Build/Cesium/Widgets/widgets.css">
+</head>
+<body>
+  <div class="loading-screen" id="loadingScreen">
+    <div class="load-ring"></div>
+    <div class="load-label">Loading Globe</div>
+  </div>
+
+  <div id="lipas-topnav" data-active="globe"></div>
+
+  <div class="loc-search-panel" id="locSearchPanel">
+    <div class="control-title">Find location</div>
+    <input type="search" id="locSearchInput" placeholder="Search lunar sites…" autocomplete="off">
+    <div id="locSearchResults"></div>
+  </div>
+
+  <div id="locHoverCard">
+    <h4 id="locHoverName">-</h4>
+    <div class="coords" id="locHoverCoords">-</div>
+    <div class="hov-status go" id="locHoverStatus"><span class="dot"></span><span id="locHoverStatusText">GO</span></div>
+    <div class="summary" id="locHoverSummary">-</div>
+    <div class="hov-hazards" id="locHoverHazards"></div>
+    <div class="hov-meta">
+      <div>Earth link<strong id="locHoverLink">-</strong></div>
+    </div>
+    <div class="loc-actions">
+      <a class="loc-dash-btn" id="locDashBtn" href="doctype.html">View in dashboard</a>
+      <button type="button" class="loc-close-btn" id="locCloseBtn">Close</button>
+    </div>
+  </div>
+
+  <div class="map-controls">
+    <div class="control-panel">
+      <div class="control-title">View Options</div>
+      <div class="control-item">
+        <input type="checkbox" id="showTerrain">
+        <label for="showTerrain">Terrain</label>
+      </div>
+      <div class="control-item">
+        <input type="checkbox" id="showImagery" checked>
+        <label for="showImagery">Reference Globe</label>
+      </div>
+      <div class="control-item">
+        <input type="checkbox" id="enableLighting">
+        <label for="enableLighting">Lighting</label>
+      </div>
+      <div class="control-item">
+        <input type="checkbox" id="autoRotate">
+        <label for="autoRotate">Auto-Rotate</label>
+      </div>
+      <div class="control-item">
+        <input type="checkbox" id="showLocations" checked>
+        <label for="showLocations">Site markers</label>
+      </div>
+    </div>
+
+    <div class="control-panel" id="hazardLayerPanel">
+      <div class="control-title">Hazard Layers</div>
+      <div class="control-item">
+        <input type="checkbox" id="showRadiation" checked>
+        <label for="showRadiation">Radiation</label>
+      </div>
+      <div class="control-item">
+        <input type="checkbox" id="showMicrometeorites">
+        <label for="showMicrometeorites">Micrometeorites</label>
+      </div>
+      <div class="control-item">
+        <input type="checkbox" id="showDust">
+        <label for="showDust">Dust</label>
+      </div>
+      <div class="control-item">
+        <input type="checkbox" id="showMoonquakes">
+        <label for="showMoonquakes">Moonquakes</label>
+      </div>
+      <div class="control-item">
+        <input type="checkbox" id="showTemperature">
+        <label for="showTemperature">Temperature</label>
+      </div>
+      <div class="control-item">
+        <input type="checkbox" id="showSolar">
+        <label for="showSolar">Solar</label>
+      </div>
+      <div class="control-item">
+        <input type="checkbox" id="showSep">
+        <label for="showSep">SEP</label>
+      </div>
+      <div class="control-item">
+        <input type="checkbox" id="showCme">
+        <label for="showCme">CME</label>
+      </div>
+    </div>
+
+    <div class="control-panel" id="viewModePanel">
+      <div class="control-title">View Mode</div>
+      <div class="control-item">
+        <select id="viewMode">
+          <option value="3d">3D Globe</option>
+          <option value="2d">2D Map</option>
+          <option value="columbus">Columbus View</option>
+        </select>
+      </div>
+    </div>
+  </div>
+
+  <div class="legend-panel">
+    <div class="legend-title">Hazard Legend</div>
+    <div class="legend-item"><div class="legend-color radiation"></div><span>Radiation</span></div>
+    <div class="legend-item"><div class="legend-color micrometeorites"></div><span>Micrometeorites</span></div>
+    <div class="legend-item"><div class="legend-color dust"></div><span>Dust Activity</span></div>
+    <div class="legend-item"><div class="legend-color moonquakes"></div><span>Moonquakes</span></div>
+    <div class="legend-item"><div class="legend-color temperature"></div><span>Temperature</span></div>
+    <div class="legend-item"><div class="legend-color solar"></div><span>Solar</span></div>
+    <div class="legend-item"><div class="legend-color sep"></div><span>SEP</span></div>
+    <div class="legend-item"><div class="legend-color cme"></div><span>CME</span></div>
+    <div class="legend-item" style="margin-top:6px;font-size:11px;opacity:.75;">
+      <span>Deeper color = higher severity</span>
+    </div>
+  </div>
+
+  <div id="cesiumContainer"></div>
+
+  <script src="https://unpkg.com/cesium@1.130/Build/Cesium/Cesium.js"></script>
+  <script>
+    (function applyEmbedParams() {
+      const q = new URLSearchParams(location.search);
+      if (q.get('embed') === '1') document.body.classList.add('embed-mode');
+      window.__LIPAS_CESIUM_VIEW = q.get('view') || '3d';
+    })();
+
+    const MOON_TILESET_ASSET_ID = 2684829;
+    const WAC_IMAGERY_URL = 'https://trek.nasa.gov/tiles/Moon/EQ/LRO_WAC_Mosaic_Global_303ppd_v02/1.0.0/default/default028mm/{wacZoom}/{y}/{x}.jpg';
+
+    const LUNAR_SITES = [
+      { name:'The Moon', lat:0, lon:0, summary:'Global lunar conditions' },
+      { name:'Shackleton Crater', lat:-89.68, lon:166.15, summary:'Permanently shadowed polar crater' },
+      { name:'Lunar South Pole', lat:-90, lon:0, summary:'South polar region' },
+      { name:'Tycho Crater', lat:-43.31, lon:-11.36, summary:'Large young impact crater' },
+      { name:'Mare Imbrium', lat:32.8, lon:-15.6, summary:'Basaltic mare region' },
+      { name:'Malapert Massif', lat:-85.9, lon:12.9, summary:'Highland massif near south pole' },
+      { name:'Sea of Tranquility', lat:8.5, lon:31.4, summary:'Apollo 11 landing site region' },
+      { name:'Oceanus Procellarum', lat:18.4, lon:-57.4, summary:'Vast mare region' },
+      { name:'Aristarchus Plateau', lat:23.7, lon:-47.4, summary:'Highland plateau with volcanic features' },
+      { name:'Copernicus', lat:9.62, lon:-20.08, summary:'Large complex crater-frequent microseismic activity' },
+      { name:'Fra Mauro', lat:-3.01, lon:17.5, summary:'Apollo-era landing region-well-mapped' },
+      { name:'Kepler', lat:8.1, lon:-51.0, summary:'Ejecta-rich crater-elevated micrometeorite risk' },
+      { name:'South Pole-Aitken Basin', lat:-53.0, lon:158.0, summary:'Very large basin-high scientific interest and hazards' },
+      { name:'Plato Crater', lat:51.6, lon:-9.4, summary:'Flooded crater with dark floor-low seismic activity' },
+      { name:'Mare Serenitatis', lat:28.0, lon:17.5, summary:'Circular mare-excellent for habitat construction' },
+      { name:'Mare Crisium', lat:17.0, lon:59.1, summary:'Impact basin with elevated thorium-resource rich' },
+      { name:'Mare Humorum', lat:-24.4, lon:-38.6, summary:'Small mare-relatively stable environment' },
+      { name:'Mare Nubium', lat:-21.3, lon:-13.3, summary:'Volcanic plain-moderate terrain variation' },
+      { name:'Mare Vaporum', lat:13.3, lon:3.6, summary:'Irregular mare-complex geological history' },
+      { name:'Mare Insularum', lat:5.5, lon:-18.4, summary:'Small circular mare-good for outpost placement' },
+      { name:'Sinus Iridum', lat:44.1, lon:-31.7, summary:'Bay of rainbows-smooth lava plain' },
+      { name:'Sinus Roris', lat:55.5, lon:-24.8, summary:'Northern bay-low radiation exposure' },
+      { name:'Sinus Medii', lat:0.0, lon:0.0, summary:'Central bay-optimal communications location' },
+      { name:'Eratosthenes Crater', lat:14.5, lon:-11.3, summary:'Deep crater-complex terracing structure' },
+      { name:'Clavius Crater', lat:-58.4, lon:-14.4, summary:'Large crater complex-high scientific value' },
+      { name:'Bailly Crater', lat:-67.2, lon:-69.2, summary:'Very large crater-ancient impact structure' },
+      { name:'Schrödinger Crater', lat:-75.4, lon:-132.5, summary:'Near-lunar far side-unique geology' },
+      { name:'Amundsen Crater', lat:-84.7, lon:83.1, summary:'Polar crater-ice resource potential' },
+      { name:'Scott Crater', lat:-82.3, lon:-48.5, summary:'Near south pole-permanently shadowed regions' },
+      { name:'Shoemaker Crater', lat:-88.1, lon:-45.0, summary:'South polar crater-high ice content' },
+      { name:'de Gerlache Crater', lat:-88.4, lon:-86.7, summary:'Polar crater-continuous darkness' },
+      { name:'Faustini Crater', lat:-87.8, lon:77.4, summary:'Large polar crater-resource exploration target' },
+      { name:'Haworth Crater', lat:-87.0, lon:-70.0, summary:'Polar crater-habitat candidate' },
+      { name:'Sverdrup Crater', lat:-89.1, lon:-45.5, summary:'Polar crater-flat floor for landing' },
+      { name:'Shoemaker Ridge', lat:-88.5, lon:-45.0, summary:'Polar ridge-elevated position for comms' },
+      { name:'Leibnitz Mountains', lat:-85.0, lon:25.0, summary:'Polar mountain range-strategic location' },
+      { name:'Malapert Peak', lat:-86.0, lon:10.0, summary:'Elevated peak-continuous solar power' },
+      { name:'de Gerlache Ridge', lat:-88.0, lon:-85.0, summary:'Polar ridge-resource access point' },
+      { name:'Von Kármán Crater', lat:-44.8, lon:176.0, summary:'Far side-Chang\'e-4 landing site inside South Pole-Aitken Basin' },
+      { name:'Tsiolkovskiy Crater', lat:-21.2, lon:128.9, summary:'Far side-dark mare-like floor with a prominent central peak' },
+      { name:'Mare Moscoviense', lat:27.3, lon:147.9, summary:'Far side-rare farside mare basin, visible only from orbit' },
+      { name:'Korolev Crater', lat:-4.4, lon:-157.4, summary:'Far side-large impact basin named for the Soviet chief rocket designer' },
+      { name:'Apollo Crater', lat:-36.1, lon:-151.9, summary:'Far side-deep basin inside South Pole-Aitken exposing lower crust' },
+      { name:'Daedalus Crater', lat:-5.9, lon:179.4, summary:'Far side-near the antipodal center, used as an imaging reference point' },
+      { name:'Hertzsprung Crater', lat:1.4, lon:-129.2, summary:'Far side-large multi-ring impact basin' },
+      { name:'Mendeleev Crater', lat:5.5, lon:141.0, summary:'Far side-impact basin with a complex terraced rim' },
+      { name:'Compton Crater', lat:55.3, lon:103.8, summary:'Far side-high-northern crater, candidate radio-quiet observatory site' },
+      { name:'Zeeman Crater', lat:-75.2, lon:-133.6, summary:'Far side-south-polar crater with a permanently shadowed floor' },
+      { name:'Mare Ingenii', lat:-33.7, lon:163.5, summary:'Far side-unique swirl mare with magnetic anomaly terrain' },
+      { name:'Gagarin Crater', lat:-19.7, lon:149.3, summary:'Far side-large highland crater honouring the first cosmonaut' },
+      { name:'Jules Verne Crater', lat:-35.0, lon:147.0, summary:'Far side-ancient floor with volcanic and impact history' },
+      { name:'Poincaré Basin', lat:-57.3, lon:163.1, summary:'Far side-SPA-adjacent multi-ring basin' },
+      { name:'Birkhoff Crater', lat:58.7, lon:-146.1, summary:'Far side-high-northern complex crater, radio-quiet hinterland' },
+      { name:'Pasteur Crater', lat:-11.9, lon:104.6, summary:'Far side-equatorial highland crater near farside mid-lats' },
+      { name:'Oppenheimer Crater', lat:-35.2, lon:-166.3, summary:'Far side-dark-floored crater with pyroclastic deposits' },
+      { name:'Antoniadi Crater', lat:-69.3, lon:-172.0, summary:'Far side-deep southern crater inside SPA Basin' },
+      { name:'Aitken Crater', lat:-16.8, lon:173.4, summary:'Far side-namesake crater inside SPA Basin' },
+      { name:'Keeler Crater', lat:-11.2, lon:161.9, summary:'Far side-large crater west of Heaviside' },
+      { name:'Heaviside Crater', lat:-10.4, lon:162.4, summary:'Far side-equatorial crater with terrace walls' },
+      { name:'Crookes Crater', lat:-10.3, lon:-165.1, summary:'Far side-bright-rayed young crater' },
+      { name:'Leuschner Crater', lat:1.6, lon:-109.1, summary:'Far side-western highland crater' },
+      { name:'Freundlich-Sharonov Basin', lat:18.5, lon:175.0, summary:'Far side-multi-ring basin, radio-quiet interior' },
+      { name:'Planck Crater', lat:-57.9, lon:136.8, summary:'Far side-SPA-floor crater near Poincaré' },
+      { name:'Bose Crater', lat:-53.5, lon:-170.0, summary:'Far side-southern SPA highland crater' },
+      { name:'Roche Crater', lat:-42.3, lon:136.5, summary:'Far side-SPA basin floor crater' },
+      { name:'Chaplygin Crater', lat:-5.7, lon:150.2, summary:'Far side-equatorial crater with central peak' },
+      { name:'Pavlov Crater', lat:-28.8, lon:142.5, summary:'Far side-mid-southern highland crater' },
+      { name:'Campbell Crater', lat:45.3, lon:151.4, summary:'Far side-northern large complex crater' },
+      { name:'D\'Alembert Crater', lat:50.8, lon:163.9, summary:'Far side-high-northern multi-ring crater' },
+      { name:'Seares Crater', lat:73.5, lon:145.8, summary:'Far side-near-polar northern crater' },
+      { name:'Mach Crater', lat:18.5, lon:-149.3, summary:'Far side-western mid-latitude crater' },
+      { name:'Lacus Solitudinis', lat:-27.8, lon:104.3, summary:'Far side-small mare patch, Lake of Solitude' },
+      { name:'Mare Orientale', lat:-19.4, lon:-92.8, summary:'Far-side limb-multi-ring Orientale impact basin' },
+      { name:'Lorentz Basin', lat:34.2, lon:-97.0, summary:'Far-side limb-northern multi-ring basin' },
+      { name:'Fermi Crater', lat:-19.3, lon:122.1, summary:'Far side-large crater near Tsiolkovskiy' },
+      { name:'Leibnitz Crater', lat:-38.3, lon:179.2, summary:'Far side-deep SPA crater under Leibnitz mountains' },
+      { name:'O\'Day Crater', lat:-30.4, lon:157.5, summary:'Far side-SPA floor crater with dark melt pools' },
+      { name:'Mandel\'shtam Crater', lat:5.4, lon:162.4, summary:'Far side-equatorial crater near Mendeleev' },
+      { name:'Schwarzschild Crater', lat:70.1, lon:121.2, summary:'Far side-large northern polar-adjacent crater' },
+      { name:'Birkeland Crater', lat:-30.2, lon:173.9, summary:'Far side-SPA crater near Von Kármán' }
+    ];
+
+    function hideLoading() {
+      const loadingScreen = document.getElementById('loadingScreen');
+      if (loadingScreen) loadingScreen.classList.add('hidden');
+    }
+
+    const TYPE_PALETTES = {
+      Radiation:       { c0: [255, 70, 60],   c1: [255, 140, 70],  c2: [180, 40, 100] },
+      Micrometeorites: { c0: [255, 200, 60],  c1: [255, 140, 40],  c2: [220, 100, 30] },
+      Dust:            { c0: [210, 170, 100], c1: [170, 130, 80],  c2: [120, 90, 55] },
+      Moonquake:       { c0: [180, 120, 255], c1: [110, 70, 220],  c2: [70, 40, 160] },
+      Temperature:     { c0: [255, 90, 50],   c1: [80, 180, 255],  c2: [30, 80, 200] },
+      Solar:           { c0: [255, 220, 80],  c1: [255, 150, 40],  c2: [255, 90, 30] },
+      SEP:             { c0: [255, 110, 160], c1: [220, 70, 120],  c2: [140, 30, 80] },
+      CME:             { c0: [255, 160, 60],  c1: [240, 100, 40],  c2: [160, 50, 20] },
+    };
+
+    const HAZ_CANVAS_W = 1024;
+    const HAZ_CANVAS_H = 512;
+
+    function makeHazardCanvas(type, severity) {
+      const pal = TYPE_PALETTES[type] || { c0: [110, 182, 255], c1: [90, 150, 220], c2: [60, 100, 180] };
+      const c = document.createElement('canvas');
+      c.width = HAZ_CANVAS_W;
+      c.height = HAZ_CANVAS_H;
+      const ctx = c.getContext('2d');
+      const sev = Math.max(0.15, Math.min(1, severity != null ? severity : 0.5));
+
+      const baseA = 0.05 + sev * 0.07;
+      ctx.fillStyle = `rgba(${pal.c2[0]},${pal.c2[1]},${pal.c2[2]},${baseA.toFixed(3)})`;
+      ctx.fillRect(0, 0, HAZ_CANVAS_W, HAZ_CANVAS_H);
+
+      let seed = 0;
+      for (let i = 0; i < type.length; i++) seed = (seed * 31 + type.charCodeAt(i)) >>> 0;
+      function rnd() { seed = (seed * 1664525 + 1013904223) >>> 0; return seed / 4294967295; }
+
+      const N = 26;
+      for (let i = 0; i < N; i++) {
+        const cx = rnd() * HAZ_CANVAS_W;
+        const cy = rnd() * HAZ_CANVAS_H;
+        const r = HAZ_CANVAS_W * (0.16 + rnd() * 0.15);
+        const local = Math.max(0.2, Math.min(1, sev * (0.55 + rnd() * 0.85)));
+        const a0 = 0.1 + local * 0.24;
+        const a1 = 0.03 + local * 0.09;
+        [-HAZ_CANVAS_W, 0, HAZ_CANVAS_W].forEach((dx) => {
+          const grad = ctx.createRadialGradient(cx + dx, cy, 2, cx + dx, cy, r);
+          grad.addColorStop(0, `rgba(${pal.c0[0]},${pal.c0[1]},${pal.c0[2]},${a0.toFixed(3)})`);
+          grad.addColorStop(0.5, `rgba(${pal.c1[0]},${pal.c1[1]},${pal.c1[2]},${a1.toFixed(3)})`);
+          grad.addColorStop(1, `rgba(${pal.c1[0]},${pal.c1[1]},${pal.c1[2]},0)`);
+          ctx.fillStyle = grad;
+          ctx.beginPath();
+          ctx.arc(cx + dx, cy, r, 0, Math.PI * 2);
+          ctx.fill();
+        });
+      }
+      return c;
+    }
+
+    (async function(){
+      try {
+        if (typeof Cesium === 'undefined') throw new Error('Cesium library failed to load');
+
+        let token = '';
+        try {
+          const resp = await fetch('/client-token', { cache: 'no-store' });
+          if (resp.ok) {
+            const j = await resp.json();
+            token = j.token || '';
+          }
+        } catch (tokenErr) {
+          console.warn('CESIUM_ION_TOKEN unavailable; continuing with public imagery fallback.', tokenErr);
+        }
+        if (token) Cesium.Ion.defaultAccessToken = token;
+
+        try {
+          if (Cesium.Ellipsoid && Cesium.Ellipsoid.MOON) {
+            Cesium.Ellipsoid.default = Cesium.Ellipsoid.MOON;
+          }
+        } catch (ellErr) {
+          console.warn('Could not set default ellipsoid to Moon', ellErr);
+        }
+
+        const moonEllipsoid = Cesium.Ellipsoid.MOON || Cesium.Ellipsoid.WGS84;
+        const moonGlobe = new Cesium.Globe(moonEllipsoid);
+        moonGlobe.terrainProvider = new Cesium.EllipsoidTerrainProvider({ ellipsoid: moonEllipsoid });
+        moonGlobe.baseColor = Cesium.Color.fromCssColorString('#8a8a8a');
+        moonGlobe.show = true;
+        moonGlobe.enableLighting = false;
+        moonGlobe.depthTestAgainstTerrain = false;
+
+        const viewer = new Cesium.Viewer('cesiumContainer', {
+          globe: moonGlobe,
+          baseLayer: false,
+          mapProjection: new Cesium.GeographicProjection(moonEllipsoid),
+          baseLayerPicker: false,
+          geocoder: false,
+          homeButton: false,
+          sceneModePicker: false,
+          navigationHelpButton: false,
+          animation: false,
+          timeline: false,
+          fullscreenButton: false,
+          vrButton: false,
+          infoBox: false,
+          selectionIndicator: false
+        });
+        viewer.scene.globe.depthTestAgainstTerrain = false;
+
+        try {
+          if (moonGlobe.imageryLayers) moonGlobe.imageryLayers.removeAll();
+          moonGlobe.imageryLayers.addImageryProvider(new Cesium.UrlTemplateImageryProvider({
+            url: WAC_IMAGERY_URL,
+            tilingScheme: new Cesium.GeographicTilingScheme({ ellipsoid: moonEllipsoid }),
+            minimumLevel: 0,
+            maximumLevel: 7,
+            credit: 'NASA LRO WAC Global Mosaic (Trek)',
+            customTags: {
+              wacZoom: (imageryProvider, x, y, level) => level + 1
+            }
+          }));
+        } catch (imageryErr) {
+          console.warn('LRO WAC imagery layer failed to attach.', imageryErr);
+        }
+
+        let moonTileset = null;
+        try {
+          if (token) {
+            moonTileset = await Cesium.Cesium3DTileset.fromIonAssetId(MOON_TILESET_ASSET_ID);
+            viewer.scene.primitives.add(moonTileset);
+            moonTileset.show = false;
+          } else {
+            throw new Error('No Ion token - using reference globe');
+          }
+        } catch (tilesetErr) {
+          console.warn('Moon 3D Tileset failed to load; using LRO globe.', tilesetErr);
+          moonTileset = null;
+          const imgToggle = document.getElementById('showImagery');
+          if (imgToggle) imgToggle.checked = true;
+        }
+
+        const HAZARD_TYPES = [
+          { type: 'Radiation',       checkboxId: 'showRadiation',       base: 0.55 },
+          { type: 'Micrometeorites', checkboxId: 'showMicrometeorites', base: 0.48 },
+          { type: 'Dust',             checkboxId: 'showDust',            base: 0.45 },
+          { type: 'Moonquake',        checkboxId: 'showMoonquakes',      base: 0.4 },
+          { type: 'Temperature',      checkboxId: 'showTemperature',     base: 0.52 },
+          { type: 'Solar',            checkboxId: 'showSolar',           base: 0.5 },
+          { type: 'SEP',              checkboxId: 'showSep',             base: 0.48 },
+          { type: 'CME',              checkboxId: 'showCme',             base: 0.42 },
+        ];
+        const MOON_RECT = Cesium.Rectangle.fromDegrees(-180, -90, 180, 90);
+        const hazardLayers = Object.create(null);
+
+        function buildHazardProvider(type, sev) {
+          const canvas = makeHazardCanvas(type, sev);
+          return new Cesium.SingleTileImageryProvider({
+            url: canvas.toDataURL('image/png'),
+            rectangle: MOON_RECT,
+            tileWidth: canvas.width,
+            tileHeight: canvas.height,
+          });
+        }
+
+        HAZARD_TYPES.forEach((cfg, i) => {
+          const idx = i + 1; // index 0 is the Trek base layer
+          const layer = moonGlobe.imageryLayers.addImageryProvider(buildHazardProvider(cfg.type, cfg.base), idx);
+          const on = !!document.getElementById(cfg.checkboxId)?.checked;
+          layer.alpha = 0.38;
+          layer.show = on;
+          hazardLayers[cfg.type] = { layer, severity: cfg.base, on, idx };
+        });
+        window.__LIPAS_HAZARD_LAYERS = hazardLayers;
+
+        function syncTilesetWithHazards() {
+          if (!moonTileset) return;
+          const wantTerrain = !!document.getElementById('showTerrain')?.checked;
+          const anyHaz = Object.values(hazardLayers).some((h) => h.on);
+          moonTileset.show = wantTerrain && !anyHaz && viewer.scene.mode === Cesium.SceneMode.SCENE3D;
+        }
+
+        function setHazardTypeVisible(type, visible) {
+          const h = hazardLayers[type];
+          if (!h) return;
+          h.on = !!visible;
+          h.layer.show = h.on;
+          syncTilesetWithHazards();
+        }
+
+        function syncVisibilityFromCheckboxes() {
+          HAZARD_TYPES.forEach((cfg) => {
+            setHazardTypeVisible(cfg.type, !!document.getElementById(cfg.checkboxId)?.checked);
+          });
+          syncTilesetWithHazards();
+        }
+        syncVisibilityFromCheckboxes();
+        console.info('[LIPAS] hazard layers created:', Object.keys(hazardLayers).length, '(checkbox-synced)');
+
+        function scaleToSeverity(scale) {
+          return Math.max(0.15, Math.min(1, (scale - 0.55) / 1.1));
+        }
+
+        window.syncCesiumHazards = function(hd) {
+          if (!hd || !hd._meta) return;
+          const m = hd._meta;
+          const scale = {
+            Radiation: Math.min(1.8, 0.7 + (m.rad || 0.06) / 0.12),
+            Micrometeorites: Math.min(1.8, 0.7 + (m.mets || 1.6) / 3),
+            Dust: Math.min(1.8, 0.7 + (m.dust || 1) / 2.5),
+            Moonquake: Math.min(1.8, 0.7 + (m.quakes || 1.2) / 3.5),
+            Temperature: Math.min(1.8, 0.85 + Math.abs((m.temp || 200) - 200) / 200),
+            Solar: Math.min(1.8, 0.7 + (m.solar || 2.2) / 6),
+            SEP: Math.min(1.8, 0.7 + (m.solar || 2.2) / 7),
+            CME: Math.min(1.8, 0.65 + (m.solar || 2.2) / 8),
+          };
+          Object.keys(scale).forEach((type) => {
+            const h = hazardLayers[type];
+            if (!h) return;
+            const sev = scaleToSeverity(scale[type]);
+            if (Math.abs(sev - h.severity) < 0.04) return; // skip imperceptible re-renders
+            h.severity = sev;
+            const newLayer = moonGlobe.imageryLayers.addImageryProvider(buildHazardProvider(type, sev), h.idx);
+            newLayer.alpha = h.layer.alpha;
+            newLayer.show = h.on;
+            const old = h.layer;
+            h.layer = newLayer;
+            moonGlobe.imageryLayers.remove(old, true);
+          });
+        };
+
+        try {
+          const raw = localStorage.getItem('lipas_hazard_meta');
+          if (raw) window.syncCesiumHazards({ _meta: JSON.parse(raw) });
+        } catch (e) {}
+
+        const _hazPulseT0 = performance.now();
+        viewer.clock.onTick.addEventListener(() => {
+          const t = (performance.now() - _hazPulseT0) / 1000;
+          let i = 0;
+          for (const type in hazardLayers) {
+            const h = hazardLayers[type];
+            i++;
+            if (!h.on) continue;
+            const wave = 0.30 + 0.10 * Math.sin(t * (0.22 + i * 0.03) + i * 1.3);
+            h.layer.alpha = wave;
+          }
+        });
+
+        const _scratchPos = new Cesium.Cartesian3();
+        const _scratchNormal = new Cesium.Cartesian3();
+        const _scratchCam = new Cesium.Cartesian3();
+        function facingScore(lat, lon) {
+          if (viewer.scene.mode !== Cesium.SceneMode.SCENE3D) return 1;
+          const pos = Cesium.Cartesian3.fromDegrees(lon, lat, 0, moonEllipsoid, _scratchPos);
+          const normal = moonEllipsoid.geodeticSurfaceNormal(pos, _scratchNormal);
+          const toCam = Cesium.Cartesian3.subtract(viewer.camera.positionWC, pos, _scratchCam);
+          Cesium.Cartesian3.normalize(toCam, toCam);
+          return Cesium.Cartesian3.dot(normal, toCam);
+        }
+        function isFacingCamera(lat, lon) {
+          return facingScore(lat, lon) > 0.1;
+        }
+
+        const TYPE_FROM_KEY = {
+          radiation: 'Radiation', micrometeorites: 'Micrometeorites', dust: 'Dust',
+          moonquakes: 'Moonquake', temperature: 'Temperature', solar: 'Solar',
+          sep: 'SEP', cme: 'CME',
+        };
+        function applyActiveHazardLayers(keys) {
+          const list = Array.isArray(keys) ? keys : [];
+          if (!list.length) {
+            syncVisibilityFromCheckboxes();
+            return;
+          }
+          const want = new Set(list.map((k) => TYPE_FROM_KEY[k] || k));
+          Object.values(TYPE_FROM_KEY).forEach((type) => {
+            const on = want.has(type);
+            setHazardTypeVisible(type, on);
+            const idMap = {
+              Radiation: 'showRadiation', Micrometeorites: 'showMicrometeorites', Dust: 'showDust',
+              Moonquake: 'showMoonquakes', Temperature: 'showTemperature', Solar: 'showSolar',
+              SEP: 'showSep', CME: 'showCme',
+            };
+            const el = document.getElementById(idMap[type]);
+            if (el) el.checked = on;
+          });
+        }
+        window.applyActiveHazardLayers = applyActiveHazardLayers;
+
+        window.addEventListener('message', (ev) => {
+          const msg = ev.data;
+          if (!msg || msg.type !== 'lipas_hazards') return;
+          if (msg.meta) {
+            try { window.syncCesiumHazards({ _meta: msg.meta }); } catch (e) {}
+          }
+          if (Array.isArray(msg.active)) applyActiveHazardLayers(msg.active);
+          else syncVisibilityFromCheckboxes();
+        });
+
+        const siteEntities = [];
+        LUNAR_SITES.forEach((site, i) => {
+          if (i === 0) return; // skip global overview at 0,0
+          const ent = viewer.entities.add({
+            id: 'site_' + i,
+            position: Cesium.Cartesian3.fromDegrees(site.lon, site.lat, 25000, moonEllipsoid),
+            point: {
+              pixelSize: 8,
+              color: Cesium.Color.fromCssColorString('#6eb6ff'),
+              outlineColor: Cesium.Color.fromCssColorString('#0b0e13'),
+              outlineWidth: 1.5,
+              heightReference: Cesium.HeightReference.NONE,
+              scaleByDistance: new Cesium.NearFarScalar(1.5e5, 1.4, 5.5e6, 0.65),
+            },
+            label: {
+              text: site.name,
+              font: '11px IBM Plex Sans, sans-serif',
+              fillColor: Cesium.Color.fromCssColorString('#e6eef8'),
+              outlineColor: Cesium.Color.fromCssColorString('#0b0e13'),
+              outlineWidth: 3,
+              style: Cesium.LabelStyle.FILL_AND_OUTLINE,
+              verticalOrigin: Cesium.VerticalOrigin.BOTTOM,
+              pixelOffset: new Cesium.Cartesian2(0, -10),
+              show: false,
+              showBackground: true,
+              backgroundColor: Cesium.Color.fromCssColorString('#0b0e13').withAlpha(0.72),
+              backgroundPadding: new Cesium.Cartesian2(6, 4),
+              scaleByDistance: new Cesium.NearFarScalar(2.0e5, 1.0, 3.5e6, 0.0),
+            },
+            properties: {
+              siteName: site.name,
+              siteLat: site.lat,
+              siteLon: site.lon,
+              siteSummary: site.summary || '',
+              isSite: true,
+            }
+          });
+          siteEntities.push({ entity: ent, site, layerOn: true });
+        });
+
+        function setLocationsVisible(on) {
+          siteEntities.forEach((s) => {
+            s.layerOn = !!on;
+            if (!on) s.entity.show = false;
+          });
+        }
+        document.getElementById('showLocations')?.addEventListener('change', (e) => {
+          setLocationsVisible(e.target.checked);
+        });
+        setLocationsVisible(!!document.getElementById('showLocations')?.checked);
+
+        viewer.clock.onTick.addEventListener(() => {
+          siteEntities.forEach((s) => {
+            if (!s.layerOn) { s.entity.show = false; return; }
+            s.entity.show = isFacingCamera(s.site.lat, s.site.lon);
+          });
+        });
+
+        const hoverCard = document.getElementById('locHoverCard');
+        const hoverName = document.getElementById('locHoverName');
+        const hoverCoords = document.getElementById('locHoverCoords');
+        const hoverSummary = document.getElementById('locHoverSummary');
+        const hoverStatus = document.getElementById('locHoverStatus');
+        const hoverStatusText = document.getElementById('locHoverStatusText');
+        const hoverHazards = document.getElementById('locHoverHazards');
+        const hoverLink = document.getElementById('locHoverLink');
+        const dashBtn = document.getElementById('locDashBtn');
+        const closeBtn = document.getElementById('locCloseBtn');
+        let pinnedSite = null;
+
+        function isFarSideLon(lon) {
+          const a = Math.abs(((Number(lon) + 180) % 360 + 360) % 360 - 180);
+          return a > 90;
+        }
+
+        function siteBrief(site) {
+          const lat = Number(site.lat), lon = Number(site.lon);
+          const far = isFarSideLon(lon);
+          const polar = Math.abs(lat) >= 80;
+          const seed = Math.abs(Math.round(lat * 97 + lon * 13));
+          const rad = 0.055 + ((seed % 40) / 400);
+          const dust = 1.2 + ((seed % 25) / 20);
+          const solar = 2 + ((seed % 20) / 5);
+          const hazards = [];
+          if (rad > 0.12) hazards.push('Radiation');
+          else if (rad > 0.08) hazards.push('Rad watch');
+          if (dust > 2.2) hazards.push('Dust');
+          if (solar > 5) hazards.push('Solar');
+          if (polar) hazards.push('Polar thermal');
+          if (far) hazards.push('Relay only');
+          let status = 'go';
+          if (rad > 0.14 || solar > 6.5) status = 'nogo';
+          else if (rad > 0.09 || dust > 2.0 || solar > 4.5 || far) status = 'caution';
+          const conf = Math.round(Math.max(52, Math.min(94, 78 - (status === 'nogo' ? 12 : status === 'caution' ? 6 : 0) - (far ? 2 : 0) + (polar ? 3 : 0))));
+          return {
+            status,
+            statusLabel: status === 'go' ? 'GO' : status === 'caution' ? 'CAUTION' : 'NO-GO',
+            hazards: hazards.slice(0, 3),
+            conf,
+            link: far ? 'Relay' : 'Direct',
+          };
+        }
+
+        function fillLocCard(site, { pinned } = { pinned: false }) {
+          if (!hoverCard || !site) return;
+          const brief = siteBrief(site);
+          hoverName.textContent = site.name;
+          hoverCoords.textContent = `${Number(site.lat).toFixed(2)}°, ${Number(site.lon).toFixed(2)}°`;
+          hoverSummary.textContent = site.summary || 'Lunar operational site';
+          if (hoverStatus) {
+            hoverStatus.className = `hov-status ${brief.status}`;
+            if (hoverStatusText) hoverStatusText.textContent = brief.statusLabel;
+          }
+          if (hoverHazards) {
+            hoverHazards.innerHTML = brief.hazards.length
+              ? brief.hazards.map((h) => `<span>${h}</span>`).join('')
+              : '<span>Nominal</span>';
+          }
+          if (hoverLink) hoverLink.textContent = brief.link;
+          if (dashBtn) {
+            dashBtn.href = `doctype.html?lat=${encodeURIComponent(site.lat)}&lon=${encodeURIComponent(site.lon)}&name=${encodeURIComponent(site.name)}`;
+          }
+          hoverCard.classList.add('show');
+          hoverCard.classList.toggle('pinned', !!pinned);
+          if (pinned) {
+            pinnedSite = site;
+            hoverCard.style.left = '';
+            hoverCard.style.top = '';
+          }
+        }
+
+        function clearPinnedCard() {
+          pinnedSite = null;
+          hoverCard?.classList.remove('pinned', 'show');
+        }
+        closeBtn?.addEventListener('click', clearPinnedCard);
+
+        function flyToSite(site, altitude) {
+          viewer.camera.flyTo({
+            destination: Cesium.Cartesian3.fromDegrees(site.lon, site.lat, altitude || 900000, moonEllipsoid),
+            duration: 1.4
+          });
+          siteEntities.forEach((s) => {
+            if (s.entity.label) s.entity.label.show = s.site.name === site.name;
+          });
+        }
+
+        const handler = new Cesium.ScreenSpaceEventHandler(viewer.scene.canvas);
+        handler.setInputAction((movement) => {
+          if (pinnedSite) return;
+          const picked = viewer.scene.pick(movement.endPosition);
+          const ent = picked && picked.id;
+          const isSite = ent && ent.properties && ent.properties.isSite && ent.properties.isSite.getValue();
+          if (isSite) {
+            const site = {
+              name: ent.properties.siteName.getValue(),
+              lat: ent.properties.siteLat.getValue(),
+              lon: ent.properties.siteLon.getValue(),
+              summary: ent.properties.siteSummary.getValue(),
+            };
+            fillLocCard(site, { pinned: false });
+            const x = movement.endPosition.x;
+            const y = movement.endPosition.y;
+            const rect = viewer.scene.canvas.getBoundingClientRect();
+            hoverCard.style.left = Math.min(window.innerWidth - 300, rect.left + x + 16) + 'px';
+            hoverCard.style.top = Math.min(window.innerHeight - 240, rect.top + y + 16) + 'px';
+            document.body.style.cursor = 'pointer';
+          } else {
+            hoverCard.classList.remove('show');
+            document.body.style.cursor = '';
+          }
+        }, Cesium.ScreenSpaceEventType.MOUSE_MOVE);
+
+        handler.setInputAction((click) => {
+          const picked = viewer.scene.pick(click.position);
+          const ent = picked && picked.id;
+          if (ent && ent.properties && ent.properties.isSite && ent.properties.isSite.getValue()) {
+            const site = {
+              name: ent.properties.siteName.getValue(),
+              lat: ent.properties.siteLat.getValue(),
+              lon: ent.properties.siteLon.getValue(),
+              summary: ent.properties.siteSummary.getValue(),
+            };
+            flyToSite(site);
+            fillLocCard(site, { pinned: true });
+          }
+        }, Cesium.ScreenSpaceEventType.LEFT_CLICK);
+
+        const searchInput = document.getElementById('locSearchInput');
+        const searchResults = document.getElementById('locSearchResults');
+        function selectSiteFromSearch(site) {
+          if (!site) return;
+          if (searchInput) searchInput.value = site.name;
+          searchResults?.classList.remove('show');
+          flyToSite(site);
+          fillLocCard(site, { pinned: true });
+        }
+        function renderSearch(q) {
+          if (!searchResults) return;
+          const query = (q || '').trim().toLowerCase();
+          if (!query) {
+            searchResults.classList.remove('show');
+            searchResults.innerHTML = '';
+            return;
+          }
+          const hits = LUNAR_SITES.filter((s, i) => i > 0 && (
+            s.name.toLowerCase().includes(query) ||
+            String(s.lat).includes(query) ||
+            String(s.lon).includes(query) ||
+            (s.summary || '').toLowerCase().includes(query)
+          )).slice(0, 10);
+          if (!hits.length) {
+            searchResults.innerHTML = '<div class="loc-result"><small>No sites matched</small></div>';
+            searchResults.classList.add('show');
+            return;
+          }
+          searchResults.innerHTML = hits.map((s) =>
+            `<div class="loc-result" data-lat="${s.lat}" data-lon="${s.lon}" data-name="${s.name.replace(/"/g, '&quot;')}" data-summary="${(s.summary || '').replace(/"/g, '&quot;')}">
+              ${s.name}<small>${s.lat.toFixed(2)}°, ${s.lon.toFixed(2)}° · ${s.summary || ''}</small>
+            </div>`
+          ).join('');
+          searchResults.classList.add('show');
+          searchResults.querySelectorAll('.loc-result').forEach((el) => {
+            el.addEventListener('click', () => {
+              selectSiteFromSearch({
+                name: el.dataset.name || '',
+                lat: parseFloat(el.dataset.lat),
+                lon: parseFloat(el.dataset.lon),
+                summary: el.dataset.summary || '',
+              });
+            });
+          });
+        }
+        searchInput?.addEventListener('input', () => renderSearch(searchInput.value));
+        searchInput?.addEventListener('focus', () => renderSearch(searchInput.value));
+        searchInput?.addEventListener('keydown', (e) => {
+          if (e.key !== 'Enter') return;
+          const first = searchResults?.querySelector('.loc-result[data-lat]');
+          if (first) {
+            e.preventDefault();
+            first.click();
+          }
+        });
+        document.addEventListener('click', (e) => {
+          if (!e.target.closest('.loc-search-panel')) searchResults?.classList.remove('show');
+        });
+
+        let autoRotateEnabled = false;
+        let userInteracting = false;
+        let lastAutoRotateTs = performance.now();
+        const AUTO_ROTATE_RATE = Cesium.Math.toRadians(1.5);
+        const canvasEl = viewer.scene.canvas;
+        ['mousedown', 'touchstart', 'wheel'].forEach(evt =>
+          canvasEl.addEventListener(evt, () => { userInteracting = true; }, { passive: true })
+        );
+        ['mouseup', 'touchend'].forEach(evt =>
+          window.addEventListener(evt, () => { userInteracting = false; })
+        );
+        viewer.clock.onTick.addEventListener(() => {
+          const now = performance.now();
+          const dt = Math.min((now - lastAutoRotateTs) / 1000, 0.25);
+          lastAutoRotateTs = now;
+          if (!autoRotateEnabled || userInteracting) return;
+          if (viewer.scene.mode === Cesium.SceneMode.SCENE3D) {
+            viewer.scene.camera.rotate(Cesium.Cartesian3.UNIT_Z, -AUTO_ROTATE_RATE * dt);
+          } else {
+            viewer.scene.camera.moveRight(AUTO_ROTATE_RATE * dt * Cesium.Ellipsoid.MOON.maximumRadius);
+          }
+        });
+        document.getElementById('autoRotate').addEventListener('change', (e) => {
+          autoRotateEnabled = e.target.checked;
+          lastAutoRotateTs = performance.now();
+        });
+
+        document.getElementById('showTerrain').addEventListener('change', () => {
+          syncTilesetWithHazards();
+        });
+        document.getElementById('showImagery').addEventListener('change', (e) => {
+          moonGlobe.show = true;
+          if (moonGlobe.imageryLayers) {
+            for (let i = 0; i < moonGlobe.imageryLayers.length; i++) {
+              moonGlobe.imageryLayers.get(i).show = e.target.checked;
+            }
+          }
+        });
+        document.getElementById('enableLighting').addEventListener('change', (e) => {
+          moonGlobe.enableLighting = e.target.checked;
+        });
+
+        document.getElementById('viewMode').addEventListener('change', (e) => {
+          moonGlobe.show = true;
+          if (e.target.value === '3d') {
+            viewer.scene.morphTo3D(0);
+          } else if (e.target.value === 'columbus') {
+            viewer.scene.morphToColumbusView(0);
+          } else {
+            viewer.scene.morphTo2D(0);
+          }
+          syncTilesetWithHazards();
+        });
+
+        ['showRadiation','showMicrometeorites','showDust','showMoonquakes','showTemperature','showSolar','showSep','showCme']
+          .forEach((id) => {
+            document.getElementById(id)?.addEventListener('change', syncVisibilityFromCheckboxes);
+          });
+
+        syncVisibilityFromCheckboxes();
+        syncTilesetWithHazards();
+        if (document.body.classList.contains('embed-mode')) {
+          try {
+            const activeRaw = localStorage.getItem('lipas_hazard_active');
+            if (activeRaw) {
+              const parsed = JSON.parse(activeRaw);
+              if (Array.isArray(parsed) && parsed.length) applyActiveHazardLayers(parsed);
+            }
+          } catch (e) {}
+          syncTilesetWithHazards();
+        }
+
+        const initialView = (window.__LIPAS_CESIUM_VIEW || '3d').toLowerCase();
+        const viewSelect = document.getElementById('viewMode');
+        if (viewSelect && (initialView === 'columbus' || initialView === '2d')) {
+          viewSelect.value = initialView;
+          viewSelect.dispatchEvent(new Event('change'));
+        }
+
+        const isEmbed = document.body.classList.contains('embed-mode');
+        if (viewer.scene.mode === Cesium.SceneMode.SCENE2D) {
+          viewer.camera.flyTo({ destination: MOON_RECT, duration: isEmbed ? 0.5 : 1.5 });
+        } else {
+          const flyAlt = isEmbed ? 4500000 : 3200000;
+          viewer.camera.flyTo({
+            destination: Cesium.Cartesian3.fromDegrees(0, 0, flyAlt, moonEllipsoid),
+            duration: isEmbed ? 0.5 : 2.0
+          });
+        }
+
+        try {
+          if (window.parent && window.parent !== window) {
+            window.parent.postMessage({ type: 'lipas_cesium_ready' }, '*');
+          }
+        } catch (e) {}
+
+        window.viewer = viewer;
+        console.info('[LIPAS] Cesium ready -', Object.keys(hazardLayers).length, 'full-globe hazard layers,', siteEntities.length, 'site markers', token ? '(Ion token present)' : '(Trek globe, no Ion token)');
+
+      } catch(e) {
+        console.warn('Cesium init failed', e);
+        const detail = (e && e.message) ? String(e.message) : 'unknown error';
+        document.getElementById('cesiumContainer').innerHTML =
+          '<div class="globe-fail"><strong>Globe unavailable</strong>Cesium failed to initialize (' + detail.replace(/[<>&]/g, '') + '). Serve this page from the L.I.P.A.S. Flask server (not a static file host), then hard-reload. Ion tiles need CESIUM_ION_TOKEN in .env; the NASA Trek reference globe works without a token once Cesium.js loads.</div>';
+      } finally {
+        setTimeout(hideLoading, 400);
+      }
+    })();
+
+    setTimeout(hideLoading, 12000);
+  </script>
+
+  <script src="js/navbar.js" defer></script>
+</body>
+</html>

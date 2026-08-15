@@ -1,0 +1,14 @@
+{
+  "title": "LIPAS hybrid blend weights",
+  "convention": "ml_blend_weight is how much ML; physics is 1 minus that",
+  "ml_weights": [0.4, 0.05, 0.0, 0.0, 0.0, 0.0],
+  "order": [
+    "solar_activity",
+    "radiation_mSv",
+    "temperature_C",
+    "moonquakes_per_day",
+    "meteor_flux_1e15",
+    "dust_g_cm3"
+  ],
+  "note": "solar uses some ML, most other hazards stay physics"
+}

@@ -1,0 +1,650 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>L.I.P.A.S. - Mission Planner</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=Syne:wght@600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles/theme.css">
+  <link rel="stylesheet" href="styles/main.css">
+  <style>
+    :root {
+      --void: #0b0e13;
+      --ink: #121821;
+      --panel: #171e2a;
+      --line: rgba(140, 170, 200, 0.14);
+      --line-strong: rgba(120, 170, 220, 0.28);
+      --navy: #1a3358;
+      --steel: #6eb6ff;
+      --steel-dim: #3d7ab8;
+      --text: #e6eef8;
+      --muted: #8fa3b8;
+      --dim: #5c7088;
+      --go: #3ecf8e;
+      --caution: #e0b14a;
+      --nogo: #e25b5b;
+      --font-ui: "IBM Plex Sans", system-ui, sans-serif;
+      --font-display: "Syne", "IBM Plex Sans", sans-serif;
+      --ease: cubic-bezier(0.22, 1, 0.36, 1);
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { min-height: 100%; font-family: var(--font-ui); color: var(--text); background: var(--void); }
+    body {
+      background:
+        radial-gradient(ellipse 90% 55% at 8% -8%, rgba(40, 90, 140, 0.32), transparent 55%),
+        radial-gradient(ellipse 60% 45% at 100% 10%, rgba(30, 55, 90, 0.22), transparent 50%),
+        linear-gradient(180deg, #0d121a 0%, #0b0e13 45%, #0a1018 100%);
+      background-attachment: fixed;
+    }
+    body::before {
+      content: "";
+      position: fixed; inset: 0; pointer-events: none; opacity: 0.035; z-index: 0;
+      background-image:
+        linear-gradient(rgba(180, 210, 240, 0.55) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(180, 210, 240, 0.55) 1px, transparent 1px);
+      background-size: 52px 52px;
+      mask-image: radial-gradient(ellipse at 50% 30%, black 15%, transparent 72%);
+    }
+
+    .loading-screen {
+      position: fixed; inset: 0; z-index: 9999;
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      background: #0b0e13; transition: opacity 0.45s var(--ease), visibility 0.45s;
+    }
+    .loading-screen.hidden { opacity: 0; visibility: hidden; pointer-events: none; }
+    .load-ring {
+      width: 52px; height: 52px; border-radius: 50%;
+      border: 2px solid rgba(110, 182, 255, 0.15); border-top-color: var(--steel);
+      animation: spin 0.85s linear infinite; margin-bottom: 18px;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .load-label {
+      font-family: var(--font-display); letter-spacing: 0.18em; font-size: 11px;
+      color: var(--steel); text-transform: uppercase;
+    }
+
+    .shell {
+      position: relative; z-index: 1;
+      max-width: 1680px; margin: 0 auto; padding: 24px 22px 56px;
+    }
+
+    .mast {
+      display: grid; grid-template-columns: 1fr auto; gap: 20px; align-items: end;
+      margin-bottom: 16px; animation: rise 0.65s var(--ease) both;
+    }
+    @keyframes rise {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: none; }
+    }
+    .mast h1 {
+      font-family: var(--font-display); font-size: clamp(1.7rem, 3vw, 2.4rem);
+      font-weight: 800; letter-spacing: -0.02em; line-height: 1.05;
+    }
+    .mast h1 em { font-style: normal; color: var(--steel); }
+    .mast p { margin-top: 8px; color: var(--muted); font-size: 13px; max-width: 52ch; line-height: 1.45; }
+    .mast-meta { text-align: right; font-size: 12px; color: var(--dim); font-variant-numeric: tabular-nums; }
+    .mast-meta strong { display: block; color: var(--steel); font-weight: 600; font-size: 13px; margin-bottom: 4px; }
+
+    #ops-banner {
+      padding: 10px 14px; margin-bottom: 16px; border-left: 3px solid var(--steel-dim);
+      background: linear-gradient(90deg, rgba(26, 51, 88, 0.45), transparent);
+      font-size: 13px; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    #ops-banner[data-kind="go"] { border-left-color: var(--go); background: linear-gradient(90deg, rgba(62, 207, 142, 0.12), transparent); }
+    #ops-banner[data-kind="caution"] { border-left-color: var(--caution); background: linear-gradient(90deg, rgba(224, 177, 74, 0.12), transparent); }
+    #ops-banner[data-kind="nogo"] { border-left-color: var(--nogo); background: linear-gradient(90deg, rgba(226, 91, 91, 0.12), transparent); }
+
+    /* Stretch columns so side panels fill height beside tall middle stack */
+    .ops-grid {
+      display: grid;
+      grid-template-columns: minmax(270px, 300px) minmax(0, 1.45fr) minmax(300px, 360px);
+      gap: 16px;
+      align-items: stretch;
+    }
+    .col {
+      display: flex; flex-direction: column; gap: 16px; min-height: 0;
+    }
+    .col > .panel.grow { flex: 1; }
+
+    .panel {
+      background: linear-gradient(165deg, rgba(28, 37, 51, 0.94), rgba(18, 24, 33, 0.97));
+      border: 1px solid var(--line); padding: 16px; position: relative;
+      overflow: visible;
+    }
+    .panel::after {
+      content: ""; position: absolute; top: 0; left: 0; right: 0; height: 1px;
+      background: linear-gradient(90deg, transparent, rgba(110, 182, 255, 0.35), transparent);
+      pointer-events: none;
+    }
+    .panel-label {
+      font-size: 10px; font-weight: 600; letter-spacing: 0.16em; text-transform: uppercase;
+      color: var(--dim); margin-bottom: 12px;
+    }
+
+    .field { margin-bottom: 10px; }
+    .field label { display: block; font-size: 11px; color: var(--muted); margin-bottom: 4px; letter-spacing: 0.04em; }
+    .field input, .field select {
+      width: 100%; background: var(--ink); border: 1px solid var(--line-strong); color: var(--text);
+      padding: 9px 11px; font-family: var(--font-ui); font-size: 13px; font-variant-numeric: tabular-nums;
+      outline: none; transition: border-color 0.2s, box-shadow 0.2s;
+    }
+    .field input:focus, .field select:focus {
+      border-color: var(--steel); box-shadow: 0 0 0 3px rgba(110, 182, 255, 0.15);
+    }
+    .field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+
+    .preset-row { display: flex; flex-wrap: wrap; gap: 5px; margin: 2px 0 12px; }
+    .preset-chip {
+      background: transparent; border: 1px solid var(--line); color: var(--muted);
+      font-family: var(--font-ui); font-size: 10px; padding: 4px 8px; cursor: pointer;
+      transition: color 0.15s, border-color 0.15s, background 0.15s;
+    }
+    .preset-chip:hover { color: var(--text); border-color: var(--steel-dim); }
+    .preset-chip.active { color: var(--void); background: var(--steel); border-color: var(--steel); font-weight: 600; }
+
+    .btn {
+      width: 100%; border: none; font-family: var(--font-ui); font-weight: 600; font-size: 13px;
+      letter-spacing: 0.04em; padding: 11px 14px; cursor: pointer;
+      transition: transform 0.15s var(--ease), opacity 0.15s;
+    }
+    .btn:disabled { opacity: 0.45; cursor: not-allowed; transform: none !important; }
+    .btn:not(:disabled):hover { transform: translateY(-1px); }
+    .btn-primary { background: linear-gradient(180deg, #5aa8f0, #2f6fad); color: #fff; margin-top: 2px; }
+    .btn-ghost { background: transparent; border: 1px solid var(--line-strong); color: var(--steel); margin-top: 7px; }
+    .btn-pdf { background: var(--navy); color: var(--text); border: 1px solid var(--steel-dim); margin-top: 7px; }
+
+    #compute-pulse { height: 2px; margin-top: 10px; background: var(--line); overflow: hidden; opacity: 0; }
+    #compute-pulse.active { opacity: 1; }
+    #compute-pulse.active::after {
+      content: ""; display: block; height: 100%; width: 40%; background: var(--steel);
+      animation: pulse-scan 1s linear infinite;
+    }
+    @keyframes pulse-scan { from { transform: translateX(-100%); } to { transform: translateX(350%); } }
+
+    .hint { font-size: 11px; color: var(--dim); margin-top: 10px; line-height: 1.4; }
+
+    /* Hazard matrix */
+    .hz-grid {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 8px;
+    }
+    .hz-cell {
+      padding: 10px 10px 9px; background: var(--ink); border: 1px solid var(--line);
+      border-left-width: 3px; min-height: 58px;
+    }
+    .hz-cell.go { border-left-color: var(--go); }
+    .hz-cell.caution { border-left-color: var(--caution); }
+    .hz-cell.nogo { border-left-color: var(--nogo); }
+    .hz-cell .hk { font-size: 10px; color: var(--dim); letter-spacing: 0.08em; text-transform: uppercase; }
+    .hz-cell .hv { margin-top: 4px; font-size: 13px; font-weight: 700; letter-spacing: 0.04em; }
+    .hz-cell .hc {
+      margin-top: 4px; font-size: 10px; font-weight: 600; letter-spacing: 0.05em;
+      text-transform: uppercase; color: var(--dim); font-variant-numeric: tabular-nums;
+    }
+    .hz-cell .hc strong { color: var(--steel); }
+    .hz-cell.go .hv { color: var(--go); }
+    .hz-cell.caution .hv { color: var(--caution); }
+    .hz-cell.nogo .hv { color: var(--nogo); }
+    .equip-sub {
+      margin-top: 12px; display: grid; grid-template-columns: 1fr 1fr; gap: 6px;
+    }
+    .equip-pill {
+      font-size: 10px; padding: 6px 8px; border: 1px solid var(--line); color: var(--muted);
+      display: flex; justify-content: space-between; gap: 6px; align-items: center;
+    }
+    .equip-pill .dot {
+      width: 7px; height: 7px; border-radius: 50%; background: var(--dim); flex-shrink: 0;
+    }
+    .equip-pill.go .dot { background: var(--go); box-shadow: 0 0 8px rgba(62, 207, 142, 0.5); }
+    .equip-pill.caution .dot { background: var(--caution); box-shadow: 0 0 8px rgba(224, 177, 74, 0.45); }
+    .equip-pill.nogo .dot { background: var(--nogo); box-shadow: 0 0 8px rgba(226, 91, 91, 0.45); }
+
+    /* GO dial */
+    .go-block {
+      display: grid; grid-template-columns: 160px 1fr; gap: 16px; align-items: center;
+    }
+    #go-dial {
+      width: 148px; height: 148px; margin: 0 auto; border-radius: 50%;
+      position: relative; display: grid; place-items: center;
+      background:
+        radial-gradient(circle at 50% 45%, rgba(40, 60, 90, 0.55), transparent 62%),
+        conic-gradient(from 200deg, rgba(110,182,255,0.08), rgba(110,182,255,0.35), rgba(110,182,255,0.08));
+      border: 1px solid var(--line-strong);
+      transition: box-shadow 0.45s var(--ease), border-color 0.35s;
+    }
+    #go-dial::before {
+      content: ""; position: absolute; inset: 9px; border-radius: 50%;
+      border: 1px dashed rgba(140, 170, 200, 0.22); animation: spin 40s linear infinite;
+    }
+    #go-dial[data-status="go"] { box-shadow: 0 0 0 1px rgba(62, 207, 142, 0.4), 0 0 36px rgba(62, 207, 142, 0.14); border-color: rgba(62, 207, 142, 0.55); }
+    #go-dial[data-status="caution"] { box-shadow: 0 0 0 1px rgba(224, 177, 74, 0.4), 0 0 36px rgba(224, 177, 74, 0.12); border-color: rgba(224, 177, 74, 0.55); }
+    #go-dial[data-status="nogo"] { box-shadow: 0 0 0 1px rgba(226, 91, 91, 0.45), 0 0 36px rgba(226, 91, 91, 0.14); border-color: rgba(226, 91, 91, 0.55); }
+    .go-inner { text-align: center; position: relative; z-index: 1; }
+    #go-label { font-family: var(--font-display); font-size: 24px; font-weight: 800; letter-spacing: 0.06em; line-height: 1; }
+    #go-dial[data-status="go"] #go-label { color: var(--go); }
+    #go-dial[data-status="caution"] #go-label { color: var(--caution); }
+    #go-dial[data-status="nogo"] #go-label { color: var(--nogo); }
+    #go-score { margin-top: 5px; font-size: 20px; font-weight: 600; font-variant-numeric: tabular-nums; }
+    #go-score::after { content: " / 100"; font-size: 10px; color: var(--dim); font-weight: 400; }
+    .go-copy { min-width: 0; }
+    #go-sub {
+      font-size: 13px; color: var(--muted); line-height: 1.4; margin-bottom: 8px;
+      display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+    }
+    #go-reasons { list-style: none; font-size: 12px; color: var(--muted); }
+    #go-reasons li {
+      padding: 4px 0 4px 10px; border-left: 2px solid var(--line); margin-bottom: 3px;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+
+    .metrics {
+      display: grid; grid-template-columns: repeat(4, 1fr); gap: 1px;
+      background: var(--line); border: 1px solid var(--line);
+    }
+    .metric { background: var(--panel); padding: 12px 10px; min-height: 78px; }
+    .metric .v {
+      font-family: var(--font-display); font-size: 20px; font-weight: 700;
+      font-variant-numeric: tabular-nums; color: var(--steel); letter-spacing: -0.02em;
+    }
+    .metric .u { font-size: 10px; color: var(--dim); margin-top: 3px; letter-spacing: 0.05em; text-transform: uppercase; }
+    .metric .c { font-size: 10px; color: var(--dim); margin-top: 4px; font-weight: 600; }
+    .metric .c strong { color: var(--steel); }
+
+    #window-rail { display: flex; gap: 4px; height: 42px; margin-bottom: 10px; }
+    .rail-seg {
+      background: var(--ink); border: 1px solid var(--line); color: var(--muted); cursor: pointer;
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      font-size: 10px; flex: 1; transition: transform 0.15s, border-color 0.15s;
+      animation: rise 0.45s var(--ease) both;
+    }
+    .rail-seg:hover, .rail-seg.focus { transform: translateY(-2px); border-color: var(--steel); }
+    .rail-seg.go { border-top: 2px solid var(--go); }
+    .rail-seg.caution { border-top: 2px solid var(--caution); }
+    .rail-seg.nogo { border-top: 2px solid var(--nogo); }
+    .rail-rank { font-weight: 700; color: var(--text); font-size: 12px; }
+    .rail-time { color: var(--dim); }
+
+    .window-row, .zone-row {
+      display: grid; grid-template-columns: 26px 1fr auto; gap: 8px; align-items: center;
+      padding: 9px 6px; border-bottom: 1px solid var(--line); width: 100%;
+      text-align: left; background: transparent; border-left: 0; border-right: 0; border-top: 0;
+      color: inherit; font-family: inherit;
+    }
+    .zone-row { cursor: pointer; transition: background 0.15s; }
+    .zone-row:hover { background: rgba(110, 182, 255, 0.06); }
+    .zone-row.query { background: rgba(110, 182, 255, 0.05); }
+    .window-row.focus { background: rgba(110, 182, 255, 0.08); }
+    .wr-rank, .zr-rank { font-family: var(--font-display); font-weight: 700; color: var(--dim); font-size: 13px; }
+    .wr-title, .zr-name { font-size: 13px; font-weight: 600; }
+    .wr-meta, .zr-meta { font-size: 11px; color: var(--dim); margin-top: 2px; line-height: 1.3; }
+    .wr-side, .zr-score { text-align: right; display: flex; flex-direction: column; align-items: flex-end; gap: 3px; }
+    .wr-score, .pct { font-variant-numeric: tabular-nums; font-weight: 700; font-size: 14px; color: var(--steel); }
+
+    .badge {
+      display: inline-block; font-size: 9px; font-weight: 700; letter-spacing: 0.08em;
+      padding: 2px 6px; border: 1px solid currentColor;
+    }
+    .badge.go { color: var(--go); }
+    .badge.caution { color: var(--caution); }
+    .badge.nogo { color: var(--nogo); }
+
+    .chart-box { height: 200px; position: relative; margin-top: 8px; }
+
+    .dose-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; }
+    .dose-cell { padding: 10px; background: var(--ink); border: 1px solid var(--line); }
+    .dose-cell .k { font-size: 10px; color: var(--dim); text-transform: uppercase; letter-spacing: 0.08em; }
+    .dose-cell .d { margin-top: 4px; font-size: 15px; font-weight: 600; font-variant-numeric: tabular-nums; }
+    #dose-risk[data-risk="high"] { color: var(--nogo); }
+    #dose-risk[data-risk="moderate"] { color: var(--caution); }
+    #dose-risk[data-risk="low"], #dose-risk[data-risk="minimal"] { color: var(--go); }
+
+    .meta-foot {
+      margin-top: 12px; font-size: 11px; color: var(--dim);
+      display: flex; justify-content: space-between; gap: 10px; flex-wrap: wrap;
+    }
+    .meta-foot strong { color: var(--muted); font-weight: 500; }
+
+    /* Best base pick hero */
+    .base-pick {
+      position: relative; overflow: hidden; padding: 18px 16px 16px;
+      background:
+        radial-gradient(ellipse 80% 70% at 90% 0%, rgba(110, 182, 255, 0.18), transparent 55%),
+        linear-gradient(160deg, #1a2a40 0%, #121821 70%);
+      border: 1px solid rgba(110, 182, 255, 0.28);
+      animation: rise 0.7s var(--ease) 0.08s both;
+    }
+    .base-pick::before {
+      content: ""; position: absolute; width: 120px; height: 120px; right: -20px; top: -30px;
+      border-radius: 50%; border: 1px solid rgba(110, 182, 255, 0.2);
+      animation: spin 28s linear infinite;
+    }
+    .base-pick::after {
+      content: ""; position: absolute; width: 80px; height: 80px; right: 0; top: -10px;
+      border-radius: 50%; border: 1px dashed rgba(110, 182, 255, 0.25);
+      animation: spin 18s linear infinite reverse;
+    }
+    .bp-eyebrow {
+      font-size: 10px; font-weight: 700; letter-spacing: 0.2em; color: var(--steel);
+      text-transform: uppercase; margin-bottom: 8px; position: relative; z-index: 1;
+    }
+    .bp-eyebrow i {
+      display: inline-block; width: 6px; height: 6px; border-radius: 50%;
+      background: var(--go); margin-right: 6px; vertical-align: 1px;
+      box-shadow: 0 0 10px var(--go); animation: blink 1.6s ease-in-out infinite;
+    }
+    @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.35; } }
+    .bp-name {
+      font-family: var(--font-display); font-size: 1.35rem; font-weight: 800;
+      letter-spacing: -0.02em; line-height: 1.15; position: relative; z-index: 1;
+    }
+    .bp-coords { margin-top: 6px; font-size: 12px; color: var(--muted); font-variant-numeric: tabular-nums; position: relative; z-index: 1; }
+    .bp-score-row {
+      display: flex; align-items: flex-end; justify-content: space-between; gap: 10px;
+      margin-top: 14px; position: relative; z-index: 1;
+    }
+    .bp-big {
+      font-family: var(--font-display); font-size: 42px; font-weight: 800; line-height: 1;
+      color: var(--steel); font-variant-numeric: tabular-nums;
+    }
+    .bp-big span { font-size: 14px; color: var(--dim); font-weight: 500; margin-left: 2px; }
+    .bp-bars { flex: 1; display: flex; flex-direction: column; gap: 5px; }
+    .bp-bar { display: grid; grid-template-columns: 48px 1fr 28px; gap: 6px; align-items: center; font-size: 10px; color: var(--dim); }
+    .bp-bar .track { height: 4px; background: rgba(255,255,255,0.06); overflow: hidden; }
+    .bp-bar .fill { height: 100%; background: linear-gradient(90deg, var(--steel-dim), var(--steel)); width: 0; transition: width 0.7s var(--ease); }
+    .bp-why { margin-top: 12px; display: flex; flex-wrap: wrap; gap: 5px; position: relative; z-index: 1; }
+    .bp-chip {
+      font-size: 10px; padding: 4px 8px; border: 1px solid rgba(110, 182, 255, 0.25);
+      color: var(--muted); background: rgba(110, 182, 255, 0.06);
+    }
+    .bp-use {
+      margin-top: 12px; width: 100%; position: relative; z-index: 1;
+    }
+
+    #zone-list { flex: 1; overflow: auto; max-height: none; }
+    .col-right .panel.grow { display: flex; flex-direction: column; }
+    .empty-note { color: var(--dim); font-size: 13px; padding: 10px 0; }
+
+    #results-shell { opacity: 0.55; transition: opacity 0.35s; }
+    #results-shell.ready { opacity: 1; }
+
+    .model-pill {
+      display: inline-flex; align-items: center; gap: 6px; font-size: 10px;
+      padding: 3px 8px; border: 1px solid var(--line); color: var(--muted); margin-top: 8px;
+    }
+    .model-pill.on { border-color: rgba(62, 207, 142, 0.4); color: var(--go); }
+    .model-pill .dot { width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+
+    .ml-overview {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 4px;
+    }
+    .ml-chip {
+      background: var(--ink); border: 1px solid var(--line); padding: 10px 10px 9px;
+      min-height: 64px;
+    }
+    .ml-chip .mk {
+      font-size: 10px; color: var(--dim); letter-spacing: 0.08em; text-transform: uppercase; margin-bottom: 4px;
+    }
+    .ml-chip .mv {
+      font-size: 14px; font-weight: 600; color: var(--text); font-variant-numeric: tabular-nums; line-height: 1.25;
+    }
+    .ml-chip .mm { font-size: 11px; color: var(--muted); margin-top: 4px; line-height: 1.35; }
+    .ml-chip.ok { border-left: 3px solid var(--go); }
+    .ml-chip.warn { border-left: 3px solid var(--caution); }
+    .ml-chip.off { border-left: 3px solid var(--dim); }
+
+    @media (max-width: 1180px) {
+      .ops-grid { grid-template-columns: 1fr; }
+      .go-block { grid-template-columns: 1fr; }
+      .metrics { grid-template-columns: repeat(2, 1fr); }
+      .dose-grid { grid-template-columns: 1fr 1fr; }
+      .brand-mark { position: static; margin-right: auto; }
+      /* topnav responsive rules live in styles/main.css */
+      .mast { grid-template-columns: 1fr; }
+      .mast-meta { text-align: left; }
+      #ops-banner { white-space: normal; }
+    }
+  </style>
+</head>
+<body>
+  <div class="loading-screen" id="loadingScreen">
+    <div class="load-ring"></div>
+    <div class="load-label">Mission planner</div>
+  </div>
+
+  <div id="lipas-topnav" data-active="mission"></div>
+
+  <div class="shell">
+    <header class="mast">
+      <div>
+        <h1>Mission <em>Planner</em></h1>
+        <p>Real hybrid ML + physics EVA windows, solar-storm &amp; equipment hazards, and live base-zone ranking for any selenographic coordinate.</p>
+      </div>
+      <div class="mast-meta">
+        <strong id="utc-clock">-</strong>
+        Active site<br>
+        <span id="active-site">Select coordinates</span>
+      </div>
+    </header>
+
+    <div id="ops-banner" data-kind="info">Enter site coordinates and EVA duration, then run a plan.</div>
+
+    <div class="ops-grid">
+      
+      <div class="col col-left">
+        <aside class="panel" aria-label="Mission inputs">
+          <div class="panel-label">Mission inputs</div>
+          <div class="field">
+            <label for="inp-site">Site callsign</label>
+            <input id="inp-site" type="text" placeholder="e.g. Shackleton Rim A" autocomplete="off">
+          </div>
+          <div class="panel-label" style="margin-bottom:6px">Quick sites</div>
+          <div class="preset-row" id="preset-row"></div>
+          <div class="field-row">
+            <div class="field">
+              <label for="inp-lat">Latitude (°)</label>
+              <input id="inp-lat" type="number" step="any" min="-90" max="90" value="-89.68">
+            </div>
+            <div class="field">
+              <label for="inp-lon">Longitude (°)</label>
+              <input id="inp-lon" type="number" step="any" min="-180" max="180" value="166.15">
+            </div>
+          </div>
+          <div class="field-row">
+            <div class="field">
+              <label for="inp-eva-dur">EVA duration (h)</label>
+              <input id="inp-eva-dur" type="number" min="1" max="12" value="4">
+            </div>
+            <div class="field">
+              <label for="inp-eva-day">EVA / day (h)</label>
+              <input id="inp-eva-day" type="number" min="0" max="12" step="0.5" value="4">
+            </div>
+          </div>
+          <div class="field-row">
+            <div class="field">
+              <label for="inp-mission-days">Mission days</label>
+              <input id="inp-mission-days" type="number" min="1" max="180" value="14">
+            </div>
+            <div class="field">
+              <label for="inp-risk">Risk posture</label>
+              <select id="inp-risk">
+                <option value="conservative">Conservative</option>
+                <option value="nominal" selected>Nominal</option>
+                <option value="aggressive">Aggressive</option>
+              </select>
+            </div>
+          </div>
+          <button class="btn btn-primary" id="btn-run" type="button">Run mission plan</button>
+          <button class="btn btn-ghost" id="btn-eva-check" type="button">Is EVA safe now?</button>
+          <button class="btn btn-pdf" id="btn-pdf" type="button" disabled>Download PDF report</button>
+          <div id="compute-pulse" aria-hidden="true"></div>
+          <div class="model-pill" id="model-pill"><span class="dot"></span><span id="model-pill-text">Model idle</span></div>
+          <div class="panel-label" style="margin-top:16px;margin-bottom:8px">Quick ML overview</div>
+          <div class="ml-overview" id="ml-overview">
+            <div class="ml-chip off" id="ml-loaded"><div class="mk">Model</div><div class="mv">Checking…</div><div class="mm">LSTM / hybrid</div></div>
+            <div class="ml-chip off" id="ml-source"><div class="mk">Source</div><div class="mv">-</div><div class="mm">Live stack</div></div>
+            <div class="ml-chip off" id="ml-plaus"><div class="mk">Plausibility</div><div class="mv">-</div><div class="mm">Physics ↔ ML</div></div>
+            <div class="ml-chip off" id="ml-horizon"><div class="mk">Forecast</div><div class="mv">-</div><div class="mm">Hours ready</div></div>
+          </div>
+        </aside>
+
+        <section class="panel grow" aria-label="Hazard matrix">
+          <div class="panel-label">Hazard matrix - now</div>
+          <div class="hz-grid" id="hz-grid">
+            <div class="hz-cell" data-k="radiation"><div class="hk">Radiation</div><div class="hv">-</div><div class="hc">Conf -</div></div>
+            <div class="hz-cell" data-k="solar_storm"><div class="hk">Solar storm</div><div class="hv">-</div><div class="hc">Conf -</div></div>
+            <div class="hz-cell" data-k="dust"><div class="hk">Dust</div><div class="hv">-</div><div class="hc">Conf -</div></div>
+            <div class="hz-cell" data-k="seismic"><div class="hk">Seismic</div><div class="hv">-</div><div class="hc">Conf -</div></div>
+            <div class="hz-cell" data-k="temperature"><div class="hk">Thermal</div><div class="hv">-</div><div class="hc">Conf -</div></div>
+            <div class="hz-cell" data-k="meteor"><div class="hk">Meteor</div><div class="hv">-</div><div class="hc">Conf -</div></div>
+            <div class="hz-cell" data-k="equipment"><div class="hk">Equipment</div><div class="hv">-</div><div class="hc">Conf -</div></div>
+            <div class="hz-cell" data-k="site_base"><div class="hk">Base fit</div><div class="hv">-</div><div class="hc">Conf -</div></div>
+          </div>
+          <div class="panel-label" style="margin-top:16px;margin-bottom:8px">Equipment stress</div>
+          <div class="equip-sub" id="equip-sub">
+            <div class="equip-pill" data-k="equip_abrasion"><span>Abrasion / seals</span><span class="dot"></span></div>
+            <div class="equip-pill" data-k="equip_thermal"><span>Thermal cycling</span><span class="dot"></span></div>
+            <div class="equip-pill" data-k="equip_structure"><span>Structure / quake</span><span class="dot"></span></div>
+            <div class="equip-pill" data-k="equip_impact"><span>Impact flux</span><span class="dot"></span></div>
+          </div>
+        </section>
+      </div>
+
+      
+      <main class="col col-center" id="results-shell">
+        <section class="panel">
+          <div class="panel-label">EVA status - now</div>
+          <div class="go-block">
+            <div id="go-dial" data-status="caution" aria-live="polite">
+              <div class="go-inner">
+                <div id="go-label">-</div>
+                <div id="go-score">-</div>
+              </div>
+            </div>
+            <div class="go-copy">
+              <div id="go-sub">Awaiting model…</div>
+              <ul id="go-reasons"></ul>
+            </div>
+          </div>
+        </section>
+
+        <section class="panel">
+          <div class="panel-label">Surface conditions</div>
+          <div class="metrics">
+            <div class="metric"><div class="v" id="m-rad">-</div><div class="u">Rad mSv/h</div><div class="c" id="m-rad-c">Conf -</div></div>
+            <div class="metric"><div class="v" id="m-temp">-</div><div class="u">Temp °C</div><div class="c" id="m-temp-c">Conf -</div></div>
+            <div class="metric"><div class="v" id="m-dust">-</div><div class="u">Dust g/cm³</div><div class="c" id="m-dust-c">Conf -</div></div>
+            <div class="metric"><div class="v" id="m-solar">-</div><div class="u">Solar idx</div><div class="c" id="m-solar-c">Conf -</div></div>
+            <div class="metric"><div class="v" id="m-quake">-</div><div class="u">Quakes / day</div><div class="c" id="m-quake-c">Conf -</div></div>
+            <div class="metric"><div class="v" id="m-meteor">-</div><div class="u">Meteor idx</div><div class="c" id="m-meteor-c">Conf -</div></div>
+            <div class="metric"><div class="v" id="m-illum">-</div><div class="u">Illum %</div><div class="c" id="m-illum-c">Conf -</div></div>
+            <div class="metric"><div class="v" id="m-storm">-</div><div class="u">Storm</div><div class="c" id="m-storm-c">Conf -</div></div>
+          </div>
+        </section>
+
+        <section class="panel">
+          <div class="panel-label">Best EVA windows - next 24 h</div>
+          <div id="window-rail" aria-label="EVA window timeline"></div>
+          <div id="window-list"></div>
+          <div class="panel-label" style="margin-top:16px;margin-bottom:8px">Landing ops windows - hazard quiet (2 h)</div>
+          <p class="hint" style="margin-top:0;margin-bottom:8px">Surface descent / landing-ops quiet bands from radiation, storm, and thermal - not orbital Δv.</p>
+          <div id="landing-window-list"></div>
+          <div class="chart-box">
+            <canvas id="hazard-chart" aria-label="24-hour hazard chart"></canvas>
+          </div>
+        </section>
+
+        <section class="panel">
+          <div class="panel-label">Crew dose estimate</div>
+          <div class="dose-grid">
+            <div class="dose-cell"><div class="k">Total mission</div><div class="d" id="dose-total">-</div></div>
+            <div class="dose-cell"><div class="k">Risk band</div><div class="d" id="dose-risk">-</div></div>
+            <div class="dose-cell"><div class="k">EVA share</div><div class="d" id="dose-eva">-</div></div>
+            <div class="dose-cell"><div class="k">Habitat share</div><div class="d" id="dose-hab">-</div></div>
+            <div class="dose-cell"><div class="k">Career male used</div><div class="d" id="dose-male">-</div></div>
+            <div class="dose-cell"><div class="k">Career female used</div><div class="d" id="dose-female">-</div></div>
+          </div>
+          <div class="meta-foot">
+            <span>Model: <strong id="model-source">-</strong></span>
+            <span>Generated: <strong id="plan-generated">-</strong></span>
+          </div>
+        </section>
+      </main>
+
+      
+      <div class="col col-right">
+        <section class="base-pick" id="base-pick" aria-label="Best base zone now">
+          <div class="bp-eyebrow"><i></i>Best base zone · now</div>
+          <div class="bp-name" id="bp-name">Computing…</div>
+          <div class="bp-coords" id="bp-coords">-</div>
+          <div class="bp-score-row">
+            <div class="bp-big" id="bp-score">-<span>%</span></div>
+            <div class="bp-bars">
+              <div class="bp-bar"><span>Power</span><div class="track"><div class="fill" id="bp-power"></div></div><span id="bp-power-n">-</span></div>
+              <div class="bp-bar"><span>Habitat</span><div class="track"><div class="fill" id="bp-hab"></div></div><span id="bp-hab-n">-</span></div>
+              <div class="bp-bar"><span>Comms</span><div class="track"><div class="fill" id="bp-comms"></div></div><span id="bp-comms-n">-</span></div>
+            </div>
+          </div>
+          <div class="bp-why" id="bp-why"></div>
+          <div class="hint" id="bp-conf" style="margin-top:10px;margin-bottom:0">Confidence -</div>
+          <button class="btn btn-primary bp-use" id="btn-use-base" type="button">Plan EVA at this base</button>
+        </section>
+
+        <aside class="panel grow" aria-label="Landing zones">
+          <div class="panel-label">Ranked landing / base zones</div>
+          <p class="hint" style="margin-top:0;margin-bottom:10px">Scored for EVA safety + base suitability. Your coords are included. Click to replan.</p>
+          <div id="zone-list"></div>
+        </aside>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <script src="mission_planner.js"></script>
+  <script>
+    (async function loadMlOverview() {
+      const setChip = (id, cls, value, meta) => {
+        const el = document.getElementById(id);
+        if (!el) return;
+        el.className = `ml-chip ${cls}`;
+        const mv = el.querySelector('.mv');
+        const mm = el.querySelector('.mm');
+        if (mv) mv.textContent = value;
+        if (mm && meta) mm.textContent = meta;
+      };
+      try {
+        const [st, real, data] = await Promise.all([
+          fetch('/status').then((r) => r.ok ? r.json() : {}),
+          fetch('/api/real-data-status').then((r) => r.ok ? r.json() : {}),
+          fetch('/data?lat=-89.68&lon=166.15&hours=48').then((r) => r.ok ? r.json() : {}),
+        ]);
+        const loaded = !!(st.model_loaded || real.available);
+        setChip('ml-loaded', loaded ? 'ok' : 'warn', loaded ? 'Loaded' : 'Physics only',
+          loaded ? 'Trained weights online' : (real.message || 'Using physics estimates'));
+        const src = st.source || st.mode || (loaded ? 'ml+physics' : 'physics');
+        setChip('ml-source', loaded ? 'ok' : 'warn', String(src).slice(0, 22),
+          st.temporal_shape ? `Shape ${JSON.stringify(st.temporal_shape)}` : 'Hybrid stack');
+        let plaus = st.plausibility ?? data?.plausibility ?? data?.radiation_cache?.plausibility;
+        if (plaus == null && data?.radiation_cache?.hourly?.[0]?.plausibility != null) {
+          plaus = data.radiation_cache.hourly[0].plausibility;
+        }
+        if (plaus != null && Number.isFinite(Number(plaus))) {
+          const p = Number(plaus);
+          setChip('ml-plaus', p >= 0.7 ? 'ok' : p >= 0.55 ? 'warn' : 'off',
+            p <= 1 ? `${(p * 100).toFixed(0)}%` : p.toFixed(2), 'Physics ↔ ML agreement');
+        } else {
+          setChip('ml-plaus', 'warn', 'n/a', 'Run a plan for live score');
+        }
+        const hours = data?.radiation_cache?.hourly?.length || st.forecast_hours || 48;
+        setChip('ml-horizon', hours >= 24 ? 'ok' : 'warn', `${hours} h`, 'Series available for EVA windows');
+      } catch (e) {
+        setChip('ml-loaded', 'off', 'Offline', 'Backend unreachable');
+        setChip('ml-source', 'off', '-', 'Start server.py');
+        setChip('ml-plaus', 'off', '-', '');
+        setChip('ml-horizon', 'off', '-', '');
+      }
+    })();
+  </script>
+  <script src="js/navbar.js" defer></script>
+</body>
+</html>
