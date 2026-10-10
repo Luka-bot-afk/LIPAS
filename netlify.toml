@@ -1,0 +1,7 @@
+# Static site. POST /api/* is not available here (Netlify returns 501).
+# Mission Planner + Luna fall back to in-browser physics / local answers.
+# Full live ML: run `python server.py` locally, or host Flask and set:
+#   <meta name="lipas-api-base" content="https://your-api.onrender.com">
+
+[build]
+  publish = "."

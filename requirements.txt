@@ -1,0 +1,12 @@
+numpy
+pandas
+requests
+scikit-learn
+tensorflow>=2.21.0,<2.22.0
+flask
+flask-cors
+matplotlib
+python-dotenv
+reportlab
+beautifulsoup4
+lxml

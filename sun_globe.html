@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>L.I.P.A.S. Mercury · Sun</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=Syne:wght@600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles/theme.css">
+  <link rel="stylesheet" href="styles/main.css">
+  <link rel="stylesheet" href="styles/mercury.css?v=7">
+  <link rel="stylesheet" href="styles/globe-page.css?v=2">
+  <style>
+    body {
+      --steel: #f0a03c;
+      --steel-dim: #c47a20;
+      --steel-glow: rgba(240, 160, 60, 0.22);
+      --globe-accent-rgb: 240, 160, 60;
+    }
+  </style>
+  <link rel="stylesheet" href="https://unpkg.com/cesium@1.130/Build/Cesium/Widgets/widgets.css">
+</head>
+<body data-app="mercury" class="mercury-mode sun-globe">
+  <div class="loading-screen" id="loadingScreen">
+    <div class="load-ring"></div>
+    <div class="load-label">Loading Sun Globe</div>
+  </div>
+
+  <div id="lipas-topnav" data-active="sun"></div>
+
+  <div class="globe-tools" id="globeTools">
+    <div class="loc-search-panel" id="locSearchPanel">
+      <div class="control-title">Find location</div>
+      <input type="search" id="locSearchInput" placeholder="Search active regions…" autocomplete="off">
+      <div id="locSearchResults"></div>
+    </div>
+
+    <button type="button" class="globe-options-toggle" id="globeOptionsOpen">Open options</button>
+
+    <div class="map-controls" id="mapControls">
+    <div class="control-panel">
+      <div class="control-title">View Options</div>
+      <div class="control-item">
+        <input type="checkbox" id="showTerrain">
+        <label for="showTerrain">Terrain</label>
+      </div>
+      <div class="control-item">
+        <input type="checkbox" id="showImagery" checked>
+        <label for="showImagery">Reference Globe</label>
+      </div>
+      <div class="control-item">
+        <input type="checkbox" id="autoRotate">
+        <label for="autoRotate">Auto-Rotate</label>
+      </div>
+      <div class="control-item">
+        <input type="checkbox" id="showLocations" checked>
+        <label for="showLocations">Planet markers</label>
+      </div>
+    </div>
+
+    <div class="control-panel" id="hazardLayerPanel">
+      <div class="control-title">Solar layers</div>
+      <div class="control-item">
+        <input type="checkbox" id="showSunspots" checked>
+        <label for="showSunspots">Sunspots</label>
+      </div>
+      <div class="control-item">
+        <input type="checkbox" id="showFlares">
+        <label for="showFlares">Flares</label>
+      </div>
+      <div class="control-item">
+        <input type="checkbox" id="showCme">
+        <label for="showCme">CME</label>
+      </div>
+      <div class="control-item">
+        <input type="checkbox" id="showSep">
+        <label for="showSep">SEP</label>
+      </div>
+    </div>
+
+    <div class="control-panel" id="viewModePanel">
+      <div class="control-title">View Mode</div>
+      <div class="control-item">
+        <select id="viewMode">
+          <option value="3d">3D Globe</option>
+          <option value="2d">2D Map</option>
+          <option value="columbus">Columbus View</option>
+        </select>
+      </div>
+    </div>
+
+    <button type="button" class="globe-options-close" id="globeOptionsClose">Close option selection &amp; view globe</button>
+    </div>
+  </div>
+
+  <div id="locHoverCard">
+    <h4 id="locHoverName">-</h4>
+    <div class="coords" id="locHoverCoords">-</div>
+    <div class="hov-status go" id="locHoverStatus"><span class="dot"></span><span id="locHoverStatusText">GO</span></div>
+    <div class="summary" id="locHoverSummary">-</div>
+    <div class="hov-hazards" id="locHoverHazards"></div>
+    <div class="hov-meta">
+      <div>Earth link<strong id="locHoverLink">-</strong></div>
+    </div>
+    <div class="loc-actions">
+      <a class="loc-dash-btn" id="locDashBtn" href="index.html">View in dashboard</a>
+      <button type="button" class="loc-close-btn" id="locCloseBtn">Close</button>
+    </div>
+  </div>
+
+  <div id="cesiumContainer"></div>
+
+  <div class="legend-panel" id="legendPanel">
+    <div class="legend-title">Solar layers</div>
+    <div class="legend-item"><div class="legend-color sunspots"></div><span>Sunspots (NOAA ARs)</span></div>
+    <div class="legend-item"><div class="legend-color flares"></div><span>Flares</span></div>
+    <div class="legend-item"><div class="legend-color cme"></div><span>CME</span></div>
+    <div class="legend-item"><div class="legend-color sep"></div><span>SEP</span></div>
+    <div class="legend-item" style="margin-top:6px;font-size:11px;opacity:.75;">
+      <span>Lon 0 faces Earth · rotate to see other planets</span>
+    </div>
+  </div>
+
+  <div class="globe-timebar" id="globeTimebar">
+    <div class="timebar-head">
+      <span class="timebar-kicker">Next 24 hours</span>
+      <strong id="globeHourLabel">Now</strong>
+    </div>
+    <input type="range" id="globeHourSlider" min="0" max="24" step="1" value="0">
+    <div class="timebar-ticks">
+      <span>Now</span><span>+6h</span><span>+12h</span><span>+18h</span><span>+24h</span>
+    </div>
+    <div class="timebar-meta" id="globeHourMeta"></div>
+  </div>
+
+  <script src="js/lipas-api.js"></script>
+  <script src="js/hazard_grid.js?v=4"></script>
+  <script src="js/globe_timebar.js?v=1"></script>
+  <script src="https://unpkg.com/cesium@1.130/Build/Cesium/Cesium.js"></script>
+  <script src="js/cesium_body_globe.js?v=14"></script>
+  <script>
+    LipasCesiumGlobe.start({
+      body: "sun",
+      radiusMeters: 695700000,
+      baseColor: "#c87820",
+      markerColor: "#f0a03c",
+      imageryKind: "solar",
+      maxLevel: 4,
+      sitesUrl: "/api/solar/disk",
+      sitesListKey: "spots",
+      dashboardBase: "index.html",
+      fallbackSites: [],
+    });
+  </script>
+  <script src="js/navbar.js?v=2" defer></script>
+</body>
+</html>

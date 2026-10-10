@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>L.I.P.A.S. Mercury · Globe</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=Syne:wght@600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles/theme.css">
+  <link rel="stylesheet" href="styles/main.css">
+  <link rel="stylesheet" href="styles/mercury.css?v=7">
+  <link rel="stylesheet" href="styles/globe-page.css?v=2">
+  <style>
+    body {
+      --steel: #e07a3d;
+      --steel-dim: #c45d2c;
+      --steel-glow: rgba(224, 122, 61, 0.22);
+      --globe-accent-rgb: 224, 122, 61;
+    }
+  </style>
+  <link rel="stylesheet" href="https://unpkg.com/cesium@1.130/Build/Cesium/Widgets/widgets.css">
+</head>
+<body data-app="mercury" class="mercury-mode">
+  <div class="loading-screen" id="loadingScreen">
+    <div class="load-ring"></div>
+    <div class="load-label">Loading Mercury Globe</div>
+  </div>
+
+  <div id="lipas-topnav" data-active="globe"></div>
+
+  <div class="globe-tools" id="globeTools">
+    <div class="loc-search-panel" id="locSearchPanel">
+      <div class="control-title">Find location</div>
+      <input type="search" id="locSearchInput" placeholder="Search Mercury sites…" autocomplete="off">
+      <div id="locSearchResults"></div>
+    </div>
+
+    <button type="button" class="globe-options-toggle" id="globeOptionsOpen">Open options</button>
+
+    <div class="map-controls" id="mapControls">
+    <div class="control-panel">
+      <div class="control-title">View Options</div>
+      <div class="control-item">
+        <input type="checkbox" id="showTerrain" checked>
+        <label for="showTerrain">Terrain</label>
+      </div>
+      <div class="control-item">
+        <input type="checkbox" id="showImagery" checked>
+        <label for="showImagery">Reference Globe</label>
+      </div>
+      <div class="control-item">
+        <input type="checkbox" id="enableLighting" checked>
+        <label for="enableLighting">Lighting</label>
+      </div>
+      <div class="control-item">
+        <input type="checkbox" id="autoRotate">
+        <label for="autoRotate">Auto-Rotate</label>
+      </div>
+      <div class="control-item">
+        <input type="checkbox" id="showLocations" checked>
+        <label for="showLocations">Site markers</label>
+      </div>
+    </div>
+
+    <div class="control-panel" id="hazardLayerPanel">
+      <div class="control-title">Hazard Layers</div>
+      <div class="control-item">
+        <input type="checkbox" id="showRadiation">
+        <label for="showRadiation">Radiation</label>
+      </div>
+      <div class="control-item">
+        <input type="checkbox" id="showSolar" checked>
+        <label for="showSolar">Solar</label>
+      </div>
+      <div class="control-item">
+        <input type="checkbox" id="showSep">
+        <label for="showSep">SEP</label>
+      </div>
+      <div class="control-item">
+        <input type="checkbox" id="showCme">
+        <label for="showCme">CME</label>
+      </div>
+      <div class="control-item">
+        <input type="checkbox" id="showTemperature">
+        <label for="showTemperature">Temperature</label>
+      </div>
+      <div class="control-item">
+        <input type="checkbox" id="showStorm">
+        <label for="showStorm">Storm / IMF</label>
+      </div>
+    </div>
+
+    <div class="control-panel" id="viewModePanel">
+      <div class="control-title">View Mode</div>
+      <div class="control-item">
+        <select id="viewMode">
+          <option value="3d">3D Globe</option>
+          <option value="2d">2D Map</option>
+          <option value="columbus">Columbus View</option>
+        </select>
+      </div>
+    </div>
+
+    <button type="button" class="globe-options-close" id="globeOptionsClose">Close option selection &amp; view globe</button>
+    </div>
+  </div>
+
+  <div id="locHoverCard">
+    <h4 id="locHoverName">-</h4>
+    <div class="coords" id="locHoverCoords">-</div>
+    <div class="hov-status go" id="locHoverStatus"><span class="dot"></span><span id="locHoverStatusText">GO</span></div>
+    <div class="summary" id="locHoverSummary">-</div>
+    <div class="hov-hazards" id="locHoverHazards"></div>
+    <div class="hov-meta">
+      <div>Earth link<strong id="locHoverLink">-</strong></div>
+    </div>
+    <div class="loc-actions">
+      <a class="loc-dash-btn" id="locDashBtn" href="index.html">View in dashboard</a>
+      <button type="button" class="loc-close-btn" id="locCloseBtn">Close</button>
+    </div>
+  </div>
+
+  <div id="cesiumContainer"></div>
+
+  <div class="legend-panel" id="legendPanel">
+    <div class="legend-title">Mercury hazards</div>
+    <div class="legend-item"><div class="legend-color radiation"></div><span>Radiation</span></div>
+    <div class="legend-item"><div class="legend-color solar"></div><span>Solar (dayside)</span></div>
+    <div class="legend-item"><div class="legend-color sep"></div><span>SEP</span></div>
+    <div class="legend-item"><div class="legend-color cme"></div><span>CME</span></div>
+    <div class="legend-item"><div class="legend-color temperature"></div><span>Temperature</span></div>
+    <div class="legend-item"><div class="legend-color storm"></div><span>Storm / IMF</span></div>
+    <div class="legend-item" style="margin-top:6px;font-size:11px;opacity:.75;">
+      <span>Layers cover the whole globe (dayside, nightside, cusps)</span>
+    </div>
+  </div>
+
+  <div class="globe-timebar" id="globeTimebar">
+    <div class="timebar-head">
+      <span class="timebar-kicker">Next 24 hours</span>
+      <strong id="globeHourLabel">Now</strong>
+    </div>
+    <input type="range" id="globeHourSlider" min="0" max="24" step="1" value="0">
+    <div class="timebar-ticks">
+      <span>Now</span><span>+6h</span><span>+12h</span><span>+18h</span><span>+24h</span>
+    </div>
+    <div class="timebar-meta" id="globeHourMeta"></div>
+  </div>
+
+  <script src="js/lipas-api.js"></script>
+  <script src="js/hazard_grid.js?v=5"></script>
+  <script src="js/globe_timebar.js?v=1"></script>
+  <script src="https://unpkg.com/cesium@1.130/Build/Cesium/Cesium.js"></script>
+  <script src="js/cesium_body_globe.js?v=15"></script>
+  <script>
+    LipasCesiumGlobe.start({
+      body: "mercury",
+      radiusMeters: 2439700,
+      baseColor: "#8a7a68",
+      markerColor: "#e07a3d",
+      imageryKind: "trek",
+      imageryUrl: "/api/trek/Mercury/EQ/Mercury_MESSENGER_MDIS_Basemap_EnhancedColor_Mosaic_Global_665m/1.0.0/default/default028mm/{z}/{y}/{x}.jpg",
+      hillshadeUrl: "/api/trek/Mercury/EQ/Mercury_Messenger_USGS_DEM_665m_v2_Hillshade/1.0.0/default/default028mm/{z}/{y}/{x}.png",
+      imageryCredit: "NASA MESSENGER MDIS Enhanced Color + USGS MLA hillshade (Trek)",
+      maxLevel: 6,
+      sitesUrl: "/api/mercury/sites",
+      sitesListKey: "sites",
+      dashboardBase: "index.html",
+    });
+  </script>
+  <script src="js/navbar.js?v=2" defer></script>
+</body>
+</html>
