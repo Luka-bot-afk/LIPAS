@@ -10,4 +10,4 @@ Daily numerical tables that previously appeared as Appendices A, B, D, and E of 
 **Code repository:** https://github.com/Luka-bot-afk/LIPAS  
 **This folder:** https://github.com/Luka-bot-afk/LIPAS/tree/main/papers/appendix_numerical_tables
 
-For reproduction commands, see the manuscript Appendix (Code repository and reproduction) and `scripts/run_14day_flagship_study.py` in the repository root.
+For reproduction commands, see manuscript **Appendix E** (Code repository and reproduction instructions) and `scripts/run_14day_flagship_study.py` in the repository root. Qualitative scoring rules are in Appendix B; quantitative RMSE / skill rules are in Appendix C.
