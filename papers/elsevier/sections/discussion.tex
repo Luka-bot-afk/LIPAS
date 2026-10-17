@@ -1,0 +1,32 @@
+\section{Discussion}
+\label{sec:discussion}
+
+\subsection{Cross-experiment reading}
+\label{sec:rq}
+
+\paragraph{RQ1 (development).}
+A channel-specific hybrid approach was more appropriate than applying machine learning uniformly. Physics-tied channels stay on shared paths; learned corrections help where drivers add information, especially solar activity, not radiation.
+
+\paragraph{RQ2 (usability).}
+The unified dashboard improved how information is presented for planning, but this study did not show that LIPAS is safer than existing agency pathways.
+
+\paragraph{RQ3 (accuracy).}
+Solar RMSE is lower in both windows. Radiation is not: Window~A hybrid 0.119 versus replica 0.102; quiet Window~B 0.0188 versus 0.00266. Temperature, moonquakes, and dust stay physics-aligned. Micrometeorite skill reflects the shower-timing term only.
+
+Mission simulation: LIPAS issued caution earlier than the GOES-only path by using upstream drivers; the combined NASA path still produced the earlier hard no-go. Treat LIPAS as consultative decision support alongside agency products.
+
+Ablation: setting solar input to its Window~A mean lowered solar RMSE and raised radiation RMSE in that quiet interval. This is sensitivity, not evidence that live solar data are generally harmful.
+
+\subsection{Why radiation is worse, and why Window~B looks worse relatively}
+\label{sec:why-rad}
+
+The absence of improvement in temperature, moonquakes, and dust is a consequence of design rather than necessarily a weakness: those channels were deliberately physics-led. The clearest evidence for additional learned information came from the modest solar-activity reductions rather than any radiation win over the replica.
+
+Window contrast matters. Window~A is night-dominant with higher absolute radiation labels; the hybrid still trails the replica, but absolute RMSEs are of similar order (0.119 versus 0.102). Window~B is quiet dayside: absolute doses collapse, the replica stays close to the quiet path, and the small radiation blend ($0.05$) plus low-biased ML corrections inflate relative error (0.0188 versus 0.00266). Hybrid beats raw ML-only radiation ($\sim$0.068 in Window~B) but remains worse than physics/replica. This is a quiet-regime radiation-channel limit, not evidence that LIPAS is broken overall---but it must be reported honestly and improved before operational claims.
+
+What could be made better: denser OMNI/DONKI/SWPC sampling across active intervals, calibrated uncertainty on the radiation blend, storm-period holdouts, and eventual replacement of proxy labels with Artemis-era surface measurements.
+
+\subsection{Limitations}
+\label{sec:limits}
+
+Quantitative targets use public observations, physical formulations, catalogs, and proxies rather than continuous co-located lunar-surface truth. Agency comparisons are independent public-method reconstructions (except the available MEM~3 engineering-model export), not certified operational NASA/NOAA software. Combining physics and machine learning is not itself new \citep{karpatne2017,willard2022,camporeale2019}; LIPAS's contribution is hazard-specific weighting and unified decision support under incomplete observations.
