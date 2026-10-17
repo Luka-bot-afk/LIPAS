@@ -1,12 +1,12 @@
 \documentclass[preprint,12pt,authoryear]{elsarticle}
 
-% Advances in Space Research -- Elsevier elsarticle preprint workflow.
-% Compile on Overleaf or locally with: pdflatex -> bibtex -> pdflatex -> pdflatex
+% Advances in Space Research preprint using Elsevier elsarticle.
+% Overleaf: set main document to main.tex, compile pdfLaTeX + BibTeX + pdfLaTeX x2.
 
 \usepackage[T1]{fontenc}
 \usepackage[utf8]{inputenc}
 \usepackage{amsmath,amssymb}
-\usepackage{booktabs,tabularx,multirow}
+\usepackage{booktabs,tabularx,multirow,array}
 \usepackage{graphicx}
 \usepackage{enumitem}
 \usepackage{microtype}
@@ -31,8 +31,8 @@
 \address[aff1]{Affiliation and full postal address required before submission}
 
 \begin{abstract}
-LIPAS (Lunar Impact and Predictive Analysis System) is a hybrid forecasting and decision-support platform that combines machine learning with physics-based models to characterize lunar environmental conditions, including temperature, radiation, dust activity, micrometeorite impacts, solar activity, and moonquakes. By unifying NASA and NOAA space-weather products with OMNI telemetry and historical lunar archives, LIPAS produces forecasts through a temporal long short-term memory network constrained by physics-based baselines and presents them in an interactive web dashboard for arbitrary lunar locations.
-This study documents the hybrid development process, evaluates operational usability in simulated mission scenarios, and compares locked-model hybrid predictions with replicated public NASA/NOAA-style baselines. Two 14-day windows at three sites show modest solar-activity gains (Window~A RMSE 4.10 versus 4.66; Window~B 4.99 versus 5.99), while radiation does not beat the replica (Window~A 0.119 versus 0.102; quiet dayside Window~B 0.0188 versus 0.00266). Temperature, moonquakes, and dust remain physics ties by design; micrometeorite contrast is limited to a shower-timing term and is circular under blend weight~0. The results support LIPAS as consultative decision support alongside agency products and identify radiation validation, surface measurements, and further hybrid tuning as required next steps.
+LIPAS (Lunar Impact and Predictive Analysis System) is a hybrid forecasting and decision-support platform that combines machine learning with physics-based models for six lunar hazards: temperature, radiation, dust, micrometeorites, solar activity, and moonquakes. Public NASA and NOAA products, OMNI telemetry, and lunar archives feed a temporal long short-term memory network constrained by physics baselines, with results shown in a web dashboard for selectable lunar coordinates.
+This paper reports three evaluation layers. A client-side prototype study first suggested a mean-skill lead against weak replicas, but that early path used a different model stack and scoring setup and is not the locked result; early temperature already failed a Diviner-class check. Locked train-2 studies over two 14-day windows then show modest solar gains (Window~A RMSE 4.10 versus 4.66; Window~B 4.99 versus 5.99) while radiation does not beat the replica (0.119 versus 0.102 in night-dominant Window~A; 0.0188 versus 0.00266 in quiet dayside Window~B). Temperature, moonquakes, and dust remain physics ties; micrometeorite skill is circular under blend weight zero. Qualitative comparison shows LIPAS high on coverage and usability but only moderate on validation. Mission simulation and ablation add operational and sensitivity context. LIPAS is best treated as consultative support alongside agency products, with substantial further work required.
 \end{abstract}
 
 \begin{keyword}
@@ -42,10 +42,12 @@ lunar environment \sep space weather \sep hybrid forecasting \sep machine learni
 \end{frontmatter}
 
 \input{sections/introduction}
+\input{sections/methods_brief}
 \input{sections/results}
 \input{sections/discussion}
 \input{sections/conclusion}
 \input{sections/declarations}
+\input{sections/appendices}
 
 \bibliographystyle{elsarticle-harv}
 \bibliography{references}

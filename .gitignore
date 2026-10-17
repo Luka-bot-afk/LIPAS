@@ -29,13 +29,18 @@ saved_model*/
 *.npy
 
 images/
-studies/
+# study runners are published with the paper package
+# studies/   (tracked on purpose)
 *.png
 *.jpg
 *.jpeg
 *.gif
 *.webp
 *.ico
+# keep manuscript figures and appendix charts
+!papers/**/*.png
+!papers/**/*.jpg
+!studies/
 
 # Earth stack is local-only until it is public again
 earth.html

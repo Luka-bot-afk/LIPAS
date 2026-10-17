@@ -1,0 +1,1 @@
+../scripts/verify_train2_capability.py

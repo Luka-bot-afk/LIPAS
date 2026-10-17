@@ -1,14 +1,13 @@
-# LIPAS appendix numerical tables
+# Appendix numerical and qualitative materials
 
-Daily numerical tables that previously appeared as Appendices A, B, D, and E of the LIPAS manuscript are hosted here so the paper appendix can stay short.
+Use this folder with the Elsevier manuscript in `papers/elsevier/`.
 
-| File | Contents |
-|------|----------|
-| `LIPAS_appendix_numerical_tables_A_B_D_E.pdf` | Prototype study tables and Window A / Window B daily tables |
-| `LIPAS_qualitative_comparison_framework.md` | Full ordinal scoring rules for manuscript Table 2 |
-| `reported_window_rmse.md` | Aggregate RMSE values reported in the manuscript (Tables 3–4) |
+| File | Go here for |
+|------|-------------|
+| `reported_window_rmse.md` | Locked Window A / Window B RMSE that must match the paper tables |
+| `QUANTITATIVE_COMPARISON_FRAMEWORK.md` | How hybrid vs replica RMSE and skill were defined, plus prototype note |
+| `LIPAS_qualitative_comparison_framework.md` | Full qualitative rubric, Table 2 scores, and references |
+| `LIPAS_appendix_numerical_tables_A_B_D_E.pdf` | Daily numerical rows for prototype April tables and Window A / B site-days |
+| `figures/` | Extra locked skill exports used when rebuilding charts |
 
-**Code repository:** https://github.com/Luka-bot-afk/LIPAS  
-**This folder:** https://github.com/Luka-bot-afk/LIPAS/tree/main/papers/appendix_numerical_tables
-
-For reproduction commands, see manuscript **Appendix E**. Short pointers are in Appendices B (qualitative) and C (quantitative).
+For reproduction commands, see `../../studies/README.md` and manuscript Appendix E.

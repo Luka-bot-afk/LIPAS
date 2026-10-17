@@ -1,32 +1,28 @@
 \section{Discussion}
 \label{sec:discussion}
 
-\subsection{Cross-experiment reading}
-\label{sec:rq}
+\subsection{Reading the prototype against the locked windows}
 
-\paragraph{RQ1 (development).}
-A channel-specific hybrid approach was more appropriate than applying machine learning uniformly. Physics-tied channels stay on shared paths; learned corrections help where drivers add information, especially solar activity, not radiation.
+The prototype mean-skill lead is an artifact of weak replicas, a different client model path, and circular or proxy scoring. The Diviner-era temperature plot shows that early client temperature was not trustworthy even when other thin replicas looked weak. The prototype answers an engineering question (does the unified client look competitive against thin stubs?) but not RQ3 under the locked blend. Prototype skill bars must not be mixed with Window~A/B RMSE when stating accuracy conclusions.
 
-\paragraph{RQ2 (usability).}
-The unified dashboard improved how information is presented for planning, but this study did not show that LIPAS is safer than existing agency pathways.
+\subsection{What the locked windows actually show}
 
-\paragraph{RQ3 (accuracy).}
-Solar RMSE is lower in both windows. Radiation is not: Window~A hybrid 0.119 versus replica 0.102; quiet Window~B 0.0188 versus 0.00266. Temperature, moonquakes, and dust stay physics-aligned. Micrometeorite skill reflects the shower-timing term only.
+Across both windows, solar activity is the clearest modest gain. Radiation does not beat the replica in night-dominant Window~A or quiet dayside Window~B. Temperature, moonquakes, and dust are physics ties under the lock. Micrometeorite skill remains circular at blend weight zero. These caveats are intentional: the lock with $\mathbf{w}=[0.4,0.05,0,0,0,0]$ was chosen for stability, not to maximize every bar.
 
-Mission simulation: LIPAS issued caution earlier than the GOES-only path by using upstream drivers; the combined NASA path still produced the earlier hard no-go. Treat LIPAS as consultative decision support alongside agency products.
+Skill in Eq.~\eqref{eq:skill} is within-hazard only. Equal-height normalization across hazards was rejected because it would hide real RMSE differences.
 
-Ablation: setting solar input to its Window~A mean lowered solar RMSE and raised radiation RMSE in that quiet interval. This is sensitivity, not evidence that live solar data are generally harmful.
+\subsection{Qualitative meaning}
 
-\subsection{Why radiation is worse, and why Window~B looks worse relatively}
-\label{sec:why-rad}
+High coverage and usability mean operators can inspect six hazards in one place. Moderate validation means those displays should stay consultative. Agency tools remain stronger inside their own measurement domains. That split is why RQ2 can be affirmed while RQ3 stays limited and why the conclusion does not claim flight readiness.
 
-The absence of improvement in temperature, moonquakes, and dust is a consequence of design rather than necessarily a weakness: those channels were deliberately physics-led. The clearest evidence for additional learned information came from the modest solar-activity reductions rather than any radiation win over the replica.
+\subsection{Mission and ablation limits}
 
-Window contrast matters. Window~A is night-dominant with higher absolute radiation labels; the hybrid still trails the replica, but absolute RMSEs are of similar order (0.119 versus 0.102). Window~B is quiet dayside: absolute doses collapse, the replica stays close to the quiet path, and the small radiation blend ($0.05$) plus low-biased ML corrections inflate relative error (0.0188 versus 0.00266). Hybrid beats raw ML-only radiation ($\sim$0.068 in Window~B) but remains worse than physics/replica. This is a quiet-regime radiation-channel limit, not evidence that LIPAS is broken overall---but it must be reported honestly and improved before operational claims.
+Mission timelines visualize decision context; they do not prove forecast skill. Ablation checks weight sensitivity; if local ablation logs are missing, readers should reproduce from the GitHub runners in Appendix~E rather than inventing numbers.
 
-What could be made better: denser OMNI/DONKI/SWPC sampling across active intervals, calibrated uncertainty on the radiation blend, storm-period holdouts, and eventual replacement of proxy labels with Artemis-era surface measurements.
+\subsection{Data and reconstruction}
 
-\subsection{Limitations}
-\label{sec:limits}
+Some series and tables were reconstructed from saved summaries and locked model exports. Reconstructed pieces are marked in the appendix materials and in the data-availability statement. Where reconstruction was needed, locked RMSE values were re-checked against CSV and \texttt{summary.json} exports before figures were frozen.
 
-Quantitative targets use public observations, physical formulations, catalogs, and proxies rather than continuous co-located lunar-surface truth. Agency comparisons are independent public-method reconstructions (except the available MEM~3 engineering-model export), not certified operational NASA/NOAA software. Combining physics and machine learning is not itself new \citep{karpatne2017,willard2022,camporeale2019}; LIPAS's contribution is hazard-specific weighting and unified decision support under incomplete observations.
+\subsection{Architecture note (features)}
+
+The production path uses an 18-feature input vector (Fig.~\ref{fig:arch_data}). Earlier draft figures that labeled a 12-column layout described an incomplete schematic, not the locked train-2 feature count.

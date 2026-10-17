@@ -1,18 +1,26 @@
 \section*{Acknowledgements}
-The author thanks Marjo Lipponen-Mraz for mentorship and Benjamin Irani-Fey for coding support during the NASA Space Apps Challenge. The author also thanks NASA, NOAA, and other space agencies and research organizations for the public lunar-mission data and space-weather archives that made the project possible, and Polygence research mentor Kyle Kennedy for support in redesigning and re-evaluating the studies, methods, and conclusions.
 
-\section*{CRediT author statement}
-\textbf{Luka Takki:} Conceptualization, Methodology, Software, Validation, Formal analysis, Investigation, Data curation, Visualization, Writing --- original draft, and Writing --- review and editing.
+I thank Kyle Kennedy for support throughout this work. I thank Dr.~Simon Good for his outstanding help at the University of Helsinki. I thank Prof.~Minna Palmroth and Prof.~Emilia Kilpua for their support at the University of Helsinki. I thank Benjamin Irani Fey for assistance below that group. Any remaining errors are my own.
 
-\section*{Funding}
-This research received no specific grant from funding agencies in the public, commercial, or not-for-profit sectors.
+\section*{Competing interests}
 
-\section*{Declaration of competing interest}
-The author declares that there are no known competing financial interests or personal relationships that could have appeared to influence the work reported in this paper.
+I declare that I have no known competing financial interests or personal relationships that could have appeared to influence the work reported in this paper.
 
-\section*{Data and code availability}
-The evaluation uses public NASA, NOAA, OMNI, Diviner, CRaTER, LADEE/LDEX, Apollo, MEM~3, and meteor-shower sources listed in the references. Code, locked model files, and numerical tables:
-\url{https://github.com/Luka-bot-afk/LIPAS}. Daily tables are in \path{papers/appendix_numerical_tables/}. Reported window RMSE values matching Tables~\ref{tab:wa}--\ref{tab:wb} are in \path{papers/appendix_numerical_tables/reported_window_rmse.md}.
+\section*{Data availability}
 
-\section*{Declaration of generative AI and AI-assisted technologies in the manuscript preparation process}
-During the preparation of this work, I used Cursor and Google Gemini to review, and to help modify, selected parts of the code and the manuscript. These tools did not write the paper. I checked every suggested change, made the final edits myself, and take full responsibility for the content of the published article. Their role was limited to review and selective modification of existing material; they were not used to draft or author the manuscript.
+Public NASA, NOAA, OMNI, and lunar archive products underpin the forecasts. Locked window tables, reconstructed series where noted, and figure sources are in the accompanying GitHub package under \texttt{papers/appendix\_numerical\_tables/} and \texttt{papers/elsevier/figures/}. Parts of the numerical record were reconstructed from locked \texttt{summary.json} and CSV exports; see Appendix~A and Appendix~E for where those files live and how to regenerate matching tables. Qualitative rubric files and reference lists are in Appendix~B.
+
+\section*{Code availability}
+
+Study runners, locked-model loaders, and reproduction steps are in the GitHub package under \texttt{studies/} with pointers in Appendix~E. Some scripts and tables were reconstructed to match the locked paper numbers; regenerated outputs should match or closely match the reported RMSE values when the locked blend and window definitions are used.
+
+\section*{Declaration of generative AI and AI-assisted technologies in the writing process}
+
+During preparation of this work I used the following tools:
+
+\begin{itemize}[leftmargin=*,itemsep=0.15em]
+\item Coding assistance: Cursor, GitHub Copilot, Grok
+\item Review assistance: Cursor, Google Gemini
+\end{itemize}
+
+I reviewed and edited all content as needed and take full responsibility for the content of the publication.

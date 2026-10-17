@@ -1,0 +1,131 @@
+\appendix
+
+\section{Numerical data tables}
+\label{app:A}
+
+For the numerical data tables of the locked Window~A and Window~B studies, go to \texttt{papers/appendix\_numerical\_tables/} on GitHub, especially \texttt{reported\_window\_rmse.md} and \texttt{QUANTITATIVE\_COMPARISON\_FRAMEWORK.md}. Those files hold RMSE, skill, location keys, and blend weights used in Figs.~\ref{fig:wa}--\ref{fig:wb}.
+
+For the prototype two-bar comparison source numbers, go to the prototype note inside \texttt{QUANTITATIVE\_COMPARISON\_FRAMEWORK.md}.
+
+For reconstructed series notes (where a table was rebuilt from locked exports), see the same folder and the comments in the quantitative framework file. Daily site-day rows are in \texttt{LIPAS\_appendix\_numerical\_tables\_A\_B\_D\_E.pdf}.
+
+\section{Qualitative comparison framework and references}
+\label{app:B}
+
+For the full qualitative comparison framework, including the scoring rubric and the references considered, go to \texttt{papers/appendix\_numerical\_tables/QUALITATIVE\_COMPARISON\_FRAMEWORK.md} (same content as \texttt{LIPAS\_qualitative\_comparison\_framework.md}). That file lists nine criteria, Table~2 scores, and the public tools used for comparison. References used for the qualitative pass are collected there so the manuscript body stays short.
+
+If a score changes after a reference re-check, update the markdown first, then re-sync any appendix material that depends on it.
+
+\section{Locked model and blend notes}
+\label{app:C}
+
+Appendix~C explains what the locked train-2 path is and what it is not.
+
+The locked path loads the \texttt{saved\_model} export and applies the blend in Eq.~\eqref{eq:blend}. In hazard order solar, radiation, temperature, moonquakes, micrometeorites, dust, the nonzero machine-learning weights are solar activity~$0.4$ and radiation~$0.05$. Temperature, moonquakes, micrometeorites, and dust stay on physics or proxy paths under this lock.
+
+This lock is the accuracy baseline for Windows~A and~B. It is not the client V1 prototype stack. It is not an equal-weight ensemble. Do not point study runners at \texttt{saved\_model\_train2\_locked} for the paper tables; that folder uses different weights. Skill charts drawn from this lock must use within-hazard scales only.
+
+Readers who need the exact loader entry point should follow Appendix~E under Window~A and Window~B.
+
+\section{Tools used for coding and review}
+\label{app:D}
+
+Tools used while preparing code and reviews:
+
+\begin{itemize}[leftmargin=*,itemsep=0.15em]
+\item Coding: Cursor, GitHub Copilot, Grok
+\item Reviews: Cursor, Google Gemini
+\end{itemize}
+
+This list matches the generative-AI declaration above. No other generative tools are claimed for those roles.
+
+\section{Reproduction steps by study}
+\label{app:E}
+
+This appendix tells you what each study is for, where to go in the package, and what to run so results match or closely match the paper. Use model directory \texttt{saved\_model} and blend $[0.4,0.05,0,0,0,0]$. Do not mix client V1 prototype outputs into locked tables.
+
+\subsection*{Window A (night-dominant locked study)}
+
+Purpose: locked 14-day skill and RMSE at equatorial, Apollo~11, and Nobile Rim sites (night-dominant window).
+
+Where to go: \texttt{studies/} and \texttt{logs/study\_14day\_window\_A\_night/}.
+
+What to run:
+\begin{enumerate}[leftmargin=*,itemsep=0.2em]
+\item Open \texttt{studies/README.md}.
+\item Run:
+\begin{verbatim}
+python scripts/run_14day_flagship_study.py \
+  --start 2026-07-05 --end 2026-07-18 --window-label A \
+  --out-dir logs/study_14day_window_A_night \
+  --model-dir saved_model \
+  --csv data/ingested_extended/extended_training_window_B_ready.csv
+\end{verbatim}
+\item Open \texttt{logs/study\_14day\_window\_A\_night/summary.json}.
+\item Compare solar and radiation RMSE to \texttt{reported\_window\_rmse.md} and Fig.~\ref{fig:wa}.
+\end{enumerate}
+
+Expected: solar about 4.10 versus replica 4.66; radiation about 0.119 versus 0.102; physics ties on temperature, moonquakes, and dust; micrometeorite hybrid RMSE 0.0 (circular).
+
+\subsection*{Window B (dayside quiet locked study)}
+
+Purpose: same locked stack and sites for the dayside-quiet window.
+
+Where to go: \texttt{studies/} and \texttt{logs/study\_14day\_window\_B\_day/}.
+
+What to run:
+\begin{enumerate}[leftmargin=*,itemsep=0.2em]
+\item Run:
+\begin{verbatim}
+python scripts/run_14day_flagship_study.py \
+  --start 2026-07-22 --end 2026-08-04 --window-label B \
+  --out-dir logs/study_14day_window_B_day \
+  --model-dir saved_model \
+  --csv data/ingested_extended/extended_training_window_B_ready.csv
+\end{verbatim}
+\item Compare to Fig.~\ref{fig:wb} and \texttt{reported\_window\_rmse.md}.
+\end{enumerate}
+
+Expected: solar about 4.99 versus 5.99; radiation about 0.0188 versus 0.00266; same tie and circular notes as Window~A.
+
+\subsection*{Prototype study (client V1, not locked)}
+
+Purpose: early engineering comparison against weak flagship replicas; explains why early mean skill looked favorable even though temperature already failed a Diviner-class check.
+
+Where to go: prototype note in \texttt{QUANTITATIVE\_COMPARISON\_FRAMEWORK.md}; Figs.~\ref{fig:proto}--\ref{fig:diviner}.
+
+What to run:
+\begin{enumerate}[leftmargin=*,itemsep=0.2em]
+\item Treat published prototype figures as historical context.
+\item Do not overwrite locked Window~A/B tables with prototype outputs.
+\end{enumerate}
+
+\subsection*{Mission simulation}
+
+Purpose: operational timeline illustration with red legend markers.
+
+Where to go: \texttt{studies/run\_mission\_sim\_radiation\_eva.py}; figure \texttt{fig\_mission\_timeline.png}.
+
+What to run:
+\begin{enumerate}[leftmargin=*,itemsep=0.2em]
+\item \texttt{python scripts/run\_mission\_sim\_radiation\_eva.py --out-dir logs/study\_mission\_sim\_radiation\_eva}
+\item Confirm caution near T+45 and no-go near T+85 for the LIPAS path.
+\item Do not use mission plots as RMSE proof.
+\end{enumerate}
+
+\subsection*{Ablation}
+
+Purpose: sensitivity of residuals when inputs or pathways change under the locked stack.
+
+Where to go: \texttt{studies/run\_hazard\_ablation\_study.py}.
+
+What to run:
+\begin{enumerate}[leftmargin=*,itemsep=0.2em]
+\item \texttt{python scripts/run\_hazard\_ablation\_study.py --out-dir logs/study\_ablation\_window\_A}
+\item Check ranking and relative changes against manuscript ablation tables.
+\item If local logs are missing, regenerate rather than inventing numbers.
+\end{enumerate}
+
+\subsection*{Sanity check before claiming reproduction}
+
+After any locked run, re-open \texttt{papers/appendix\_numerical\_tables/reported\_window\_rmse.md} and confirm solar and radiation RMSE match the paper within normal floating-point tolerance. If they diverge, check that \texttt{--model-dir} is \texttt{saved\_model} and that blend weights print as $[0.4,0.05,0,0,0,0]$.
