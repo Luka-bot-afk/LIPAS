@@ -1,0 +1,68 @@
+\section{Results}
+\label{sec:results}
+
+Locked \texttt{saved\_model} (train-2) predictions were evaluated over two 14-day windows at three sites (equatorial reference $0^\circ$N~$0^\circ$E, Apollo~11, Nobile Rim). Window~A (5--18~July~2026) is lunar-night dominant; Window~B (22~July--4~August~2026) is lunar-day dominant and quiet in radiation. Blend weights are $[0.4, 0.05, 0, 0, 0, 0]$ for solar, radiation, temperature, moonquakes, micrometeorites, and dust. Skill charts use
+\begin{equation}
+\mathrm{skill}=96\times\max\!\left(0,\,1-\mathrm{RMSE}/\mathrm{scale}\right),
+\end{equation}
+with \texttt{scale} taken within each hazard across the three sites. Bars are deliberately \emph{not} height-normalized across hazards, so channel failures remain visible.
+
+\subsection{Window A and Window B skill}
+\label{sec:windows}
+
+Figure~\ref{fig:wa-skill} and Figure~\ref{fig:wb-skill} show per-site absolute skill. Temperature, moonquakes, and dust are physics ties (blend weight~0), so navy and orange bars coincide at each site; site-to-site heights differ because absolute RMSE differs by site. Micrometeorite LIPAS bars sit at skill~96 at all sites because hybrid equals the shower-augmented evaluation label (circular under blend weight~0); they are descriptive only.
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=\linewidth]{fig_windowA_skill.png}
+\caption{Window~A per-site absolute skill (5--18~July~2026; 42 site-days). Night-dominant conditions. Radiation hybrid RMSE exceeds the replica (Table~\ref{tab:wa}).}
+\label{fig:wa-skill}
+\end{figure}
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=\linewidth]{fig_windowB_skill.png}
+\caption{Window~B per-site absolute skill (22~July--4~August~2026; 42 site-days). Quiet dayside radiation leaves little storm signal; the $0.05$ blend widens the hybrid--replica gap relative to Window~A (Table~\ref{tab:wb}).}
+\label{fig:wb-skill}
+\end{figure}
+
+\begin{table}[t]
+\centering
+\caption{Window~A hybrid versus replicated-reference RMSE (night-dominant; 42 site-days).}
+\label{tab:wa}
+\begin{tabular}{@{}lccp{5.2cm}@{}}
+\toprule
+Hazard & Hybrid & Replica & Outcome \\
+\midrule
+Solar activity & 4.10 & 4.66 & Hybrid lower by $\sim$12\% \\
+Radiation (mSv) & 0.119 & 0.102 & Replica lower (hybrid higher error) \\
+Temperature ($^\circ$C) & 38.2 & 38.2 & Tie on shared physics path \\
+Moonquakes (day$^{-1}$) & 1.23 & 1.23 & Tie on shared physics path \\
+Micrometeorite flux ($\times10^{-15}$) & 0.0 & 0.624 & Descriptive / circular (blend weight 0) \\
+Dust (g\,cm$^{-3}$) & 0.526 & 0.526 & Tie on shared physics path \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{table}[t]
+\centering
+\caption{Window~B hybrid versus replicated-reference RMSE (day-dominant, quiet radiation; 42 site-days).}
+\label{tab:wb}
+\begin{tabular}{@{}lccp{5.2cm}@{}}
+\toprule
+Hazard & Hybrid & Replica & Outcome \\
+\midrule
+Solar activity & 4.99 & 5.99 & Modest hybrid improvement ($\sim$17\%) \\
+Radiation (mSv) & 0.0188 & 0.00266 & Hybrid higher error (quiet dayside) \\
+Temperature ($^\circ$C) & 25.5 & 25.5 & Tie on shared physics path \\
+Moonquakes (day$^{-1}$) & 0.695 & 0.695 & Tie on shared physics path \\
+Micrometeorite flux ($\times10^{-15}$) & 0.0 & 0.701 & Descriptive / circular (blend weight 0) \\
+Dust (g\,cm$^{-3}$) & 0.169 & 0.169 & Tie on shared physics path \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Interpretation of radiation across windows}
+\label{sec:rad-interp}
+
+Solar activity improves modestly in both windows. Radiation does not. In night-dominant Window~A, hybrid RMSE is 0.119 versus replica 0.102. In quiet dayside Window~B, absolute doses are much smaller, so the same $0.05$ neural blend produces a larger relative gap (0.0188 versus 0.00266): there is little storm signal for the neural path to learn from, ML predictions remain biased low, and the blend still pulls away from the cleaner physics/replica path. Hybrid radiation absolute error exceeded the replica on every site-day in both windows. Chronological holdout hybrid RMSE was approximately 4.97 versus approximately 13.66 for persistence.
