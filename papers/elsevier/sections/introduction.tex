@@ -1,0 +1,15 @@
+\section{Introduction}
+\label{sec:intro}
+
+Renewed international interest in lunar exploration, particularly through NASA's Artemis program and its partners, has increased the need for reliable information about the lunar environment \citep{nasa2020artemis}. The Moon has no protective atmosphere or global magnetic field, leaving its surface exposed to large temperature variations, radiation, micrometeorite impacts, electrostatic dust, and seismic activity.
+
+Specialized models already exist for individual lunar hazards, but they generally operate as separate tools. Mission planners may need to consult several sources when assessing conditions. The Lunar Impact and Predictive Analysis System (LIPAS) was developed to reduce that fragmentation by combining machine-learning predictions with physics-based models, public heliophysics data, and adaptive weighting in one decision-support platform.
+
+This study addresses three research questions:
+\begin{enumerate}[leftmargin=*,itemsep=0.25em]
+\item[\textbf{RQ1}] Can a hybrid lunar-forecasting system be developed by combining machine-learning and physics-based approaches?
+\item[\textbf{RQ2}] Can integrating multiple lunar hazards and data sources into one forecasting interface improve operational usability?
+\item[\textbf{RQ3}] Does the locked LIPAS hybrid improve prediction performance for selected hazards relative to selected replicated public baselines?
+\end{enumerate}
+
+LIPAS is not intended to replace established scientific models or flight-qualified agency products. The contribution is a unified hybrid framework that retains physics where it is strongest and applies machine learning where additional predictive information is plausible. Because simultaneous in-situ observations are unavailable for all six hazards, evaluation uses archived measurements, observation-constrained estimates, engineering-model output, and physics/catalog proxies rather than treating every target as direct ground truth.
