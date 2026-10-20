@@ -25,24 +25,12 @@ The locked path loads the \texttt{saved\_model} export and applies the blend in 
 
 This lock is the accuracy baseline for Windows~A and~B. It is not the client V1 prototype stack. It is not an equal-weight ensemble. Do not point study runners at \texttt{saved\_model\_train2\_locked} for the paper tables; that folder uses different weights. Skill charts drawn from this lock must use within-hazard scales only.
 
-Readers who need the exact loader entry point should follow Appendix~E under Window~A and Window~B.
-
-\section{Tools used for coding and review}
-\label{app:D}
-
-Tools used while preparing code and reviews:
-
-\begin{itemize}[leftmargin=*,itemsep=0.15em]
-\item Coding: Cursor, GitHub Copilot, Grok
-\item Reviews: Cursor, Google Gemini
-\end{itemize}
-
-This list matches the generative-AI declaration above. No other generative tools are claimed for those roles.
+Readers who need the exact loader entry point should follow Appendix~D under Window~A and Window~B.
 
 \section{Reproduction steps by study}
 \label{app:E}
 
-This appendix tells you what each study is for, where to go in the package, and what to run so results match or closely match the paper. Use model directory \texttt{saved\_model} and blend $[0.4,0.05,0,0,0,0]$. Do not mix client V1 prototype outputs into locked tables.
+This appendix tells you what each study is for, where to go in the package, and what to run so results match or closely match the paper. The same steps, one section per study, are in \texttt{papers/appendix\_numerical\_tables/REPRODUCTION.md}. Use model directory \texttt{saved\_model} and blend $[0.4,0.05,0,0,0,0]$. That model folder is not in the public repository. Do not mix client V1 prototype outputs into locked tables.
 
 \subsection*{Window A (night-dominant locked study)}
 

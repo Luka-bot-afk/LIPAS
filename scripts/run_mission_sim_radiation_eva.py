@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-
+"""Mission timeline for Figure 10. Compare caution and no-go times with Section 6.4."""
 from __future__ import annotations
 
 import argparse

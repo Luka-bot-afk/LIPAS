@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
-
-
+"""Ablation for Tables 5 and 6. Replace one Window A input with its mean. Do not retrain."""
 from __future__ import annotations
 
 import argparse

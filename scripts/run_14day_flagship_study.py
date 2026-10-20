@@ -446,8 +446,9 @@ def main():
             'improvement_pct': 0.0 if tie else imp,
         }
 
-    # Per-site skill for poster charts: skill = 96 * max(0, 1 - RMSE / scale)
-    # scale = max(hybrid RMSE, flagship RMSE, small epsilon) across the three sites.
+    # Scale this skill for the chart. 96 means zero error, not percent accuracy.
+    # The scale for each hazard is the larger site RMSE, so the worst site on that hazard sits at 0.
+    # skill = 96 * max(0, 1 - RMSE / scale)
     summary['per_site_skill'] = {}
     site_short = {
         'Equatorial reference (0°N, 0°E)': 'E',

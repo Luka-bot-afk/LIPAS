@@ -1,6 +1,8 @@
 # Appendix numerical and qualitative materials
 
-Use this folder with the Elsevier manuscript in `papers/elsevier/`.
+Start with [REPRODUCTION.md](REPRODUCTION.md). Each study has its own steps and a file you can open.
+
+Use this folder with the manuscript.
 
 | File | Go here for |
 |------|-------------|

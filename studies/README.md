@@ -1,6 +1,12 @@
 # Study reproduction runners
 
-These scripts rebuild the locked-model study outputs used in the paper.
+Open [REPRODUCTION.md](../papers/appendix_numerical_tables/REPRODUCTION.md) for one section per study.
+
+Qualitative scores and the nine criteria: [LIPAS_qualitative_comparison_framework.md](../papers/appendix_numerical_tables/LIPAS_qualitative_comparison_framework.md).
+
+The April prototype is the daytime diagnostic at 0°N, 0°E from 5 to 19 April 2026. Daily rows are in the numerical PDF in that same folder. There is no separate runner, and those rows are not the fourteen-day result.
+
+These scripts rebuild the locked-model study outputs used in the paper. The `saved_model` folder is not in this public repository.
 
 Use Python 3.10+ from the repo root with dependencies from `requirements.txt`.
 
