@@ -575,7 +575,6 @@
 </head>
 <body>
   <div class="loading-screen" id="loadingScreen">
-    <div class="load-ring"></div>
     <div class="load-label">Loading Globe</div>
   </div>
 
@@ -1328,14 +1327,29 @@
         handler.setInputAction((click) => {
           const picked = viewer.scene.pick(click.position);
           const ent = picked && picked.id;
-          if (ent && ent.properties && ent.properties.isSite && ent.properties.isSite.getValue()) {
+          const isSite = ent && ent.properties && ent.properties.isSite && ent.properties.isSite.getValue();
+          const isCraft = ent && ent.properties && ent.properties.isCraft && ent.properties.isCraft.getValue();
+          if (isSite || isCraft) {
+            let lat = ent.properties.siteLat.getValue();
+            let lon = ent.properties.siteLon.getValue();
+            if (isCraft && ent.position) {
+              const cart = ent.position.getValue(viewer.clock.currentTime);
+              if (cart) {
+                const cg = Cesium.Cartographic.fromCartesian(cart, moonEllipsoid);
+                lat = Cesium.Math.toDegrees(cg.latitude);
+                lon = Cesium.Math.toDegrees(cg.longitude);
+              }
+            }
             const site = {
               name: ent.properties.siteName.getValue(),
-              lat: ent.properties.siteLat.getValue(),
-              lon: ent.properties.siteLon.getValue(),
+              lat, lon,
               summary: ent.properties.siteSummary.getValue(),
             };
-            flyToSite(site);
+            if (isSite) flyToSite(site);
+            else viewer.camera.flyTo({
+              destination: Cesium.Cartesian3.fromDegrees(lon, lat, 400000, moonEllipsoid),
+              duration: 1.2,
+            });
             fillLocCard(site, { pinned: true });
           }
         }, Cesium.ScreenSpaceEventType.LEFT_CLICK);
@@ -1544,6 +1558,84 @@
           }
         } catch (e) {}
 
+        (function addLunarTraffic() {
+          const R = 1737400;
+          const craft = [
+            { name: "LRO", kind: "orbiter", alt: 180, inc: 86, period: 113, phase: 0.2, node: 18, color: "#8fd0ff", note: "NASA Lunar Reconnaissance Orbiter. Polar mapping orbit." },
+            { name: "KPLO Danuri", kind: "orbiter", alt: 420, inc: 62, period: 118, phase: 1.4, node: 70, color: "#7dffb2", note: "Korea Pathfinder Lunar Orbiter." },
+            { name: "Chandrayaan-2", kind: "orbiter", alt: 680, inc: 43, period: 130, phase: 2.6, node: 140, color: "#e4c27a", note: "ISRO orbiter. Still circling after the Vikram attempt." },
+            { name: "CAPSTONE", kind: "orbiter", alt: 1100, inc: 28, period: 160, phase: 0.8, node: 210, color: "#e07ad0", note: "NASA pathfinder. Altitude here is schematic so the ring stays in frame." },
+            { name: "Yutu-2", kind: "surface", lat: -45.44, lon: 177.6, note: "CNSA rover in Von Kármán, far side. Chang'e-4." },
+            { name: "Vikram", kind: "surface", lat: -69.37, lon: 32.32, note: "ISRO Chandrayaan-3 lander, south polar highlands. Pragyan rover beside it." },
+            { name: "SLIM", kind: "surface", lat: -13.32, lon: 25.25, note: "JAXA Smart Lander for Investigating Moon, near Shioli." },
+            { name: "Blue Ghost", kind: "surface", lat: 18.56, lon: 61.81, note: "Firefly Blue Ghost Mission 1, Mare Crisium." },
+          ];
+          const t0 = Date.now();
+          craft.forEach((c) => {
+            const position = new Cesium.CallbackProperty(() => {
+              if (c.kind === "surface") {
+                return Cesium.Cartesian3.fromDegrees(c.lon, c.lat, 800, moonEllipsoid);
+              }
+              const ang = c.phase + ((Date.now() - t0) / 60000) * (Math.PI * 2 / c.period);
+              const inc = c.inc * Math.PI / 180;
+              const lat = Math.asin(Math.sin(inc) * Math.sin(ang)) * 180 / Math.PI;
+              const lon = Math.atan2(Math.sin(ang) * Math.cos(inc), Math.cos(ang)) * 180 / Math.PI + c.node;
+              return Cesium.Cartesian3.fromDegrees(lon, lat, c.alt * 1000, moonEllipsoid);
+            }, false);
+            if (c.kind !== "surface") {
+              const ring = [];
+              const inc = c.inc * Math.PI / 180;
+              for (let i = 0; i <= 90; i++) {
+                const ang = (i / 90) * Math.PI * 2;
+                const lat = Math.asin(Math.sin(inc) * Math.sin(ang)) * 180 / Math.PI;
+                const lon = Math.atan2(Math.sin(ang) * Math.cos(inc), Math.cos(ang)) * 180 / Math.PI + c.node;
+                ring.push(Cesium.Cartesian3.fromDegrees(lon, lat, c.alt * 1000, moonEllipsoid));
+              }
+              const orbitColor = Cesium.Color.fromCssColorString(c.color || "#8fd0ff");
+              viewer.entities.add({
+                polyline: {
+                  positions: ring,
+                  width: 7,
+                  arcType: Cesium.ArcType.NONE,
+                  material: new Cesium.PolylineGlowMaterialProperty({ glowPower: 0.18, color: orbitColor }),
+                  depthFailMaterial: orbitColor.withAlpha(0.55),
+                },
+              });
+            }
+            viewer.entities.add({
+              name: c.name,
+              position,
+              point: {
+                pixelSize: c.kind === "surface" ? 9 : 8,
+                color: Cesium.Color.fromCssColorString(c.color || (c.kind === "surface" ? "#e4c27a" : "#8fd0ff")),
+                outlineColor: Cesium.Color.WHITE,
+                outlineWidth: 1,
+                disableDepthTestDistance: Number.POSITIVE_INFINITY,
+              },
+              label: {
+                text: c.name,
+                font: "600 12px Outfit, sans-serif",
+                fillColor: Cesium.Color.WHITE,
+                outlineColor: Cesium.Color.BLACK,
+                outlineWidth: 2,
+                style: Cesium.LabelStyle.FILL_AND_OUTLINE,
+                pixelOffset: new Cesium.Cartesian2(10, -8),
+                disableDepthTestDistance: Number.POSITIVE_INFINITY,
+                show: true,
+              },
+              properties: {
+                isCraft: true,
+                siteName: c.name,
+                siteLat: c.lat || 0,
+                siteLon: c.lon || 0,
+                siteSummary: c.note,
+                craftKind: c.kind,
+              },
+            });
+          });
+          void R;
+        })();
+
         window.viewer = viewer;
         console.info('[LIPAS] Cesium ready -', Object.keys(hazardLayers).length, 'full-globe hazard layers,', siteEntities.length, 'site markers', token ? '(Ion token present)' : '(Trek globe, no Ion token)');
 
@@ -1571,7 +1663,7 @@
       }
 
       function setOptionsOpen(open) {
-        if (!mq.matches || document.body.classList.contains("embed-mode")) {
+        if (document.body.classList.contains("embed-mode")) {
           document.body.classList.remove("globe-options-open");
           return;
         }
@@ -1588,6 +1680,6 @@
     })();
   </script>
 
-  <script src="js/navbar.js" defer></script>
+  <script src="js/navbar.js?v=26" defer></script>
 </body>
 </html>

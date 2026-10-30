@@ -13,13 +13,7 @@
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
     html, body { min-height: 100%; font-family: var(--font-ui); color: var(--text); background: var(--void); }
-    body {
-      background:
-        radial-gradient(ellipse 90% 55% at 8% -8%, rgba(40, 90, 140, 0.32), transparent 55%),
-        radial-gradient(ellipse 70% 50% at 95% 8%, rgba(30, 55, 90, 0.28), transparent 52%),
-        linear-gradient(180deg, #0d121a 0%, #0b0e13 45%, #0a1018 100%);
-      background-attachment: fixed;
-    }
+    body { background: var(--void); }
     .shell {
       position: relative; z-index: 1;
       max-width: 920px; margin: 0 auto; padding: 32px 22px 48px;
@@ -36,11 +30,11 @@
       display: grid; gap: 14px;
     }
     .src-card {
-      background: linear-gradient(165deg, rgba(28, 37, 51, 0.94), rgba(18, 24, 33, 0.97));
+      background: var(--card);
       border: 1px solid var(--line);
       border-left: 3px solid var(--steel-dim);
       padding: 18px 20px;
-      border-radius: var(--radius-sm);
+      border-radius: 16px;
     }
     .src-card h2 {
       font-size: 15px; font-weight: 600; margin-bottom: 6px;
@@ -53,8 +47,11 @@
     }
     .src-card a:hover { text-decoration: underline; }
     .src-card[hidden] { display: none; }
-      border: 1px solid var(--line); border-radius: var(--radius-sm);
+    .note {
+      margin-top: 18px; padding: 14px 16px;
+      border: 1px solid var(--line); border-radius: 16px;
       color: var(--muted); font-size: 13px; line-height: 1.55;
+      background: var(--card);
     }
   </style>
 </head>
@@ -120,12 +117,12 @@
     <p class="note" id="srcNote">LIPAS combines public archives with physics-constrained forecasts for lunar sites. The Mercury layer reuses the same 1 AU drivers with magnetosphere physics and does not apply the lunar LSTM weights.</p>
 
     <footer class="lipas-site-footer">
-      <p class="lipas-copyright">© 2026 Luka Takki · LIPAS</p>
+      <p class="lipas-copyright">© 2026 LIPAS Research</p>
     </footer>
   </div>
 
   <script src="js/lipas-api.js"></script>
-  <script src="js/navbar.js?v=3" defer></script>
+  <script src="js/navbar.js?v=26" defer></script>
   <script>
     (function () {
       var app = document.body.dataset.app || "moon";

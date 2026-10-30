@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>L.I.P.A.S. Earth · Mission Planner</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=Syne:wght@600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles/theme.css">
+  <link rel="stylesheet" href="styles/main.css">
+  <link rel="stylesheet" href="styles/earth.css?v=4">
+</head>
+<body data-app="earth" class="earth-mode planner-page">
+  <div class="loading-screen" id="loadingScreen">
+    <div class="load-label">Computing corridor</div>
+  </div>
+  <div id="lipas-topnav" data-active="mission"></div>
+
+  <div class="planner-shell">
+    <aside class="planner-rail" aria-label="Mission setup">
+      <div class="rail-kicker">
+        <span>Trajectory ops</span>
+        <strong id="utc-clock">—</strong>
+      </div>
+      <h1>Mission <em>Planner</em></h1>
+      <p class="rail-lede">Pick a departure, a destination, and a vehicle. The day shows the space-weather window for that flight.</p>
+
+      <label class="field-label" for="inp-name">Callsign</label>
+      <input id="inp-name" class="callsign" value="Starbase → KSC corridor" spellcheck="false">
+
+      <div class="field-label">Quick corridors</div>
+      <div class="preset-row" id="preset-row"></div>
+
+      <div class="route-card">
+        <div class="route-end">
+          <label for="inp-from">From</label>
+          <select id="inp-from"></select>
+          <div class="route-meta" id="from-meta">—</div>
+        </div>
+        <div class="route-arrow" aria-hidden="true">
+          <span></span>
+        </div>
+        <div class="route-end">
+          <label for="inp-to">To / target</label>
+          <select id="inp-to"></select>
+          <div class="route-meta" id="to-meta">—</div>
+        </div>
+      </div>
+
+      <div class="field-row">
+        <div class="field">
+          <label for="inp-vehicle">Vehicle</label>
+          <select id="inp-vehicle">
+            <option value="suborbital">Sounding / suborbital</option>
+            <option value="leo" selected>LEO insertion</option>
+            <option value="crew_iss">Crewed ISS rendezvous</option>
+            <option value="sso">Sun-sync / polar</option>
+            <option value="gto">GTO / GEO</option>
+            <option value="reentry">Reentry corridor</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="inp-crew">Manifest</label>
+          <select id="inp-crew">
+            <option value="cargo" selected>Cargo / uncrewed</option>
+            <option value="crew">Crewed</option>
+          </select>
+        </div>
+      </div>
+      <div class="field-row">
+        <div class="field">
+          <label for="hours">Duration</label>
+          <input id="hours" type="number" min="1" max="48" value="6">
+        </div>
+        <div class="field">
+          <label for="t0">T0 offset</label>
+          <input id="t0" type="number" min="0" max="24" value="0">
+        </div>
+      </div>
+      <div class="field-row">
+        <div class="field">
+          <label for="risk">Risk posture</label>
+          <select id="risk">
+            <option value="conservative">Conservative</option>
+            <option value="nominal" selected>Nominal</option>
+            <option value="aggressive">Aggressive</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="inp-inc">Inclination (°)</label>
+          <input id="inp-inc" type="number" step="any" placeholder="auto">
+        </div>
+      </div>
+
+      <details class="adv">
+        <summary>3D coordinates</summary>
+        <div class="field-row">
+          <div class="field"><label for="lat1">Lat 1</label><input id="lat1" type="number" step="any" value="25.997"></div>
+          <div class="field"><label for="lon1">Lon 1</label><input id="lon1" type="number" step="any" value="-97.157"></div>
+        </div>
+        <div class="field-row">
+          <div class="field"><label for="alt1">Alt 1 (km)</label><input id="alt1" type="number" step="any" value="0"></div>
+          <div class="field"><label for="alt2">Alt 2 (km)</label><input id="alt2" type="number" step="any" value="220"></div>
+        </div>
+        <div class="field-row">
+          <div class="field"><label for="lat2">Lat 2</label><input id="lat2" type="number" step="any" value="28.572"></div>
+          <div class="field"><label for="lon2">Lon 2</label><input id="lon2" type="number" step="any" value="-80.649"></div>
+        </div>
+      </details>
+
+      <div class="rail-actions">
+        <button class="btn btn-primary" id="btn-run" type="button">Run trajectory plan</button>
+        <button class="btn btn-ghost" id="btn-best" type="button">Apply best 24 h window</button>
+        <button class="btn btn-ghost" id="btn-pdf" type="button">Download PDF report</button>
+      </div>
+    </aside>
+
+    <main class="planner-stage">
+      <div class="commit-hero" id="ops-banner" data-kind="caution">
+        <div class="commit-ring" id="go-dial" data-status="caution">
+          <svg viewBox="0 0 120 120" aria-hidden="true">
+            <circle class="ring-bg" cx="60" cy="60" r="52" pathLength="100"></circle>
+            <circle class="ring-fg" id="go-ring" cx="60" cy="60" r="52" pathLength="100"></circle>
+          </svg>
+          <div class="commit-inner">
+            <div id="go-label">—</div>
+            <div id="go-score">—</div>
+          </div>
+        </div>
+        <div class="commit-copy">
+          <div class="commit-kicker" id="active-site">Select pads</div>
+          <div class="commit-title" id="go-sub">Awaiting plan…</div>
+          <ul class="commit-reasons" id="go-reasons"></ul>
+        </div>
+        <div class="commit-kpis" id="kpi-row"></div>
+      </div>
+
+      <section class="stage-panel windows-panel">
+        <div class="panel-head">
+          <h2>Launch windows · next 24 h</h2>
+          <span id="window-hint">Click a slot to set T0 and recompute</span>
+        </div>
+        <div class="win-strip" id="window-strip"></div>
+        <div class="win-detail" id="window-detail">No window selected.</div>
+      </section>
+
+      <section class="stage-panel">
+        <div class="panel-head">
+          <h2>Trajectory theater</h2>
+          <span>Shaded globe · corridor lifted by altitude</span>
+        </div>
+        <canvas id="globe3d" height="280" aria-label="3D corridor"></canvas>
+      </section>
+
+      <section class="stage-panel theater">
+        <div class="panel-head">
+          <h2>Ground track &amp; altitude</h2>
+          <span id="chart-hover">Hover the plots for sample readout</span>
+        </div>
+        <div class="charts">
+          <canvas id="pathCanvas" class="path" height="220" aria-label="Ground track"></canvas>
+          <canvas id="altCanvas" class="path" height="176" aria-label="Altitude profile"></canvas>
+        </div>
+        <div class="phase-rail" id="phase-rail"></div>
+      </section>
+
+      <section class="stage-panel">
+        <div class="panel-head">
+          <h2>Hazard matrix</h2>
+          <span>Worst value along the corridor</span>
+        </div>
+        <div class="hz-grid" id="hz-grid"></div>
+      </section>
+
+      <section class="stage-panel">
+        <div class="panel-head">
+          <h2>Corridor log</h2>
+          <span>Every fourth sample</span>
+        </div>
+        <div class="sample-table" id="sample-list"></div>
+      </section>
+    </main>
+  </div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js" defer></script>
+  <script src="js/lipas-api.js"></script>
+  <script src="js/earth_mission.js?v=7"></script>
+  <script src="js/navbar.js?v=26" defer></script>
+</body>
+</html>

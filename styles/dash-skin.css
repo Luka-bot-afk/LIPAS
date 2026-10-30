@@ -1,0 +1,643 @@
+/* Dashboard, globe, and chart surfaces. Loaded last. */
+
+.main-panel,
+.shell {
+  background: transparent !important;
+  backdrop-filter: none !important;
+}
+
+.slider-section,
+.solar-section,
+.ops-section,
+.ov-panel,
+.fact-section,
+.graph-section,
+.advice-box,
+.pdf-box,
+.disclaimer-box,
+.warnings-container,
+.forecast-container,
+.moon-map-container,
+.panel,
+.merc-mag-hero,
+.map-panel,
+.earth-hero,
+.kpi,
+.profile-card {
+  background: color-mix(in srgb, var(--card) 78%, transparent) !important;
+  color: var(--text) !important;
+  border: 1px solid color-mix(in srgb, var(--line-strong) 80%, transparent) !important;
+  border-radius: 24px !important;
+  box-shadow:
+    inset 0 1px 0 color-mix(in srgb, #fff 28%, transparent),
+    0 18px 40px rgba(0, 0, 0, 0.14) !important;
+  backdrop-filter: blur(18px) saturate(1.25);
+  -webkit-backdrop-filter: blur(18px) saturate(1.25);
+  padding: 20px !important;
+  margin: 0 0 18px !important;
+  overflow: hidden !important;
+}
+
+.hour-slider-container {
+  background: color-mix(in srgb, var(--void) 78%, #000) !important;
+  border: 1px solid var(--line) !important;
+  border-radius: 28px !important;
+  padding: 14px 10px !important;
+  margin-top: 8px !important;
+  overflow-x: auto !important;
+  overflow-y: hidden !important;
+}
+.hour-item {
+  border-radius: 18px !important;
+  background: var(--ink) !important;
+  border: 1px solid var(--line) !important;
+  margin: 0 5px !important;
+  min-width: 72px !important;
+}
+
+.solar-card,
+.metric-box,
+.ops-card,
+.warning-box,
+.driver-viz-card,
+.rank-col,
+.nf-col,
+.forecast-day,
+.channel-slider-row {
+  background: color-mix(in srgb, var(--ink) 88%, var(--void)) !important;
+  color: var(--text) !important;
+  border: 1px solid var(--line) !important;
+  border-left-width: 1px !important;
+  border-top-width: 1px !important;
+  border-radius: 18px !important;
+  box-shadow: none !important;
+}
+.metric-box.go,
+.warning-box.go,
+.ops-card.go { box-shadow: inset 0 3px 0 var(--go) !important; }
+.metric-box.caution,
+.warning-box.caution,
+.ops-card.caution { box-shadow: inset 0 3px 0 var(--caution) !important; }
+.metric-box.nogo,
+.warning-box.nogo,
+.ops-card.nogo { box-shadow: inset 0 3px 0 var(--nogo) !important; }
+
+.warnings-container {
+  display: grid !important;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 12px !important;
+  background: transparent !important;
+  border: 0 !important;
+  box-shadow: none !important;
+  padding: 0 !important;
+  overflow: visible !important;
+}
+.forecast-container {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 10px !important;
+  max-height: 460px !important;
+  background: transparent !important;
+  border: 0 !important;
+  box-shadow: none !important;
+  padding: 0 !important;
+}
+.forecast-day {
+  border-bottom: 0 !important;
+  padding: 14px 16px !important;
+  margin: 0 !important;
+  display: grid !important;
+  grid-template-columns: 92px 1fr !important;
+  align-items: center !important;
+  gap: 12px !important;
+}
+.forecast-day .hazard-dot { display: none !important; }
+.forecast-day .day-name {
+  font-family: var(--font-ui) !important;
+  font-weight: 650 !important;
+  font-size: 15px !important;
+}
+.forecast-values {
+  display: grid !important;
+  grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+}
+.forecast-value {
+  border-radius: 14px !important;
+  text-align: left !important;
+  padding: 8px 10px !important;
+}
+.forecast-value strong { display: block !important; font-size: 16px !important; }
+.forecast-value {
+  border-radius: 12px !important;
+  background: var(--void) !important;
+  padding: 6px 6px !important;
+}
+.forecast-values { gap: 6px !important; }
+
+.driver-viz-card {
+  overflow: hidden !important;
+  min-height: 200px !important;
+  padding: 0 !important;
+}
+.driver-viz-card canvas {
+  border-radius: 18px !important;
+  display: block;
+  width: 100% !important;
+  height: 200px !important;
+}
+.driver-viz-caption {
+  border-radius: 999px !important;
+  background: color-mix(in srgb, var(--ink) 80%, transparent) !important;
+  color: var(--text) !important;
+  padding: 4px 8px !important;
+}
+.solar-storm-banner,
+.graph-canvas-container {
+  border-radius: 18px !important;
+  overflow: hidden !important;
+  border: 1px solid var(--line) !important;
+  background: var(--void) !important;
+}
+.graph-canvas-container { padding: 12px !important; }
+
+.term-belt { border-radius: 999px !important; height: 36px !important; }
+.term-cols,
+.nearfar-grid,
+.rank-grid,
+.solar-metrics,
+.ops-grid,
+.metrics-panel {
+  gap: 12px !important;
+}
+.term-chip,
+.nf-chip,
+.horizon-btn,
+.dropdown-trigger,
+.ask-luna-btn,
+.pdf-box button {
+  border-radius: 999px !important;
+  font-family: var(--font-ui) !important;
+}
+.rank-row {
+  border: 0 !important;
+  border-radius: 14px !important;
+  background: var(--void) !important;
+  padding: 10px 12px !important;
+  margin: 0 0 8px !important;
+}
+.rank-col.best,
+.rank-col.worst { border-left-width: 1px !important; }
+
+.pdf-box {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  gap: 16px !important;
+}
+.pdf-box button {
+  background: var(--text) !important;
+  color: var(--void) !important;
+  border: 0 !important;
+  padding: 12px 18px !important;
+  font-size: 14px !important;
+  font-weight: 600 !important;
+}
+
+html[data-theme="light"] .hour-slider-container,
+html[data-theme="light"] .graph-canvas-container,
+html[data-theme="light"] .solar-storm-banner {
+  background: #efeae2 !important;
+}
+html[data-theme="light"] .solar-card,
+html[data-theme="light"] .metric-box,
+html[data-theme="light"] .ops-card,
+html[data-theme="light"] .warning-box,
+html[data-theme="light"] .forecast-day,
+html[data-theme="light"] .rank-col,
+html[data-theme="light"] .nf-col,
+html[data-theme="light"] .hour-item,
+html[data-theme="light"] .rank-row {
+  background: #fff !important;
+  color: var(--text) !important;
+}
+
+/* Globe: keep the four chrome pieces in their own lanes. */
+.loc-search-panel {
+  top: 80px !important;
+  left: 16px !important;
+  right: auto !important;
+  bottom: auto !important;
+  width: min(280px, calc(100vw - 32px)) !important;
+  max-height: 280px !important;
+  overflow: auto !important;
+  border-radius: 20px !important;
+}
+.map-controls {
+  top: 80px !important;
+  right: 16px !important;
+  left: auto !important;
+  bottom: auto !important;
+  width: 230px !important;
+  max-height: calc(100vh - 210px) !important;
+  overflow-y: auto !important;
+  gap: 10px !important;
+}
+.map-controls .control-panel,
+.legend-panel,
+.globe-timebar,
+#locHoverCard {
+  border-radius: 20px !important;
+  background: color-mix(in srgb, var(--ink) 90%, transparent) !important;
+  color: var(--text) !important;
+  border: 1px solid var(--line-strong) !important;
+}
+.legend-panel {
+  top: auto !important;
+  left: 16px !important;
+  right: auto !important;
+  bottom: 24px !important;
+  max-height: none !important;
+  height: auto !important;
+  overflow: visible !important;
+  width: min(250px, 32vw) !important;
+}
+.legend-panel .legend-item {
+  display: flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+  margin: 0 0 6px !important;
+  font-size: 13px !important;
+  color: var(--text) !important;
+  opacity: 1 !important;
+}
+.legend-color {
+  width: 12px !important;
+  height: 12px !important;
+  min-width: 12px !important;
+  border-radius: 4px !important;
+  display: block !important;
+  flex-shrink: 0 !important;
+}
+.legend-color.radiation { background: #ff6a4a !important; }
+.legend-color.micrometeorites { background: #ffc24a !important; }
+.legend-color.dust { background: #c8a86a !important; }
+.legend-color.moonquakes { background: #9b6cff !important; }
+.legend-color.temperature { background: #4ab0ff !important; }
+.legend-color.solar { background: #ffd060 !important; }
+.legend-color.sep { background: #ff6ea0 !important; }
+.legend-color.cme { background: #ff8a40 !important; }
+.legend-color.storm { background: #5aa8ff !important; }
+.globe-timebar {
+  left: 50% !important;
+  right: auto !important;
+  bottom: 18px !important;
+  width: min(440px, calc(100vw - 540px)) !important;
+  transform: translateX(-50%) !important;
+}
+body:has(#cesiumContainer) .moon-assist {
+  right: 16px !important;
+  bottom: 132px !important;
+}
+body:has(#cesiumContainer) .lipas-site-footer--overlay {
+  top: 86px !important;
+  left: 312px !important;
+  right: auto !important;
+  bottom: auto !important;
+  width: auto !important;
+}
+.metric-box { position: relative !important; padding: 16px 14px 14px 52px !important; }
+.metric-ico {
+  position: absolute; left: 14px; top: 16px;
+  width: 28px; height: 28px; border-radius: 10px;
+  display: grid; place-items: center;
+  background: color-mix(in srgb, var(--void) 70%, transparent);
+  color: var(--text);
+}
+.metric-ico svg { width: 16px; height: 16px; }
+
+.ml-overview, #ml-overview, .model-pill { display: none !important; }
+.mp-stage-panel canvas {
+  width: 100% !important;
+  border-radius: 20px !important;
+  display: block;
+}
+.field input, .field select, .preset-chip, .btn, .hz-cell, .equip-pill, .metric, .dose-cell, .ml-chip {
+  border-radius: 14px !important;
+}
+.hz-cell { border-left-width: 1px !important; box-shadow: inset 0 3px 0 var(--line) !important; }
+.hz-cell.go { box-shadow: inset 0 3px 0 var(--go) !important; }
+.hz-cell.caution { box-shadow: inset 0 3px 0 var(--caution) !important; }
+.hz-cell.nogo { box-shadow: inset 0 3px 0 var(--nogo) !important; }
+
+body[data-app="earth"] .sat-panel {
+  left: auto !important;
+  right: 16px !important;
+  bottom: auto !important;
+  top: 128px !important;
+  width: min(280px, calc(100vw - 40px)) !important;
+  max-height: calc(100vh - 280px) !important;
+  border-radius: 20px !important;
+  border-left-width: 1px !important;
+  background: color-mix(in srgb, var(--ink) 88%, transparent) !important;
+  color: var(--text) !important;
+  backdrop-filter: blur(16px);
+}
+body[data-app="earth"] .legend-panel {
+  bottom: 118px !important;
+  max-width: 240px !important;
+}
+
+html[data-theme="light"] body.mercury-mode,
+html[data-theme="light"] body.earth-mode {
+  --text: #1a1916;
+  --muted: #5c564c;
+  --dim: #6e675c;
+  --panel: #fffdf9;
+  --panel-hi: rgba(255, 253, 249, 0.96);
+  --panel-lo: #fffdf9;
+  --navy: #efe8dc;
+  --navy-deep: #e7dfd2;
+  --line: rgba(28, 25, 21, 0.12);
+  --line-strong: rgba(28, 25, 21, 0.2);
+  background: #f3f0ea !important;
+  color: #1a1916 !important;
+}
+html[data-theme="light"] body.mercury-mode .li-name,
+html[data-theme="light"] body.earth-mode .li-name,
+html[data-theme="light"] body.mercury-mode .location-header,
+html[data-theme="light"] body.mercury-mode .cycle-info,
+html[data-theme="light"] body.mercury-mode .current-conditions,
+html[data-theme="light"] body.earth-mode .earth-hero h1,
+html[data-theme="light"] body.earth-mode .panel-head h2,
+html[data-theme="light"] body.earth-mode .metrics-title,
+html[data-theme="light"] body.earth-mode .pdf-title,
+html[data-theme="light"] body.mercury-mode .slider-title,
+html[data-theme="light"] body.mercury-mode .merc-mag-hero,
+html[data-theme="light"] body.mercury-mode .merc-mag-hero h2,
+html[data-theme="light"] body.mercury-mode .metric-box,
+html[data-theme="light"] body.earth-mode .metric-chip,
+html[data-theme="light"] body.earth-mode .warning-header,
+html[data-theme="light"] body.earth-mode .warning-desc,
+html[data-theme="light"] body.earth-mode .sat-card,
+html[data-theme="light"] body.earth-mode .sat-card .n {
+  color: #1a1916 !important;
+}
+html[data-theme="light"] body.mercury-mode .li-coords,
+html[data-theme="light"] body.mercury-mode .li-summary,
+html[data-theme="light"] body.earth-mode .li-coords,
+html[data-theme="light"] body.earth-mode .li-summary,
+html[data-theme="light"] body.earth-mode .earth-hero .k,
+html[data-theme="light"] body.earth-mode .earth-hero p,
+html[data-theme="light"] body.earth-mode .earth-sites-head .k,
+html[data-theme="light"] body.earth-mode .btn-globe,
+html[data-theme="light"] body.earth-mode .panel-head span,
+html[data-theme="light"] body.earth-mode .panel-head a,
+html[data-theme="light"] body.earth-mode .chart-axis,
+html[data-theme="light"] body.earth-mode .map-legend,
+html[data-theme="light"] body.earth-mode .pdf-box p,
+html[data-theme="light"] body.mercury-mode .slider-sub,
+html[data-theme="light"] body.mercury-mode .general-accuracy {
+  color: #5c564c !important;
+}
+html[data-theme="light"] body.mercury-mode .location-item,
+html[data-theme="light"] body.earth-mode .location-item,
+html[data-theme="light"] body.mercury-mode .location-item:hover,
+html[data-theme="light"] body.earth-mode .location-item:hover,
+html[data-theme="light"] body.mercury-mode .location-item.active,
+html[data-theme="light"] body.mercury-mode .location-item.selected,
+html[data-theme="light"] body.earth-mode .location-item.active,
+html[data-theme="light"] body.mercury-mode .search-bar,
+html[data-theme="light"] body.mercury-mode .search-bar:hover,
+html[data-theme="light"] body.mercury-mode .search-bar:focus,
+html[data-theme="light"] body.earth-mode #siteSearch,
+html[data-theme="light"] body.earth-mode .metric-chip,
+html[data-theme="light"] body.earth-mode .sat-card,
+html[data-theme="light"] body.earth-mode .alert,
+html[data-theme="light"] body.earth-mode .kpi,
+html[data-theme="light"] body.mercury-mode .sidebar,
+html[data-theme="light"] body.earth-mode .sidebar {
+  background: #fffdf9 !important;
+  color: #1a1916 !important;
+  border-color: rgba(28, 25, 21, 0.12) !important;
+}
+html[data-theme="light"] body.earth-mode .btn-globe {
+  background: #fffdf9 !important;
+  border-radius: 14px !important;
+  border-color: rgba(31, 138, 86, 0.45) !important;
+}
+html[data-theme="light"] body.earth-mode .metric-pills button {
+  color: #1a1916 !important;
+  border-color: rgba(28, 25, 21, 0.16) !important;
+  border-radius: 999px !important;
+}
+html[data-theme="light"] body.earth-mode .metric-pills button.active {
+  color: #fffdf9 !important;
+  background: #1f8a56 !important;
+}
+html[data-theme="light"] .hour-slider-container {
+  background: #efeae2 !important;
+}
+html[data-theme="light"] body.mercury-mode .li-image,
+html[data-theme="light"] body.earth-mode .li-image {
+  background-color: #efeae2 !important;
+}
+.location-item,
+.metric-chip,
+.sat-card,
+.alert,
+.btn-globe,
+.kpi,
+#siteSearch,
+.search-bar {
+  border-radius: 16px !important;
+}
+.merc-mag-hero { overflow: visible !important; }
+.merc-mag-hero-head {
+  flex-direction: column !important;
+  align-items: stretch !important;
+}
+.merc-mag-toolbar { justify-content: flex-start !important; }
+.driver-viz-card {
+  border-radius: 22px !important;
+  overflow: hidden !important;
+  border: 1px solid var(--line) !important;
+}
+.driver-viz-card canvas,
+#solarMapCanvas,
+#particleMapCanvas {
+  width: 100% !important;
+  height: 240px !important;
+  display: block;
+}
+.pdf-box button,
+.moon-map-btn,
+.metric-button,
+select,
+button.nav-cta {
+  border-radius: 14px !important;
+}
+html[data-theme="light"] .location-item,
+html[data-theme="light"] .location-item:hover,
+html[data-theme="light"] .location-item.active,
+html[data-theme="light"] .location-item.selected {
+  background: color-mix(in srgb, #fffdf9 84%, transparent) !important;
+  color: #1a1916 !important;
+  border-color: rgba(28, 25, 21, 0.12) !important;
+  border-radius: 18px !important;
+  backdrop-filter: blur(16px) saturate(1.15);
+}
+html[data-theme="light"] .li-name,
+html[data-theme="light"] .location-header,
+html[data-theme="light"] .pdf-title,
+html[data-theme="light"] .pdf-box button {
+  color: #1a1916 !important;
+}
+html[data-theme="light"] .li-coords,
+html[data-theme="light"] .li-summary,
+html[data-theme="light"] .driver-viz-caption {
+  color: #5c564c !important;
+}
+html[data-theme="light"] .search-bar,
+html[data-theme="light"] .search-bar:hover,
+html[data-theme="light"] .search-bar:focus {
+  background: #fffdf9 !important;
+  color: #1a1916 !important;
+  border-radius: 16px !important;
+  border-color: rgba(28, 25, 21, 0.14) !important;
+}
+html[data-theme="light"] .moon-map-btn {
+  background: #fffdf9 !important;
+  color: #1a1916 !important;
+  border-color: rgba(28, 25, 21, 0.16) !important;
+}
+html[data-theme="light"] .nf-col,
+html[data-theme="light"] .nf-col.near,
+html[data-theme="light"] .nf-col.far,
+html[data-theme="light"] .term-chip,
+html[data-theme="light"] .term-col {
+  background: #fffdf9 !important;
+  color: #1a1916 !important;
+  border-color: rgba(28, 25, 21, 0.12) !important;
+  border-radius: 20px !important;
+}
+html[data-theme="light"] .nf-col.near {
+  background: linear-gradient(160deg, #e7f2fb, #fffdf9) !important;
+}
+html[data-theme="light"] .nf-col.far {
+  background: linear-gradient(200deg, #efeaf8, #fffdf9) !important;
+}
+html[data-theme="light"] .nf-col h5,
+html[data-theme="light"] .nf-col p,
+html[data-theme="light"] .nf-badge,
+html[data-theme="light"] .nf-chip,
+html[data-theme="light"] .term-chip {
+  color: #1a1916 !important;
+}
+html[data-theme="light"] .nf-chip,
+html[data-theme="light"] .term-chip {
+  background: rgba(255, 253, 249, 0.9) !important;
+  border-radius: 999px !important;
+}
+.term-belt {
+  height: 36px !important;
+  border-radius: 999px !important;
+  overflow: hidden !important;
+}
+html[data-theme="light"] .term-belt {
+  background: linear-gradient(90deg, #c5d7ea 0%, #f4efe4 42%, #fff6d8 50%, #efe8dc 58%, #d9d3ee 100%) !important;
+  border: 1px solid rgba(28, 25, 21, 0.14) !important;
+}
+html[data-theme="light"] .term-belt-label {
+  color: #1a1916 !important;
+  background: rgba(255, 253, 249, 0.92) !important;
+  border-radius: 999px !important;
+}
+html[data-theme="light"] .term-col,
+html[data-theme="light"] .term-col h5 {
+  background: #fffdf9 !important;
+  color: #1a1916 !important;
+  border-radius: 18px !important;
+}
+.li-image { border-radius: 14px !important; }
+html[data-theme="dark"] .term-belt { border-radius: 999px !important; }
+.merc-cut-tabs button,
+.merc-color-modes button,
+.merc-zoom-btns button {
+  border-radius: 999px !important;
+}
+html[data-theme="light"] body.mercury-mode .merc-cut-tabs button,
+html[data-theme="light"] body.mercury-mode .merc-color-modes button,
+html[data-theme="light"] body.mercury-mode .merc-zoom-btns button,
+html[data-theme="light"] body.mercury-mode .merc-cut-tabs button:hover,
+html[data-theme="light"] body.mercury-mode .merc-color-modes button:hover {
+  background: #fffdf9 !important;
+  color: #1a1916 !important;
+  border-color: rgba(28, 25, 21, 0.16) !important;
+}
+html[data-theme="light"] body.mercury-mode .merc-cut-tabs button.active,
+html[data-theme="light"] body.mercury-mode .merc-color-modes button.active {
+  background: #e07a3d !important;
+  color: #1a1916 !important;
+  border-color: #e07a3d !important;
+}
+html[data-theme="light"] .merc-mag-hero,
+html[data-theme="light"] .merc-mag-canvas-wrap,
+html[data-theme="light"] body.earth-mode .panel,
+html[data-theme="light"] body.earth-mode .map-panel,
+html[data-theme="light"] body.earth-mode .earth-hero,
+html[data-theme="light"] body.earth-mode .sidebar,
+html[data-theme="light"] body.mercury-mode .sidebar,
+html[data-theme="light"] #earthMapCanvas,
+html[data-theme="light"] .merc-legend {
+  background: #fff !important;
+  color: #1a1916 !important;
+  border-radius: 20px !important;
+}
+html[data-theme="light"] body.earth-mode .sat-panel,
+html[data-theme="light"] body.earth-mode .sat-item button,
+html[data-theme="light"] body.earth-mode #overviewBtn {
+  background: rgba(255,255,255,.92) !important;
+  color: #1a1916 !important;
+  border-color: rgba(26,25,22,.12) !important;
+}
+
+@media (max-width: 800px) {
+  .metrics-panel, .solar-metrics, .ops-grid, .kpi-grid, .term-cols, .nearfar-grid {
+    grid-template-columns: 1fr !important;
+  }
+  .forecast-day { grid-template-columns: 1fr !important; }
+  .forecast-values { grid-template-columns: repeat(3, minmax(0, 1fr)) !important; }
+  .pdf-box { flex-direction: column !important; align-items: stretch !important; }
+  .driver-viz-card canvas, .driver-viz-card { height: 250px !important; min-height: 250px !important; }
+  .hour-item { min-width: 64px !important; }
+  .globe-timebar {
+    left: 12px !important;
+    width: calc(100vw - 24px) !important;
+    transform: none !important;
+  }
+  .legend-panel {
+    bottom: 132px !important;
+    width: min(210px, 70vw) !important;
+    max-height: 34vh !important;
+    overflow: auto !important;
+  }
+  body[data-app="earth"] .sat-panel {
+    top: auto !important;
+    right: 12px !important;
+    bottom: 132px !important;
+    width: min(200px, 54vw) !important;
+    max-height: 22vh !important;
+  }
+  .shell { padding: 12px !important; }
+}
+
+@media (max-width: 1100px) {
+  .map-controls { display: none !important; }
+  body.globe-options-open .map-controls {
+    display: flex !important;
+    top: 76px !important;
+    right: 12px !important;
+    max-height: calc(100vh - 160px) !important;
+  }
+  .globe-timebar { width: min(440px, calc(100vw - 280px)) !important; }
+}

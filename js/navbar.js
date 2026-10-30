@@ -1,7 +1,161 @@
 (function () {
   "use strict";
 
-  const COPYRIGHT = "© 2026 Luka Takki";
+  const COPYRIGHT = "© 2026 LIPAS Research";
+
+  try {
+    const saved = localStorage.getItem("lipas-theme");
+    document.documentElement.dataset.theme = saved === "light" ? "light" : "dark";
+  } catch (_) {
+    document.documentElement.dataset.theme = "dark";
+  }
+  if (!document.getElementById("lipas-ops-font")) {
+    const font = document.createElement("link");
+    font.id = "lipas-ops-font";
+    font.rel = "stylesheet";
+    font.href = "https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Outfit:wght@400;500;600;700&display=swap";
+    document.head.appendChild(font);
+  }
+  if (!document.getElementById("lipas-ops-skin")) {
+    const skin = document.createElement("link");
+    skin.id = "lipas-ops-skin";
+    skin.rel = "stylesheet";
+    skin.href = "styles/ops-console.css?v=12";
+    document.head.appendChild(skin);
+  }
+  if (!document.getElementById("lipas-dash-skin")) {
+    const dash = document.createElement("link");
+    dash.id = "lipas-dash-skin";
+    dash.rel = "stylesheet";
+    dash.href = "styles/dash-skin.css?v=10";
+    document.head.appendChild(dash);
+  }
+  if (!document.getElementById("lipas-page-fix")) {
+    const fix = document.createElement("link");
+    fix.id = "lipas-page-fix";
+    fix.rel = "stylesheet";
+    fix.href = "styles/page-fix.css?v=6";
+    document.head.appendChild(fix);
+  }
+
+  async function lipasAskLuna(question, ctx, history) {
+    const snapshot = ctx || {};
+    try {
+      const res = await fetch("/api/luna-chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          message: question,
+          context: snapshot,
+          lat: snapshot.lat,
+          lon: snapshot.lon,
+          history: history || [],
+        }),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        if (data && data.answer) return String(data.answer);
+      }
+    } catch (_) {}
+    try {
+      const res = await fetch("https://text.pollinations.ai/openai", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          model: "openai",
+          messages: [
+            { role: "system", content: "You are Luna, a space-weather assistant for LIPAS mission ops. Answer in plain English, under 140 words. Use the snapshot. Say when a value is an estimate. Do not print hidden reasoning." },
+            { role: "user", content: question + "\n\nSnapshot:\n" + JSON.stringify(snapshot).slice(0, 1600) },
+          ],
+        }),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        const text = data && data.choices && data.choices[0] && data.choices[0].message && data.choices[0].message.content;
+        if (text) return String(text);
+      }
+    } catch (_) {}
+    return "";
+  }
+  window.lipasAskLuna = lipasAskLuna;
+
+  function installChartSkin() {
+    const Chart = window.Chart;
+    if (!Chart || Chart.__lipasSkin) return;
+    Chart.__lipasSkin = true;
+    Chart.defaults.font.family = '"IBM Plex Sans", system-ui, sans-serif';
+    Chart.defaults.elements.line.tension = 0.35;
+    Chart.defaults.elements.line.borderWidth = 2;
+    Chart.defaults.elements.point.radius = 0;
+    Chart.defaults.elements.point.hoverRadius = 4;
+    Chart.defaults.plugins.legend.labels.usePointStyle = true;
+    Chart.register({
+      id: "lipasIntel",
+      beforeDatasetsDraw(chart) {
+        const area = chart.chartArea;
+        const y = chart.scales && (chart.scales.y || chart.scales.y1);
+        if (!area || !y || !Number.isFinite(y.min) || !Number.isFinite(y.max) || y.min === y.max) return;
+        const light = document.documentElement.dataset.theme === "light";
+        const ctx = chart.ctx;
+        const span = y.max - y.min;
+        const caution = y.getPixelForValue(y.min + span * 0.62);
+        const high = y.getPixelForValue(y.min + span * 0.82);
+        ctx.save();
+        ctx.fillStyle = light ? "rgba(31, 138, 86, 0.06)" : "rgba(62, 207, 142, 0.05)";
+        ctx.fillRect(area.left, caution, area.right - area.left, area.bottom - caution);
+        ctx.fillStyle = light ? "rgba(154, 107, 18, 0.08)" : "rgba(224, 177, 74, 0.07)";
+        ctx.fillRect(area.left, high, area.right - area.left, caution - high);
+        ctx.fillStyle = light ? "rgba(180, 35, 44, 0.08)" : "rgba(226, 91, 91, 0.08)";
+        ctx.fillRect(area.left, area.top, area.right - area.left, high - area.top);
+        ctx.restore();
+      },
+    });
+  }
+  installChartSkin();
+
+  const ICO = {
+    dash: '<svg viewBox="0 0 16 16" aria-hidden="true"><rect x="1.5" y="1.5" width="5.5" height="5.5" rx="1.2" fill="none" stroke="currentColor" stroke-width="1.4"/><rect x="9" y="1.5" width="5.5" height="5.5" rx="1.2" fill="none" stroke="currentColor" stroke-width="1.4"/><rect x="1.5" y="9" width="5.5" height="5.5" rx="1.2" fill="none" stroke="currentColor" stroke-width="1.4"/><rect x="9" y="9" width="5.5" height="5.5" rx="1.2" fill="none" stroke="currentColor" stroke-width="1.4"/></svg>',
+    mission: '<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M2 12.5 6.2 8.2 8.4 10.4 14 3.5" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/><path d="M10.2 3.5H14V7.2" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>',
+    globe: '<svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="6" fill="none" stroke="currentColor" stroke-width="1.4"/><ellipse cx="8" cy="8" rx="2.6" ry="6" fill="none" stroke="currentColor" stroke-width="1.2"/><path d="M2.2 8h11.6M3.2 5.2h9.6M3.2 10.8h9.6" fill="none" stroke="currentColor" stroke-width="1.1"/></svg>',
+    sun: '<svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="2.4" fill="none" stroke="currentColor" stroke-width="1.4"/><path d="M8 1.6v1.8M8 12.6v1.8M1.6 8h1.8M12.6 8h1.8M3.4 3.4l1.3 1.3M11.3 11.3l1.3 1.3M12.6 3.4l-1.3 1.3M4.7 11.3l-1.3 1.3" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>',
+    book: '<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3 2.5h7.2A2.3 2.3 0 0 1 12.5 4.8V13.5H4.6A1.6 1.6 0 0 0 3 15V2.5Z" fill="none" stroke="currentColor" stroke-width="1.3"/><path d="M3 13.2h9.5" stroke="currentColor" stroke-width="1.3"/></svg>',
+  };
+
+  const FAMILIES = {
+    moon: {
+      label: "Moon",
+      note: "Surface hazards & EVA",
+      home: "doctype.html",
+      links: [
+        { id: "dashboard", href: "doctype.html", label: "Dashboard", icon: "dash" },
+        { id: "mission", href: "mission_planning.html", label: "Mission", icon: "mission" },
+        { id: "globe", href: "cesium_map.html", label: "Globe", icon: "globe" },
+        { id: "sources", href: "sources.html?app=moon", label: "Sources", icon: "book" },
+      ],
+    },
+    mercury: {
+      label: "Mercury",
+      note: "Magnetosphere & solar wind",
+      home: "index.html",
+      links: [
+        { id: "dashboard", href: "index.html", label: "Dashboard", icon: "dash" },
+        { id: "globe", href: "mercury_globe.html", label: "Globe", icon: "globe" },
+        { id: "sun", href: "sun_globe.html", label: "Sun", icon: "sun" },
+        { id: "sources", href: "sources.html?app=mercury", label: "Sources", icon: "book" },
+      ],
+    },
+    earth: {
+      label: "Earth",
+      note: "Launch, aurora & orbits",
+      home: "earth.html",
+      links: [
+        { id: "dashboard", href: "earth.html", label: "Dashboard", icon: "dash" },
+        { id: "mission", href: "earth_mission.html", label: "Mission", icon: "mission" },
+        { id: "globe", href: "earth_globe.html", label: "Globe", icon: "globe" },
+        { id: "sources", href: "sources.html?app=earth", label: "Sources", icon: "book" },
+      ],
+    },
+  };
 
   const PAGES = [
     { id: "dashboard", href: "doctype.html", label: "Dashboard" },
@@ -13,102 +167,136 @@
   const MASCOT_SVG = `
 <svg class="moon-mascot" viewBox="0 0 64 64" aria-hidden="true" xmlns="http://www.w3.org/2000/svg">
   <defs>
-    <radialGradient id="moonGrad" cx="32%" cy="28%" r="70%">
-      <stop offset="0%" stop-color="#f2f5fa"/>
-      <stop offset="35%" stop-color="#c8d4e4"/>
-      <stop offset="70%" stop-color="#8fa3b8"/>
-      <stop offset="100%" stop-color="#3d5270"/>
-    </radialGradient>
+    <clipPath id="lunaDisc"><circle cx="32" cy="32" r="28"/></clipPath>
   </defs>
-  <circle class="body" cx="32" cy="32" r="28"/>
-  <circle class="crater" cx="22" cy="24" r="4.5"/>
-  <circle class="crater" cx="40" cy="38" r="6"/>
-  <circle class="crater" cx="44" cy="22" r="3"/>
-  <circle class="eye" cx="24" cy="30" r="2.2"/>
-  <circle class="eye" cx="38" cy="30" r="2.2"/>
-  <circle class="blush" cx="18" cy="36" r="2.4"/>
-  <circle class="blush" cx="44" cy="36" r="2.4"/>
-  <path class="mouth" d="M26 40c2.2 3.2 9.8 3.2 12 0"/>
+  <g clip-path="url(#lunaDisc)">
+    <circle cx="32" cy="32" r="28" fill="#d7e0ea"/>
+    <circle cx="20" cy="16" r="20" fill="#f7f9fc"/>
+    <circle cx="22" cy="24" r="4.2" fill="#8ea0b4"/>
+    <circle cx="41" cy="40" r="5.4" fill="#7d91a6"/>
+    <circle cx="44" cy="21" r="2.4" fill="#96a9bc"/>
+    <circle cx="30" cy="48" r="3" fill="#8ea0b4"/>
+  </g>
+  <circle cx="24" cy="30" r="2.15" fill="#1c2838"/>
+  <circle cx="38" cy="30" r="2.15" fill="#1c2838"/>
+  <circle cx="24.7" cy="29.3" r="0.7" fill="#fff"/>
+  <circle cx="38.7" cy="29.3" r="0.7" fill="#fff"/>
+  <circle cx="18" cy="36" r="2.1" fill="#f0b7b0"/>
+  <circle cx="44" cy="36" r="2.1" fill="#f0b7b0"/>
+  <path d="M26 39.5c2.2 3 9.8 3 12 0" fill="none" stroke="#1c2838" stroke-width="1.6" stroke-linecap="round"/>
 </svg>`;
 
   const chatHistory = [];
 
-    function isMercuryUi() {
-    const file = (location.pathname.split("/").pop() || "").toLowerCase();
+  function pageFile() {
+    return (location.pathname.split("/").pop() || "").toLowerCase();
+  }
+
+  function currentFamily() {
+    const file = pageFile();
     const app = new URLSearchParams(location.search).get("app");
-    if (app === "moon") {
-      try { sessionStorage.setItem("lipas-family", "moon"); } catch (_) {}
-      return false;
+    if (app === "moon" || app === "mercury" || app === "earth") {
+      try { sessionStorage.setItem("lipas-family", app); } catch (_) {}
+      return app;
     }
-    if (app === "mercury") {
-      try { sessionStorage.setItem("lipas-family", "mercury"); } catch (_) {}
-      return true;
+    if (file.includes("earth") || document.body?.dataset?.app === "earth" || document.body?.classList.contains("earth-mode")) {
+      return "earth";
     }
-    let family = "";
-    try { family = sessionStorage.getItem("lipas-family") || ""; } catch (_) {}
-    return (
+    if (
       document.body?.dataset?.app === "mercury" ||
       document.body?.classList.contains("mercury-mode") ||
       file.includes("mercury") ||
       file.includes("sun_globe") ||
-      (file.includes("sources") && family === "mercury")
-    );
+      file === "index.html"
+    ) {
+      return "mercury";
+    }
+    let family = "";
+    try { family = sessionStorage.getItem("lipas-family") || ""; } catch (_) {}
+    if ((file.includes("sources") || file.includes("landing") || file === "") && FAMILIES[family]) return family;
+    return "moon";
+  }
+
+  function isMercuryUi() {
+    return currentFamily() === "mercury";
   }
 
   function detectActive() {
-    const file = (location.pathname.split("/").pop() || "landing.html").toLowerCase();
+    const file = pageFile() || "landing.html";
     if (file.includes("sun_globe") || file === "sun.html") return "sun";
-    if (file.includes("mercury_globe") || (isMercuryUi() && file.includes("globe"))) return "globe";
-    if (isMercuryUi() && (file.includes("index") || file.includes("mercury") || file.includes("dashboard"))) return "dashboard";
-    if (file.includes("doctype") || (file.includes("dashboard") && !isMercuryUi())) return "dashboard";
+    if (file.includes("globe") || file.includes("cesium")) return "globe";
     if (file.includes("mission")) return "mission";
-    if (file.includes("cesium")) return "globe";
+    if (file.includes("doctype") || file.includes("dashboard") || file === "index.html" || file === "earth.html") return "dashboard";
     if (file.includes("sources")) return "sources";
     return "";
   }
 
-  function buildNav(active) {
-    if (isMercuryUi() || (location.pathname.split("/").pop() || "").toLowerCase().includes("mercury_globe")) {
-      const dashActive = active === "dashboard";
-      const globeActive = active === "globe";
-      const sunActive = active === "sun";
-      const srcActive = active === "sources";
-      return `
-<nav class="topnav" id="lipasTopnav" aria-label="Primary">
-  <a class="brand-mark" href="landing.html">L.I.P.A.S.<span>·</span>MERCURY</a>
-  <button type="button" class="topnav-mobile-toggle" id="lipasNavToggle" aria-label="Menu" aria-expanded="false">☰</button>
-  <a href="index.html" class="${dashActive ? "active" : ""}"${dashActive ? ' aria-current="page"' : ""}>Dashboard</a>
-  <a href="mercury_globe.html" class="${globeActive ? "active" : ""}"${globeActive ? ' aria-current="page"' : ""}>Globe</a>
-  <a href="sun_globe.html" class="${sunActive ? "active" : ""}"${sunActive ? ' aria-current="page"' : ""}>Sun</a>
-  <a href="sources.html?app=mercury" class="${srcActive ? "active" : ""}"${srcActive ? ' aria-current="page"' : ""}>Sources</a>
-  <a class="nav-cta" href="landing.html">Open LIPAS</a>
-</nav>`;
+  function profileRecord() {
+    try {
+      const raw = JSON.parse(localStorage.getItem("lipas-profile") || "{}");
+      const name = String(raw.name || "").trim();
+      return { name: name || "LIPAS Research", role: String(raw.role || "Forecast ops").trim() || "Forecast ops" };
+    } catch (_) {
+      return { name: "LIPAS Research", role: "Forecast ops" };
     }
-    const links = PAGES.map(
-      (p) =>
-        `<a href="${p.href}" class="${p.id === active ? "active" : ""}"${
-          p.id === active ? ' aria-current="page"' : ""
-        }>${p.label}</a>`
-    ).join("\n");
-    const cta =
-      active === "dashboard"
-        ? `<a class="nav-cta" href="mission_planning.html">Plan EVA</a>`
-        : `<a class="nav-cta" href="doctype.html">Open Dashboard</a>`;
+  }
+
+  function profileMark(name) {
+    if (!name || name === "LIPAS Research") return "LR";
+    const parts = name.split(/\s+/).filter(Boolean);
+    return ((parts[0] || "L")[0] + (parts[1] ? parts[1][0] : "")).toUpperCase();
+  }
+
+  function buildNav(active) {
+    const familyId = currentFamily();
+    const family = FAMILIES[familyId];
+    const links = family.links.map((p) => {
+      const on = p.id === active;
+      return `<a href="${p.href}" class="${on ? "active" : ""}"${on ? ' aria-current="page"' : ""}>${ICO[p.icon] || ""}${p.label}</a>`;
+    }).join("");
+    const worlds = Object.keys(FAMILIES).map((id) => {
+      const f = FAMILIES[id];
+      const on = id === familyId && pageFile() !== "landing.html" && pageFile() !== "";
+      return `<a href="${f.home}" data-family="${id}"${on ? ' aria-current="true"' : ""}><span><strong>${f.label}</strong><small>${f.note}</small></span></a>`;
+    }).join("");
+    const profile = profileRecord();
+    const light = document.documentElement.dataset.theme === "light";
     return `
 <nav class="topnav" id="lipasTopnav" aria-label="Primary">
-  <a class="brand-mark" href="landing.html">L.I.P.A.S.</a>
-  <button type="button" class="topnav-mobile-toggle" id="lipasNavToggle" aria-label="Menu" aria-expanded="false">☰</button>
+  <div class="ops-switch" id="lipasOps">
+    <button type="button" class="brand-mark" id="lipasOpsBtn" aria-haspopup="listbox" aria-expanded="false" aria-controls="lipasOpsMenu">
+      LIPAS <span>OPS</span>
+      <svg viewBox="0 0 12 12" aria-hidden="true"><path d="M2.5 4.5 6 8l3.5-3.5" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
+    </button>
+    <div class="ops-menu" id="lipasOpsMenu" role="listbox" hidden>
+      <a href="landing.html"><span><strong>Home</strong><small>Back to the landing</small></span></a>
+      ${worlds}
+    </div>
+  </div>
   ${links}
-  ${cta}
+  <div class="nav-tools">
+    <a class="nav-profile" href="profile.html" title="${profile.name.replace(/"/g, "")}">
+      <span>${profileMark(profile.name)}</span>
+    </a>
+    <button type="button" class="theme-toggle" id="lipasTheme" aria-pressed="${light ? "true" : "false"}" aria-label="${light ? "Switch to dark theme" : "Switch to light theme"}">
+      <svg class="ico-sun" viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="2.3" fill="none" stroke="currentColor" stroke-width="1.4"/><path d="M8 1.5v1.7M8 12.8v1.7M1.5 8h1.7M12.8 8h1.7M3.3 3.3l1.2 1.2M11.5 11.5l1.2 1.2M12.7 3.3l-1.2 1.2M4.5 11.5l-1.2 1.2" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>
+      <svg class="ico-moon" viewBox="0 0 16 16" aria-hidden="true"><path d="M10.2 2.2A5.6 5.6 0 1 0 13.8 9 4.4 4.4 0 0 1 10.2 2.2Z" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/></svg>
+    </button>
+    <button type="button" class="topnav-mobile-toggle" id="lipasNavToggle" aria-label="Menu" aria-expanded="false">
+      <span class="nav-burger" aria-hidden="true"><span></span><span></span><span></span></span>
+    </button>
+  </div>
 </nav>`;
   }
 
   function mountNav() {
-    if (isMercuryUi()) {
-      try { sessionStorage.setItem("lipas-family", "mercury"); } catch (_) {}
-      document.body.classList.add("mercury-mode");
-      if (!document.body.dataset.app) document.body.dataset.app = "mercury";
-    }
+    const familyId = currentFamily();
+    try { sessionStorage.setItem("lipas-family", familyId); } catch (_) {}
+    document.body.dataset.family = familyId;
+    document.body.classList.toggle("mercury-mode", familyId === "mercury");
+    document.body.classList.toggle("earth-mode", familyId === "earth");
+    if (familyId === "mercury" && !document.body.dataset.app) document.body.dataset.app = "mercury";
+    if (familyId === "earth" && !document.body.dataset.app) document.body.dataset.app = "earth";
     const host = document.getElementById("lipas-topnav");
     const active = (host && host.dataset.active) || detectActive();
     const html = buildNav(active === "home" ? "" : active);
@@ -139,6 +327,42 @@
       toggle.addEventListener("click", () => {
         const open = nav.classList.toggle("open");
         toggle.setAttribute("aria-expanded", open ? "true" : "false");
+      });
+    }
+    const ops = document.getElementById("lipasOps");
+    const opsBtn = document.getElementById("lipasOpsBtn");
+    const opsMenu = document.getElementById("lipasOpsMenu");
+    if (ops && opsBtn && opsMenu) {
+      opsBtn.addEventListener("click", (e) => {
+        e.stopPropagation();
+        const open = ops.classList.toggle("open");
+        opsMenu.hidden = !open;
+        opsBtn.setAttribute("aria-expanded", open ? "true" : "false");
+      });
+      document.addEventListener("click", (e) => {
+        if (!ops.contains(e.target)) {
+          ops.classList.remove("open");
+          opsMenu.hidden = true;
+          opsBtn.setAttribute("aria-expanded", "false");
+        }
+      });
+      document.addEventListener("keydown", (e) => {
+        if (e.key === "Escape") {
+          ops.classList.remove("open");
+          opsMenu.hidden = true;
+          opsBtn.setAttribute("aria-expanded", "false");
+        }
+      });
+    }
+    const themeBtn = document.getElementById("lipasTheme");
+    if (themeBtn) {
+      themeBtn.addEventListener("click", () => {
+        const next = document.documentElement.dataset.theme === "light" ? "dark" : "light";
+        document.documentElement.dataset.theme = next;
+        try { localStorage.setItem("lipas-theme", next); } catch (_) {}
+        themeBtn.setAttribute("aria-pressed", next === "light" ? "true" : "false");
+        themeBtn.setAttribute("aria-label", next === "light" ? "Switch to dark theme" : "Switch to light theme");
+        window.dispatchEvent(new CustomEvent("lipas-theme-change", { detail: next }));
       });
     }
   }
@@ -711,14 +935,24 @@
       msgs.scrollTop = msgs.scrollHeight;
     }
 
-    function ask(q) {
+    async function ask(q) {
       const question = (q || "").trim();
-      if (!question) return;
+      if (!question) return "";
       push("user", question);
       chatHistory.push({ role: "user", content: question });
-      const answer = lunaAnswer(question);
-      push("bot", answer);
+      const pending = document.createElement("div");
+      pending.className = "moon-msg bot pending";
+      pending.innerHTML = "Thinking through the forecast<span class=\"luna-dots\"></span>";
+      msgs.appendChild(pending);
+      msgs.scrollTop = msgs.scrollHeight;
+      let answer = "";
+      const ctx = gatherLipasContext();
+      answer = await lipasAskLuna(question, ctx, chatHistory.slice(-8));
+      if (!answer) answer = lunaAnswer(question);
+      pending.textContent = answer;
+      pending.classList.remove("pending");
       chatHistory.push({ role: "assistant", content: answer });
+      msgs.scrollTop = msgs.scrollHeight;
       return answer;
     }
 
@@ -786,6 +1020,7 @@
   }
 
   function boot() {
+    installChartSkin();
     mountNav();
     mountAssistant();
     mountCopyright();

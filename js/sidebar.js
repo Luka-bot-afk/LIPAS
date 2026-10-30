@@ -51,7 +51,7 @@
   }
 
   restoreWidth();
-  if (isMobile()) setHidden(false);
+  if (isMobile()) setHidden(true);
 
   openTab?.addEventListener("click", () => setHidden(false));
   overlay?.addEventListener("click", () => setHidden(true));
@@ -62,8 +62,8 @@
       openTab?.classList.remove("visible");
       sidebar.classList.remove("hidden");
       sidebar.style.transform = "";
-    } else if (sidebar.classList.contains("hidden")) {
-      openTab?.classList.add("visible");
+    } else {
+      setHidden(true);
     }
   });
 

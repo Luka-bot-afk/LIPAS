@@ -232,7 +232,7 @@
             cursor: pointer;
             padding: 12px;
             min-height: 112px;
-            border-radius: 0;
+            border-radius: 18px;
             transition: border-color 0.15s, background 0.15s;
             background: linear-gradient(165deg, rgba(28, 37, 51, 0.92), rgba(18, 24, 33, 0.96));
             border: 1px solid rgba(140, 170, 200, 0.14);
@@ -263,7 +263,7 @@
             width: 88px;
             min-width: 88px;
             height: 88px;
-            border-radius: 0;
+            border-radius: 14px;
             background-size: cover;
             background-position: center;
             background-color: #121821;
@@ -328,6 +328,7 @@
             flex-direction: column;
             justify-content: center;
             gap: 8px;
+            min-width: 0;
         }
         
         .li-hdr {
@@ -924,7 +925,7 @@
         .ov-sub { font-size: 12px; color: var(--muted, #8fa3b8); margin-bottom: 14px; line-height: 1.4; }
 
         .term-belt {
-            position: relative; height: 28px; border-radius: 0; overflow: hidden;
+            position: relative; height: 42px; border-radius: 999px; overflow: hidden;
             background: linear-gradient(90deg, #0a1018 0%, #1a2433 42%, #f0e6c8 50%, #1a2433 58%, #0a1018 100%);
             border: 1px solid rgba(140, 170, 200, 0.14); margin-bottom: 12px;
         }
@@ -2661,12 +2662,7 @@
 <body data-app="lipas" class="lipas-mode">
     
     <div class="loading-screen" id="loadingScreen">
-        <div class="spinner-container">
-            <div class="spinner-ring"></div>
-            <div class="spinner-ring"></div>
-            <div class="spinner-ring"></div>
-        </div>
-        <div class="loading-text">Initializing Mercury…</div>
+        <div class="load-label">Loading the Moon</div>
     </div>
     
     <div id="lipas-topnav" data-active="dashboard"></div>
@@ -4155,7 +4151,12 @@
                     else scored.push({ key: 'radiation', val: data.radiation[i], score: 999 });
                     scored.sort((a, b) => b.score - a.score);
                 }
-                const top = scored.slice(0, 10);
+                const preferred = ['radiation', 'temperature', 'evaRisk', 'solar', 'dust'];
+                const top = preferred
+                    .map((k) => scored.find((s) => s.key === k))
+                    .filter(Boolean)
+                    .slice(0, 3);
+                if (!top.length) top.push(...scored.slice(0, 3));
                 if (!top.length) {
                     top.push({ key: 'radiation', val: data.radiation?.[i] ?? 0, score: 1 });
                 }
@@ -4238,12 +4239,20 @@
                 return;
             }
             const palette = ['#6eb6ff','#e0b14a','#e25b5b','#3ecf8e','#a78bfa','#f0a070','#5eead4','#f472b6','#93c5fd','#fbbf24','#c084fc','#34d399'];
+            const hazardColor = {
+                radiation: '#ff6a4a', solar: '#e0b14a', temperature: '#4ab0ff', dust: '#c8a86a',
+                micrometeorites: '#ffc24a', moonquakes: '#9b6cff', illumination: '#f4e2a8',
+                sep: '#ff6ea0', protons: '#f472b6', flares: '#ff8a40', cme: '#ff8a40',
+                kp: '#5aa8ff', storm: '#5aa8ff', evaRisk: '#e25b5b', comms: '#3ecf8e',
+            };
             const datasets = plotSeries.map((s,idx)=>({
                 label: (HAZARD_META[checked[idx]]?.label || checked[idx]),
                 data: s,
-                borderColor: palette[idx % palette.length],
-                backgroundColor: 'rgba(110,182,255,0.08)',
-                tension: 0.3,
+                borderColor: hazardColor[checked[idx]] || palette[idx % palette.length],
+                backgroundColor: (hazardColor[checked[idx]] || palette[idx % palette.length]) + '33',
+                fill: checked.length === 1,
+                tension: checked[idx] === 'temperature' || checked[idx] === 'solar' ? 0.35 : 0.15,
+                borderDash: checked[idx] === 'comms' || checked[idx] === 'illumination' ? [5, 4] : [],
                 pointRadius: 0,
                 borderWidth: 2,
                 fill: false,
@@ -4662,6 +4671,15 @@
             bg.addColorStop(1, '#101820');
             ctx.fillStyle = bg;
             ctx.fillRect(0, 0, W, H);
+            const sunX = 36;
+            const bodyX = W - 42;
+            const sunGlow = ctx.createRadialGradient(sunX, H / 2, 4, sunX, H / 2, 48 + 8 * Math.sin(t));
+            sunGlow.addColorStop(0, 'rgba(255,220,120,0.95)');
+            sunGlow.addColorStop(1, 'rgba(255,140,40,0)');
+            ctx.fillStyle = sunGlow;
+            ctx.beginPath(); ctx.arc(sunX, H / 2, 48, 0, Math.PI * 2); ctx.fill();
+            ctx.fillStyle = '#d7dbe3';
+            ctx.beginPath(); ctx.arc(bodyX, H / 2, Math.min(22, H * 0.16), 0, Math.PI * 2); ctx.fill();
             const sep = Number(data?.sep?.[0] ?? solarIndex * 0.55);
             const protons = Number(data?.protons?.[0] ?? solarIndex * 0.7);
             const intensity = Math.min(1, (sep + protons) / 10 + (storm === 'red' ? 0.35 : storm === 'yellow' ? 0.18 : 0.05));
@@ -4693,17 +4711,21 @@
                 ctx.stroke();
             }
             ctx.globalAlpha = 1;
-            ctx.fillStyle = 'rgba(11,14,19,0.7)';
-            ctx.fillRect(10, 10, 168, 64);
-            ctx.fillStyle = '#8fa3b8';
-            ctx.font = '600 10px IBM Plex Sans, system-ui, sans-serif';
-            ctx.fillText('PARTICLE FLUX (derived)', 20, 28);
-            ctx.fillStyle = '#e6eef8';
-            ctx.font = '700 16px Syne, sans-serif';
-            ctx.fillText(`SEP ${fmtHazard('sep', sep)}`, 20, 50);
-            ctx.fillStyle = '#8fa3b8';
-            ctx.font = '600 10px IBM Plex Sans, system-ui, sans-serif';
-            ctx.fillText(`Conf ${conf}% · viz only`, 20, 66);
+            const lightFlux = document.documentElement.dataset.theme === 'light';
+            ctx.fillStyle = lightFlux ? 'rgba(255,253,249,0.92)' : 'rgba(11,14,19,0.78)';
+            ctx.beginPath();
+            ctx.roundRect(10, 10, 210, 92, 12);
+            ctx.fill();
+            ctx.fillStyle = lightFlux ? '#7a756b' : '#a9b7c7';
+            ctx.font = '600 10px Outfit, system-ui, sans-serif';
+            ctx.fillText('PARTICLE FLUX', 22, 28);
+            ctx.fillStyle = lightFlux ? '#1a1916' : '#eef3f8';
+            ctx.font = '650 14px Outfit, system-ui, sans-serif';
+            ctx.fillText(`SEP ${fmtHazard('sep', sep)}`, 22, 48);
+            ctx.fillText(`Protons ${fmtHazard('protons', protons)}`, 22, 66);
+            ctx.fillStyle = lightFlux ? '#7a756b' : '#a9b7c7';
+            ctx.font = '600 10px Outfit, system-ui, sans-serif';
+            ctx.fillText(`Conf ${conf}% · Sun toward site`, 22, 86);
         }
 
         function drawSolarMap(solarIndex, storm, nowMs) {
@@ -4732,7 +4754,10 @@
                 ctx.fillStyle = `rgba(220,235,255,${0.15 + rand() * 0.55})`;
                 ctx.fillRect(rand() * W, rand() * H, 1.2, 1.2);
             }
-            const cx = W * 0.36, cy = H * 0.5, R = Math.min(W, H) * 0.38;
+            const narrow = W < 540;
+            const R = Math.min(narrow ? Math.min(W, H) * 0.34 : H * 0.4, narrow ? W * 0.36 : W * 0.22);
+            const cx = narrow ? W * 0.5 : Math.min(W * 0.3, R + 28);
+            const cy = H * 0.5;
             const disk = ctx.createRadialGradient(cx - R * 0.25, cy - R * 0.25, R * 0.1, cx, cy, R);
             disk.addColorStop(0, '#fff4c2');
             disk.addColorStop(0.45, '#ffc44a');
@@ -4740,6 +4765,28 @@
             disk.addColorStop(1, '#c04010');
             ctx.beginPath(); ctx.arc(cx, cy, R, 0, Math.PI * 2);
             ctx.fillStyle = disk; ctx.fill();
+            ctx.save();
+            ctx.beginPath(); ctx.arc(cx, cy, R * 0.98, 0, Math.PI * 2); ctx.clip();
+            for (let g = 0; g < 36; g++) {
+                const ang = rand() * Math.PI * 2;
+                const rad = rand() * R * 0.9;
+                const shimmer = 0.45 + 0.55 * Math.sin(t * 1.6 + g);
+                ctx.fillStyle = `rgba(255,250,220,${0.04 + shimmer * 0.07})`;
+                ctx.beginPath();
+                ctx.arc(cx + Math.cos(ang) * rad, cy + Math.sin(ang) * rad, 2 + rand() * 5, 0, Math.PI * 2);
+                ctx.fill();
+            }
+            ctx.restore();
+            for (let k = 0; k < 10; k++) {
+                const ang = (k / 10) * Math.PI * 2 + t * 0.15;
+                const reach = R + 10 + (6 + (storm === 'red' ? 10 : 0)) * (0.5 + 0.5 * Math.sin(t * 1.3 + k));
+                ctx.strokeStyle = storm === 'red' ? `rgba(255,120,80,${0.28})` : `rgba(255,190,80,${storm === 'green' ? 0.16 : 0.28})`;
+                ctx.lineWidth = 1.2;
+                ctx.beginPath();
+                ctx.moveTo(cx + Math.cos(ang) * R * 0.92, cy + Math.sin(ang) * R * 0.92);
+                ctx.quadraticCurveTo(cx + Math.cos(ang + 0.4) * reach, cy + Math.sin(ang + 0.2) * reach, cx + Math.cos(ang + 0.15) * (R * 0.9), cy + Math.sin(ang + 0.15) * (R * 0.9));
+                ctx.stroke();
+            }
             const regions = [];
             const nAR = window.LIPAS_MERCURY
                 ? 3 + Math.round(Math.min(6, solarIndex / 10))
@@ -4794,19 +4841,34 @@
                     ctx.stroke();
                 }
             }
-            ctx.fillStyle = 'rgba(11,14,19,0.72)';
-            ctx.fillRect(W * 0.62, 12, W * 0.34, H - 24);
-            ctx.fillStyle = '#8fa3b8';
-            ctx.font = '600 10px IBM Plex Sans, system-ui, sans-serif';
-            ctx.fillText('SOLAR DISK', W * 0.62 + 10, 30);
-            ctx.fillStyle = '#e6eef8';
-            ctx.font = '700 16px Syne, sans-serif';
-            ctx.fillText(`Index ${fmtHazard('solar', solarIndex)}`, W * 0.62 + 10, 52);
+            const lightDisk = document.documentElement.dataset.theme === 'light';
+            const panelX = narrow ? -900 : Math.max(cx + R + 16, W * 0.56);
+            ctx.fillStyle = lightDisk ? 'rgba(255,253,249,0.92)' : 'rgba(11,14,19,0.8)';
+            ctx.beginPath();
+            ctx.roundRect(panelX, 10, narrow ? 8 : Math.max(120, W - panelX - 10), H - 20, 12);
+            ctx.fill();
+            ctx.fillStyle = lightDisk ? '#7a756b' : '#a9b7c7';
+            ctx.font = '600 10px Outfit, system-ui, sans-serif';
+            ctx.fillText('SOLAR DISK', panelX + 12, 30);
+            ctx.fillStyle = lightDisk ? '#1a1916' : '#eef3f8';
+            ctx.font = '650 16px Outfit, system-ui, sans-serif';
+            ctx.fillText(`Index ${fmtHazard('solar', solarIndex)}`, panelX + 12, 52);
             ctx.fillStyle = storm === 'red' ? '#e25b5b' : storm === 'yellow' ? '#e0b14a' : '#3ecf8e';
-            ctx.font = '600 11px IBM Plex Sans, system-ui, sans-serif';
-            ctx.fillText(storm.toUpperCase() + ' STORM', W * 0.62 + 10, 72);
-            ctx.fillStyle = '#8fa3b8';
-            ctx.fillText(`${nAR} active regions`, W * 0.62 + 10, 92);
+            ctx.font = '600 11px Outfit, system-ui, sans-serif';
+            ctx.fillText(storm.toUpperCase() + ' STORM', panelX + 12, 72);
+            ctx.fillStyle = lightDisk ? '#7a756b' : '#a9b7c7';
+            ctx.fillText(`${nAR} active regions`, panelX + 12, 92);
+            ['Quiet', 'Watch', 'Storm'].forEach((name, i) => {
+                const on = (storm === 'green' && i === 0) || (storm === 'yellow' && i === 1) || (storm === 'red' && i === 2);
+                ctx.fillStyle = on ? (i === 2 ? '#e25b5b' : i === 1 ? '#e0b14a' : '#3ecf8e') : (lightDisk ? '#e4dfd6' : '#2a3342');
+                const bx = panelX + 12 + i * 46;
+                ctx.beginPath();
+                ctx.roundRect(bx, H - 42, 40, 6, 3);
+                ctx.fill();
+                ctx.fillStyle = on ? (lightDisk ? '#1a1916' : '#eef3f8') : (lightDisk ? '#7a756b' : '#8fa3b8');
+                ctx.font = '600 9px Outfit, system-ui, sans-serif';
+                ctx.fillText(name, bx, H - 24);
+            });
 
             canvas._solarRegions = regions;
             if (!canvas.dataset.bound) {
@@ -4978,7 +5040,26 @@
                 box.title = 'Click to view 24-hour evolution';
                 const seriesKey = m.label === 'Thermal stress' ? 'thermalStress' : m.key;
                 const conf = channelConfidencePct(m.key || 'plausibility', data, prediction);
-                box.innerHTML = `<div class="metric-label">${m.label}</div><div class="metric-value">${m.value}</div><div class="metric-accuracy">${m.unit || '-'}</div><div class="metric-conf">Conf <strong>${conf}%</strong></div>`;
+                const icons = {
+                    radiation: '<path d="M8 1.5v3M8 11.5v3M1.5 8h3M11.5 8h3M3.2 3.2l2 2M10.8 10.8l2 2M12.8 3.2l-2 2M5.2 10.8l-2 2" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/>',
+                    solar: '<circle cx="8" cy="8" r="2.2" fill="none" stroke="currentColor" stroke-width="1.3"/>',
+                    dust: '<path d="M3 12c2-4 3-4 5-7 2 3 3 3 5 7" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/>',
+                    temperature: '<path d="M8 2.5v6.2a2.4 2.4 0 1 1-1.6 0V2.5" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/>',
+                    micrometeorites: '<circle cx="4" cy="5" r="1.2" fill="currentColor"/><circle cx="9" cy="4" r=".8" fill="currentColor"/><circle cx="12" cy="8" r="1" fill="currentColor"/><circle cx="7" cy="11" r="1.1" fill="currentColor"/>',
+                    moonquakes: '<path d="M2 10.5 5 6l2.2 3.2L10 4.5 14 11" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/>',
+                    illumination: '<circle cx="8" cy="8" r="2" fill="currentColor"/>',
+                    sep: '<path d="M8 13V3M5 6l3-3 3 3" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/>',
+                    protons: '<circle cx="8" cy="8" r="2.4" fill="none" stroke="currentColor" stroke-width="1.3"/>',
+                    flares: '<path d="M8 1.8 9.2 6h4.2L10.2 8.6 11.4 13 8 10.2 4.6 13l1.2-4.4L2.6 6h4.2z" fill="none" stroke="currentColor" stroke-width="1.1"/>',
+                    cme: '<path d="M3 11c2-5 8-5 10 0" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/>',
+                    kp: '<path d="M3 12V4h4.2a2.4 2.4 0 0 1 0 4.8H3" fill="none" stroke="currentColor" stroke-width="1.3"/>',
+                    storm: '<path d="M4 10h8M5 7.5h6M8 4v2" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/>',
+                    evaRisk: '<circle cx="8" cy="6" r="2" fill="none" stroke="currentColor" stroke-width="1.3"/><path d="M4.5 13c.6-2.2 1.8-3.2 3.5-3.2S11 10.8 11.5 13" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/>',
+                    comms: '<path d="M3 11c2.2-3 7.8-3 10 0M5 9.2c1.4-1.6 4.6-1.6 6 0" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/>',
+                    solarOutput: '<rect x="3" y="6" width="10" height="6" rx="1" fill="none" stroke="currentColor" stroke-width="1.3"/>',
+                };
+                const glyph = icons[m.key] || icons.solar;
+                box.innerHTML = `<span class="metric-ico" aria-hidden="true"><svg viewBox="0 0 16 16">${glyph}</svg></span><div class="metric-label">${m.label}</div><div class="metric-value">${m.value}</div><div class="metric-accuracy">${m.unit || '-'}</div><div class="metric-conf">Conf <strong>${conf}%</strong></div>`;
                 box.addEventListener('click', () => {
                     openEvolutionPopup({
                         mode: 'metrics',
@@ -5539,7 +5620,7 @@
     <script src="remote_client.js" defer></script>
     <script src="js/lipas-api.js"></script>
     <script src="backend.js" defer></script>
-    <script src="js/sidebar.js" defer></script>
-    <script src="js/navbar.js" defer></script>
+    <script src="js/sidebar.js?v=2" defer></script>
+    <script src="js/navbar.js?v=26" defer></script>
 </body>
 </html>

@@ -10,7 +10,7 @@
   <link rel="stylesheet" href="styles/theme.css">
   <link rel="stylesheet" href="styles/main.css">
   <link rel="stylesheet" href="styles/mercury.css?v=7">
-  <link rel="stylesheet" href="styles/globe-page.css?v=2">
+  <link rel="stylesheet" href="styles/globe-page.css?v=4">
   <style>
     body {
       --steel: #f0a03c;
@@ -23,7 +23,6 @@
 </head>
 <body data-app="mercury" class="mercury-mode sun-globe">
   <div class="loading-screen" id="loadingScreen">
-    <div class="load-ring"></div>
     <div class="load-label">Loading Sun Globe</div>
   </div>
 
@@ -138,11 +137,11 @@
   <script src="js/hazard_grid.js?v=4"></script>
   <script src="js/globe_timebar.js?v=1"></script>
   <script src="https://unpkg.com/cesium@1.130/Build/Cesium/Cesium.js"></script>
-  <script src="js/cesium_body_globe.js?v=14"></script>
+  <script src="js/cesium_body_globe.js?v=18"></script>
   <script>
     LipasCesiumGlobe.start({
       body: "sun",
-      radiusMeters: 695700000,
+      radiusMeters: 6957000,
       baseColor: "#c87820",
       markerColor: "#f0a03c",
       imageryKind: "solar",
@@ -150,9 +149,15 @@
       sitesUrl: "/api/solar/disk",
       sitesListKey: "spots",
       dashboardBase: "index.html",
-      fallbackSites: [],
+      fallbackSites: [
+        { name: "AR 13889", lat: 14, lon: -28, intensity: 0.72, area: 280, number_spots: 8, summary: "Northern group, visible disk" },
+        { name: "AR 13886", lat: -18, lon: 12, intensity: 0.64, area: 190, number_spots: 5, summary: "Southern plage and spots" },
+        { name: "AR 13883", lat: 8, lon: 46, intensity: 0.5, area: 120, number_spots: 3, summary: "Eastern limb region" },
+        { name: "AR 13880", lat: -6, lon: -62, intensity: 0.58, area: 160, number_spots: 4, summary: "Western hemisphere" },
+        { name: "AR 13876", lat: 22, lon: -8, intensity: 0.42, area: 80, number_spots: 2, summary: "Small northern pores" },
+      ],
     });
   </script>
-  <script src="js/navbar.js?v=2" defer></script>
+  <script src="js/navbar.js?v=26" defer></script>
 </body>
 </html>

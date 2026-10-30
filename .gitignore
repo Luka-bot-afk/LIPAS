@@ -37,21 +37,14 @@ images/
 *.gif
 *.webp
 *.ico
+!assets/ui/*.jpg
 # keep manuscript figures and appendix charts
 !papers/**/*.png
 !papers/**/*.jpg
 !studies/
 
-# Earth stack is local-only until it is public again
-earth.html
-earth_globe.html
-earth_mission.html
-js/earth_dashboard.js
-js/earth_globe.js
-js/earth_mission.js
-styles/earth.css
+# Local terrain package stays off the public repo
 terra/
-tests/test_earth.py
 
 build/
 kaggle/

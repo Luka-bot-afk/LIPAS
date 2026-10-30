@@ -410,7 +410,6 @@
 </head>
 <body>
   <div class="loading-screen" id="loadingScreen">
-    <div class="load-ring"></div>
     <div class="load-label">Mission planner</div>
   </div>
 
@@ -420,7 +419,7 @@
     <header class="mast">
       <div>
         <h1>Mission <em>Planner</em></h1>
-        <p>EVA windows from my model. Storm and equipment flags. Base zone ranking for any lat/lon.</p>
+        <p>EVA windows, crew dose, and base zones for the hours you are on the surface. Pick a site, set the duration, and read the day.</p>
       </div>
       <div class="mast-meta">
         <strong id="utc-clock">-</strong>
@@ -476,13 +475,18 @@
               </select>
             </div>
           </div>
+          <div class="field">
+            <label for="plan-file">Crew file (optional)</label>
+            <input id="plan-file" type="file" accept=".txt,.csv,.json,text/plain">
+          </div>
           <button class="btn btn-primary" id="btn-run" type="button">Run mission plan</button>
+          <button class="btn" id="btn-luna-plan" type="button">Ask Luna to review this plan</button>
+          <p id="luna-plan-out" style="margin:10px 0 0;font-size:13px;line-height:1.45;"></p>
           <button class="btn btn-ghost" id="btn-eva-check" type="button">Is EVA safe now?</button>
           <button class="btn btn-pdf" id="btn-pdf" type="button" disabled>Download PDF report</button>
           <div id="compute-pulse" aria-hidden="true"></div>
-          <div class="model-pill" id="model-pill"><span class="dot"></span><span id="model-pill-text">Model idle</span></div>
-          <div class="panel-label" style="margin-top:16px;margin-bottom:8px">Quick ML overview</div>
-          <div class="ml-overview" id="ml-overview">
+          <div class="model-pill" id="model-pill" hidden><span class="dot"></span><span id="model-pill-text">Model idle</span></div>
+          <div class="ml-overview" id="ml-overview" hidden>
             <div class="ml-chip off" id="ml-loaded"><div class="mk">Model</div><div class="mv">Checking…</div><div class="mm">LSTM / hybrid</div></div>
             <div class="ml-chip off" id="ml-source"><div class="mk">Source</div><div class="mv">-</div><div class="mm">Live stack</div></div>
             <div class="ml-chip off" id="ml-plaus"><div class="mk">Plausibility</div><div class="mv">-</div><div class="mm">Physics vs ML</div></div>
@@ -514,6 +518,11 @@
 
       
       <main class="col col-center" id="results-shell">
+        <section class="panel mp-stage-panel" aria-label="Site">
+          <div class="panel-label">EVA day</div>
+          <canvas id="mp-stage" aria-label="Shaded site with hazard rings"></canvas>
+          <div class="mp-stage-readout" id="mp-stage-readout">Awaiting coordinates</div>
+        </section>
         <section class="panel">
           <div class="panel-label">EVA status (now)</div>
           <div class="go-block">
@@ -545,7 +554,7 @@
         </section>
 
         <section class="panel">
-          <div class="panel-label">Best EVA windows (next 24 h)</div>
+          <div class="panel-label">EVA windows across the day</div>
           <div id="window-rail" aria-label="EVA window timeline"></div>
           <div id="window-list"></div>
           <div class="panel-label" style="margin-top:16px;margin-bottom:8px">Landing quiet windows (2 h)</div>
@@ -567,7 +576,7 @@
             <div class="dose-cell"><div class="k">Career female used</div><div class="d" id="dose-female">-</div></div>
           </div>
           <div class="meta-foot">
-            <span>Model: <strong id="model-source">-</strong></span>
+            <span>Plan basis: <strong id="model-source">-</strong></span>
             <span>Generated: <strong id="plan-generated">-</strong></span>
           </div>
         </section>
@@ -602,9 +611,10 @@
   </div>
 
   <script src="js/lipas-api.js"></script>
-  <script src="js/mission_planner_client.js"></script>
+  <script src="js/mission_planner_client.js?v=2"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
   <script src="mission_planner.js"></script>
+  <script src="js/mission_stage.js"></script>
   <script>
     (async function loadMlOverview() {
       const setChip = (id, cls, value, meta) => {
@@ -650,6 +660,28 @@
       }
     })();
   </script>
-  <script src="js/navbar.js" defer></script>
+  <script>
+    document.getElementById("btn-luna-plan")?.addEventListener("click", async () => {
+      const out = document.getElementById("luna-plan-out");
+      if (!out) return;
+      out.textContent = "Thinking through the plan…";
+      let notes = "";
+      const file = document.getElementById("plan-file")?.files?.[0];
+      if (file) {
+        try { notes = (await file.text()).slice(0, 4000); } catch (_) { notes = ""; }
+      }
+      const val = (id) => (document.getElementById(id)?.value || "").trim();
+      const question = [
+        "Review this as a mission helper, not a replacement for flight rules.",
+        `Site ${val("inp-site") || "unnamed"} at ${val("inp-lat")}, ${val("inp-lon")}.`,
+        `EVA ${val("inp-eva-dur")} h, ${val("inp-eva-day")} h per day, ${val("inp-mission-days")} days, posture ${val("inp-risk")}.`,
+        notes ? "Crew file:\n" + notes : "No crew file uploaded.",
+        "Say what to watch, what looks workable, and what should be checked with the live forecast."
+      ].join(" ");
+      const answer = typeof window.lipasAskLuna === "function" ? await window.lipasAskLuna(question, { site: val("inp-site"), lat: val("inp-lat"), lon: val("inp-lon") }) : "";
+      out.textContent = answer || "Luna could not reach a model just now. The plan on this page still runs from the local physics.";
+    });
+  </script>
+  <script src="js/navbar.js?v=26" defer></script>
 </body>
 </html>

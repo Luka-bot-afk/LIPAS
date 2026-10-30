@@ -4,6 +4,10 @@
   window.LIPAS_MERCURY = true;
 
   const api = (p) => (typeof window.lipasApiUrl === "function" ? window.lipasApiUrl(p) : p);
+  const lightOn = () => document.documentElement.dataset.theme === "light";
+  const themePlot = () => (lightOn() ? "#f6f1e8" : "#07090c");
+  const themeInk = () => (lightOn() ? "#1a1916" : "#e6eef8");
+  const themeMuted = () => (lightOn() ? "#5c564c" : "#8fa3b8");
 
   const SITES = [
     {
@@ -213,9 +217,45 @@
     const physId = site.id === "overview" ? "equator" : site.id;
     siteId = physId;
     const h = Math.min(48, Math.max(24, Number(hours) || 24));
-    const r = await fetch(api(`/api/mercury/forecast?site=${encodeURIComponent(physId)}&hours=${h}`));
-    if (!r.ok) throw new Error("mercury forecast " + r.status);
-    const raw = await r.json();
+    let raw = null;
+    try {
+      const r = await fetch(api(`/api/mercury/forecast?site=${encodeURIComponent(physId)}&hours=${h}`));
+      if (!r.ok) throw new Error("mercury forecast " + r.status);
+      raw = await r.json();
+    } catch (err) {
+      const time = Array.from({ length: h }, (_, i) => i);
+      const wave = (base, amp, phase) => time.map((i) => Math.round((base + amp * Math.sin((i / 24) * Math.PI * 2 + phase)) * 1000) / 1000);
+      const latAbs = Math.min(90, Math.abs(Number(site.lat) || 0));
+      raw = {
+        time,
+        solar: wave(14, 3.5, 0.2),
+        radiation: wave(0.06, 0.015, 1),
+        temperature: wave(430 - latAbs * 1.4, 35, 0.4),
+        temperature_k: wave(430 - latAbs * 1.4, 35, 0.4),
+        illumination: wave(latAbs > 80 ? 0.35 : 0.7, 0.25, 0),
+        standoff_rm: wave(1.42, 0.08, 0.6),
+        p_dyn_npa: wave(11, 2.5, 1.2),
+        imf_bz: wave(-2.5, 4, 0.8),
+        imf_b_mag: wave(28, 6, 0.3),
+        kp: wave(2.2, 0.6, 0.4),
+        f107: wave(130, 8, 0.1),
+        dst: wave(-16, 10, 1.4),
+        flare_index: wave(2.2, 0.4, 0.2),
+        sep: wave(1.4, 0.3, 0.5),
+        protons: wave(0.8, 0.2, 0.9),
+        flares: wave(2.2, 0.4, 0.2),
+        cme: wave(0.2, 0.08, 1.1),
+        storm: wave(1.6, 0.4, 0.7),
+        source: "offline-estimate",
+        now: {
+          site,
+          magnetosphere: { standoff_rm: 1.42, p_dyn_npa: 11, p_mag_mp_npa: 9 },
+          physics: { flare_class: "B2", flare_index: 2.2 },
+          wind_mercury: { imf_bz: -2.5 },
+        },
+      };
+      console.warn("[Mercury] using offline estimate", err);
+    }
     forecast = raw;
     state = raw.now || null;
     window._mercuryNow = state;
@@ -307,11 +347,131 @@
     };
   };
 
+  function schematicMag(rss) {
+    const R = Math.max(1.15, Number(rss) || 1.42);
+    const nx = 56;
+    const nz = 40;
+    const g = { nx, nz, x_min: -4, x_max: 3, z_min: -3, z_max: 3, cells: [] };
+    const cell = (x, z) => {
+      const rad = Math.hypot(x, z);
+      if (rad < 1) return "planet";
+      const th = Math.atan2(z, x);
+      const c = Math.max(-0.92, Math.cos(th));
+      const shape = Math.sqrt(2 / (1 + c));
+      if (rad < R * shape) return "magnetosphere";
+      if (rad < R * 1.55 * shape) return "sheath";
+      return "wind";
+    };
+    for (let j = 0; j < nz; j++) {
+      const row = [];
+      const z = g.z_max - ((j + 0.5) / nz) * (g.z_max - g.z_min);
+      for (let i = 0; i < nx; i++) {
+        const x = g.x_min + ((i + 0.5) / nx) * (g.x_max - g.x_min);
+        row.push(cell(x, z));
+      }
+      g.cells.push(row);
+    }
+    const arc = (scale, sign) => {
+      const pts = [];
+      for (let i = 0; i <= 24; i++) {
+        const th = -1.15 + (2.3 * i) / 24;
+        const r = scale * Math.sqrt(2 / (1 + Math.max(-0.92, Math.cos(th))));
+        pts.push([r * Math.cos(th), sign * Math.abs(r * Math.sin(th))]);
+      }
+      return pts;
+    };
+    const colors = {
+      planet: "#b08968",
+      magnetosphere: "#7eb6d6",
+      sheath: "#e4c56a",
+      wind: "#e07a4a",
+      closed_line: "#1f4e79",
+      open_line: "#8d3b4a",
+    };
+    const bmag = {
+      nx, nz,
+      x_min: g.x_min, x_max: g.x_max, z_min: g.z_min, z_max: g.z_max,
+      vmin: 8, vmax: 160,
+      values: g.cells.map((row, j) => row.map((_, i) => {
+        const z = g.z_max - ((j + 0.5) / nz) * (g.z_max - g.z_min);
+        const x = g.x_min + ((i + 0.5) / nx) * (g.x_max - g.x_min);
+        const rad = Math.max(0.35, Math.hypot(x, z));
+        return 12 + 140 / (rad * rad * rad);
+      })),
+    };
+    return {
+      standoff_rm: R,
+      bow_shock_rm: R * 1.55,
+      grid: g,
+      bmag_grid: bmag,
+      equatorial_grid: Object.assign({}, g, { ny: nz, y_min: g.z_min, y_max: g.z_max }),
+      colors,
+      legend: [
+        ["wind", "Solar wind"],
+        ["sheath", "Sheath"],
+        ["magnetosphere", "Magnetosphere"],
+        ["planet", "Mercury"],
+      ],
+      bow_shock: { north: arc(R * 1.55, 1), south: arc(R * 1.55, -1) },
+      magnetopause: { north: arc(R, 1), south: arc(R, -1) },
+      field_lines: [0.4, 0.9, 1.4].map((z0) => ({
+        closed: z0 < 1.2,
+        points: [[0.2, z0 * 0.2], [0.8, z0], [1.6, z0 * 0.7], [2.2, z0 * 0.2]],
+      })),
+    };
+  }
+
   async function loadState(h) {
-    const q = new URLSearchParams({ site: siteId, hour: String(h) });
-    const r = await fetch(api("/api/mercury/state?" + q.toString()));
-    if (!r.ok) throw new Error("mercury state " + r.status);
-    state = await r.json();
+    const hourN = Number(h) || 0;
+    try {
+      const q = new URLSearchParams({ site: siteId, hour: String(hourN) });
+      const r = await fetch(api("/api/mercury/state?" + q.toString()));
+      if (!r.ok) throw new Error("mercury state " + r.status);
+      state = await r.json();
+    } catch (err) {
+      if (!forecast && typeof window.fetchMercuryForecast === "function") {
+        try {
+          await window.fetchMercuryForecast(0, 0, 24);
+          forecast = window._mercuryForecast;
+        } catch (_) {}
+      }
+      const now = (forecast && forecast.now) || {};
+      const series = forecast || {};
+      const i = Math.max(0, Math.min(((series.time && series.time.length) || 1) - 1, hourN));
+      const pick = (key, fallback) => {
+        const arr = series[key];
+        const v = arr && arr[i];
+        return Number.isFinite(Number(v)) ? Number(v) : fallback;
+      };
+      state = Object.assign({}, now, {
+        forecast_hour: hourN,
+        source: series.source || "offline-estimate",
+        site: now.site || { name: "Mercury", id: siteId },
+        r_au: now.r_au || 0.387,
+        magnetosphere: Object.assign(schematicMag(pick("standoff_rm", 1.42)), {
+          standoff_rm: pick("standoff_rm", 1.42),
+          p_dyn_npa: pick("p_dyn_npa", 11),
+          p_mag_mp_npa: 9,
+          imf_b_mag_nt: pick("imf_b_mag", 28),
+        }, now.magnetosphere || {}),
+        physics: Object.assign({
+          flare_class: "B2",
+          flare_index: pick("flare_index", 2.2),
+          f107: pick("f107", 130),
+          p_dyn_npa: pick("p_dyn_npa", 11),
+        }, now.physics || {}),
+        wind_mercury: Object.assign({
+          imf_bz: pick("imf_bz", -2.5),
+          imf_b_mag: pick("imf_b_mag", 28),
+        }, now.wind_mercury || {}),
+        alerts: now.alerts || [{
+          level: "ok",
+          title: "Quiet-day sketch",
+          body: "This host has no live Mercury feed. The field and charts are a calm-day estimate.",
+        }],
+      });
+      console.warn("[Mercury] state offline", err);
+    }
     window._mercuryNow = state;
     return state;
   }
@@ -559,7 +719,7 @@
     cv.style.height = cssH + "px";
     const ctx = cv.getContext("2d");
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-    ctx.fillStyle = "#07090c";
+    ctx.fillStyle = themePlot();
     ctx.fillRect(0, 0, cssW, cssH);
 
     if (magZoom !== 1) {
@@ -574,7 +734,7 @@
     const pad = 8;
     const ymin = g[yKey === "y" ? "y_min" : "z_min"];
     const ymax = g[yKey === "y" ? "y_max" : "z_max"];
-    ctx.fillStyle = "rgba(200,210,220,0.75)";
+    ctx.fillStyle = themeMuted();
     ctx.font = "10px IBM Plex Sans, sans-serif";
     ctx.textAlign = "left";
     for (let i = 0; i <= 4; i++) {
@@ -588,7 +748,7 @@
       const y = (i / 4) * H;
       ctx.fillText(fmt(yVal, 1), 4, Math.max(12, Math.min(H - 6, y + 4)));
     }
-    ctx.fillStyle = "rgba(143,163,184,0.85)";
+    ctx.fillStyle = themeMuted();
     ctx.fillText("X (R_M)", W - 52, H - 16);
     ctx.fillText(yKey === "y" ? "Y" : "Z", 4, 14);
   }
@@ -784,10 +944,10 @@
         ctx.lineWidth = 1.6;
         ctx.stroke();
       };
-      stroke(mag.magnetopause.north, "rgba(255,255,255,0.75)");
-      stroke(mag.magnetopause.south, "rgba(255,255,255,0.75)");
+      stroke(mag.magnetopause.north, lightOn() ? "rgba(26,25,22,0.72)" : "rgba(255,255,255,0.75)");
+      stroke(mag.magnetopause.south, lightOn() ? "rgba(26,25,22,0.72)" : "rgba(255,255,255,0.75)");
     }
-    ctx.fillStyle = "#e6eef8";
+    ctx.fillStyle = themeInk();
     ctx.font = "11px IBM Plex Sans, sans-serif";
     ctx.fillText("log |B| nT", 10, 16);
     drawAxisTicks(ctx, W, H, g, "z");
@@ -814,7 +974,7 @@
 
     const grd = ctx.createRadialGradient(W * 0.55, H * 0.5, 20, W * 0.55, H * 0.5, W * 0.55);
     grd.addColorStop(0, "rgba(224,122,61,0.12)");
-    grd.addColorStop(1, "#07090c");
+    grd.addColorStop(1, themePlot());
     ctx.fillStyle = grd;
     ctx.fillRect(0, 0, W, H);
 
@@ -863,7 +1023,7 @@
     ctx.beginPath();
     ctx.arc(cx, cy, Math.abs(ex - cx), 0, Math.PI * 2);
     ctx.fill();
-    ctx.fillStyle = "#e6eef8";
+    ctx.fillStyle = themeInk();
     ctx.font = "12px IBM Plex Sans, sans-serif";
     ctx.fillText(`Shield ${fmt(rss, 2)} RM`, 14, 22);
     drawAxisTicks(ctx, W, H, g, "z");
@@ -919,10 +1079,10 @@
     ctx.lineTo(cx + rss * pr, cy);
     ctx.stroke();
     ctx.setLineDash([]);
-    ctx.fillStyle = "#e6eef8";
+    ctx.fillStyle = themeInk();
     ctx.font = "13px IBM Plex Sans, sans-serif";
     ctx.fillText(`Shield = ${fmt(rss, 2)} RM`, 18, 28);
-    ctx.fillStyle = "#8fa3b8";
+    ctx.fillStyle = themeMuted();
     ctx.fillText(`Bow shock ≈ ${fmt(rbs, 2)} R_M`, 18, 48);
     ctx.fillText(`Wind ${fmt(mag.p_dyn_npa ?? state?.physics?.p_dyn_npa, 1)} nPa`, 18, 68);
     const leg = $("magLegend");
@@ -966,7 +1126,7 @@
     ctx.beginPath();
     ctx.arc(cx, cy, pr, 0, Math.PI * 2);
     ctx.fill();
-    ctx.fillStyle = "#e6eef8";
+    ctx.fillStyle = themeInk();
     ctx.font = "12px IBM Plex Sans, sans-serif";
     ctx.fillText(`n ≈ ${fmt(dens, 1)} cm⁻³ · V ${fmt(spd, 0)} km/s`, 14, 22);
     const leg = $("magLegend");
@@ -989,7 +1149,7 @@
     ctx.beginPath();
     ctx.arc(cx, cy, r, 0, Math.PI * 2);
     ctx.stroke();
-    ctx.fillStyle = "#8fa3b8";
+    ctx.fillStyle = themeMuted();
     ctx.font = "12px IBM Plex Sans, sans-serif";
     ctx.fillText("+Bz", cx - 12, cy - r - 10);
     ctx.fillText("−Bz", cx - 12, cy + r + 18);
@@ -1004,10 +1164,10 @@
       ctx.moveTo(cx, cy);
       ctx.lineTo(x2, y2);
       ctx.stroke();
-      ctx.fillStyle = "#e6eef8";
+      ctx.fillStyle = themeInk();
       ctx.font = "14px IBM Plex Sans, sans-serif";
       ctx.fillText(`${clock.orientation}`, W * 0.62, H * 0.35);
-      ctx.fillStyle = "#8fa3b8";
+      ctx.fillStyle = themeMuted();
       ctx.font = "13px IBM Plex Sans, sans-serif";
       ctx.fillText(`By ${fmt(clock.by_nt, 1)} nT`, W * 0.62, H * 0.35 + 24);
       ctx.fillText(`Bz ${fmt(clock.bz_nt, 1)} nT`, W * 0.62, H * 0.35 + 44);
@@ -1041,9 +1201,10 @@
       canvas.height = Math.floor(cssH * dpr);
     }
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-    ctx.fillStyle = "#07090c";
+    const light = document.documentElement.dataset.theme === "light";
+    ctx.fillStyle = light ? "#f7f4ee" : "#07090c";
     ctx.fillRect(0, 0, cssW, cssH);
-    const pad = { l: 42, r: 12, t: 12, b: 24 };
+    const pad = { l: 46, r: 14, t: 22, b: 26 };
     const w = cssW - pad.l - pad.r;
     const h = cssH - pad.t - pad.b;
     const vals = (series || []).filter((v) => Number.isFinite(v));
@@ -1092,19 +1253,50 @@
       ctx.stroke();
       ctx.setLineDash([]);
     }
-    const strokeSeries = (arr, col, width) => {
+    const xy = (arr, i) => {
+      const x = pad.l + (i / Math.max(1, arr.length - 1)) * w;
+      const y = pad.t + (1 - (arr[i] - lo) / (hi - lo)) * h;
+      return [x, y];
+    };
+    const strokeSeries = (arr, col, width, fill) => {
       ctx.beginPath();
       arr.forEach((v, i) => {
-        const x = pad.l + (i / Math.max(1, arr.length - 1)) * w;
-        const y = pad.t + (1 - (v - lo) / (hi - lo)) * h;
+        const [x, y] = xy(arr, i);
         if (i === 0) ctx.moveTo(x, y);
         else ctx.lineTo(x, y);
       });
+      if (fill) {
+        const last = xy(arr, arr.length - 1);
+        const first = xy(arr, 0);
+        ctx.lineTo(last[0], pad.t + h);
+        ctx.lineTo(first[0], pad.t + h);
+        ctx.closePath();
+        const g = ctx.createLinearGradient(0, pad.t, 0, pad.t + h);
+        g.addColorStop(0, col + "55");
+        g.addColorStop(1, col + "05");
+        ctx.fillStyle = g;
+        ctx.fill();
+        ctx.beginPath();
+        arr.forEach((v, i) => {
+          const [x, y] = xy(arr, i);
+          if (i === 0) ctx.moveTo(x, y);
+          else ctx.lineTo(x, y);
+        });
+      }
       ctx.strokeStyle = col;
       ctx.lineWidth = width;
+      ctx.lineJoin = "round";
       ctx.stroke();
     };
-    strokeSeries(series, color, 2);
+    if (extra?.floor != null && Number.isFinite(extra.floor) && extra.floor > lo && extra.floor < hi) {
+      const yf = pad.t + (1 - (extra.floor - lo) / (hi - lo)) * h;
+      ctx.fillStyle = "rgba(226,91,91,0.10)";
+      ctx.fillRect(pad.l, yf, w, pad.t + h - yf);
+      ctx.fillStyle = "#e25b5b";
+      ctx.font = "10px IBM Plex Sans, sans-serif";
+      ctx.fillText(extra.floorLabel || "threshold", pad.l + 6, yf - 4);
+    }
+    strokeSeries(series, color, 2.2, true);
     if (extra?.second) strokeSeries(extra.second, extra.secondColor || "#e0b14a", 1.5);
     const mark = extra?.marker;
     if (mark != null && Number.isFinite(mark) && series.length > 1) {
@@ -1112,7 +1304,7 @@
         ? Math.max(0, Math.min(1, mark / 24))
         : Math.max(0, Math.min(1, mark / Math.max(1, series.length - 1)));
       const x = pad.l + frac * w;
-      ctx.strokeStyle = "rgba(230,238,248,0.55)";
+      ctx.strokeStyle = light ? "rgba(26,25,22,0.45)" : "rgba(230,238,248,0.55)";
       ctx.beginPath();
       ctx.moveTo(x, pad.t);
       ctx.lineTo(x, pad.t + h);
@@ -1128,13 +1320,39 @@
       }
     } else if (hour < series.length) {
       const x = pad.l + (hour / Math.max(1, series.length - 1)) * w;
-      ctx.strokeStyle = "rgba(230,238,248,0.35)";
+      ctx.strokeStyle = light ? "rgba(26,25,22,0.28)" : "rgba(230,238,248,0.35)";
       ctx.beginPath();
       ctx.moveTo(x, pad.t);
       ctx.lineTo(x, pad.t + h);
       ctx.stroke();
     }
-    ctx.fillStyle = "#8fa3b8";
+    const finite = series.map((v, i) => ({ v, i })).filter((p) => Number.isFinite(p.v));
+    if (finite.length) {
+      const loP = finite.reduce((a, b) => (a.v < b.v ? a : b));
+      const hiP = finite.reduce((a, b) => (a.v > b.v ? a : b));
+      [loP, hiP].forEach((p) => {
+        const [x, y] = xy(series, p.i);
+        ctx.fillStyle = color;
+        ctx.beginPath();
+        ctx.arc(x, y, 3, 0, Math.PI * 2);
+        ctx.fill();
+      });
+      const head = finite.slice(0, Math.min(4, finite.length));
+      const tail = finite.slice(-Math.min(4, finite.length));
+      const a0 = head.reduce((s, p) => s + p.v, 0) / head.length;
+      const a1 = tail.reduce((s, p) => s + p.v, 0) / tail.length;
+      const delta = a1 - a0;
+      const trend = Math.abs(delta) < (hi - lo) * 0.04 ? "steady" : delta > 0 ? "rising" : "falling";
+      ctx.fillStyle = light ? "#5c564c" : "#9eb0c4";
+      ctx.font = "11px IBM Plex Sans, sans-serif";
+      const note = `${trend} · now ${fmt(tail[tail.length - 1].v, extra?.digits ?? 1)}`;
+      ctx.fillText(extra?.caption ? `${extra.caption} · ${note}` : note, pad.l + 4, 14);
+      if (extra?.zero && finite.some((p) => p.v < 0)) {
+        ctx.fillStyle = "#e25b5b";
+        ctx.fillText(extra.southLabel || "southward", pad.l + w - 74, pad.t + h - 6);
+      }
+    }
+    ctx.fillStyle = light ? "#5c564c" : "#8fa3b8";
     ctx.font = "10px IBM Plex Sans, sans-serif";
     ctx.fillText(fmt(hi, extra?.digits ?? 1), 4, pad.t + 8);
     ctx.fillText(fmt(lo, extra?.digits ?? 1), 4, pad.t + h);
@@ -1145,10 +1363,6 @@
     } else {
       ctx.fillText("0 h", pad.l, cssH - 6);
       ctx.fillText("24 h", pad.l + w - 24, cssH - 6);
-    }
-    if (extra?.caption) {
-      ctx.fillStyle = "#6a7f96";
-      ctx.fillText(extra.caption, pad.l + 8, pad.t + 12);
     }
   }
 
@@ -1162,7 +1376,7 @@
     cv.width = Math.floor(cssW * dpr);
     cv.height = Math.floor(cssH * dpr);
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-    ctx.fillStyle = "#07090c";
+    ctx.fillStyle = themePlot();
     ctx.fillRect(0, 0, cssW, cssH);
     const mag = state?.magnetosphere;
     if (!mag) return;
@@ -1173,7 +1387,7 @@
     const max = Math.max(...bars.map((b) => b[1]), 1);
     bars.forEach((b, i) => {
       const y = 40 + i * 70;
-      ctx.fillStyle = "#8fa3b8";
+      ctx.fillStyle = themeMuted();
       ctx.font = "12px IBM Plex Sans, sans-serif";
       ctx.fillText(`${b[0]}  ${fmt(b[1], 2)} nPa`, 16, y);
       ctx.fillStyle = b[2];
@@ -1192,14 +1406,14 @@
     cv.height = Math.floor(cssH * dpr);
     cv.style.height = cssH + "px";
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-    ctx.fillStyle = "#07090c";
+    ctx.fillStyle = themePlot();
     ctx.fillRect(0, 0, cssW, cssH);
     const rows = sitesNow?.sites || [];
     if (!rows.length) return;
     const maxR = Math.max(...rows.map((s) => s.radiation), 0.05);
     rows.forEach((s, i) => {
       const y = 16 + i * 28;
-      ctx.fillStyle = s.id === siteId ? "#e6eef8" : "#8fa3b8";
+      ctx.fillStyle = s.id === siteId ? themeInk() : themeMuted();
       ctx.font = "11px IBM Plex Sans, sans-serif";
       ctx.fillText(s.name.split(" (")[0], 8, y + 8);
       ctx.fillStyle = "#e07a3d";
@@ -1220,7 +1434,7 @@
     cv.style.height = cssH + "px";
     const ctx = cv.getContext("2d");
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-    ctx.fillStyle = "#07090c";
+    ctx.fillStyle = themePlot();
     ctx.fillRect(0, 0, cssW, cssH);
 
     const cx = cssW * 0.42;
@@ -1287,7 +1501,7 @@
     ctx.arc(ex, ey, 7, 0, Math.PI * 2);
     ctx.fill();
 
-    ctx.fillStyle = "#e6eef8";
+    ctx.fillStyle = themeInk();
     ctx.font = "12px IBM Plex Sans, sans-serif";
     ctx.fillText("Sun", cx - 12, cy - 22);
     ctx.fillText("Mercury", mx + 10, my + 4);
@@ -1356,14 +1570,25 @@
       caption: "solar · flare idx",
     });
     lineChart($("cvRad"), first24(forecast.radiation), "#d45d8c", { digits: 3, marker: hi });
-    lineChart($("cvRss"), first24(forecast.standoff_rm), "#3d9aad", { digits: 2, marker: hi });
+    lineChart($("cvRss"), first24(forecast.standoff_rm), "#3d9aad", {
+      digits: 2,
+      marker: hi,
+      floor: 1.45,
+      floorLabel: "compressed shield",
+      caption: "standoff Rm",
+    });
     lineChart($("cvImf"), first24(forecast.imf_b_mag || []), "#e07a3d", {
       second: first24(forecast.imf_bz || []),
       secondColor: "#e25b5b",
       zero: true,
       marker: hi,
+      southLabel: "southward Bz",
+      caption: "|B| · Bz",
     });
-    lineChart($("cvPdyn"), first24(forecast.p_dyn_npa || forecast.p_dyn || []), "#c4a574", { marker: hi });
+    lineChart($("cvPdyn"), first24(forecast.p_dyn_npa || forecast.p_dyn || []), "#c4a574", {
+      marker: hi,
+      caption: "dynamic pressure",
+    });
     drawPressure();
     drawSitesCompare();
   }
@@ -1593,7 +1818,7 @@
     ctx.beginPath();
     ctx.arc(mercX - 4, mercY - 3, mercR * 0.55, 0, Math.PI * 2);
     ctx.fill();
-    ctx.fillStyle = "#8fa3b8";
+    ctx.fillStyle = themeMuted();
     ctx.font = "10px IBM Plex Sans, sans-serif";
     ctx.fillText("Mercury", mercX - 22, mercY + mercR + 14);
 
@@ -1629,9 +1854,9 @@
         ctx.stroke();
       }
     }
-    ctx.fillStyle = "rgba(7,9,12,0.72)";
+    ctx.fillStyle = lightOn() ? "rgba(255,253,249,0.88)" : "rgba(7,9,12,0.72)";
     ctx.fillRect(8, H - 30, W - 16, 22);
-    ctx.fillStyle = "#c8d6e4";
+    ctx.fillStyle = themeInk();
     ctx.font = "11px IBM Plex Sans, sans-serif";
     ctx.fillText(
       `SEP ${fmt(sep, 1)} · protons ${fmt(protons, 1)} · shield ${fmt(rss, 2)} · wind ${fmt(pDyn, 1)} · flare ${fmt(flareIdx, 1)} · T+${hi}h`,
@@ -2059,6 +2284,12 @@
         drawHelio();
         if (activeChartKey) renderCharts();
       }
+    });
+    window.addEventListener("lipas-theme-change", () => {
+      if (!state && !forecast) return;
+      drawCombinedCut();
+      drawHelio();
+      renderCharts();
     });
   }
 

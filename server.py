@@ -1685,13 +1685,13 @@ def _luna_openai_answer(message, snap, history=None):
     if not key:
         return None, "no_key"
     system = (
-        "You are Luna, the friendly L.I.P.A.S. lunar assistant.\n\n"
-        "Tone: normal conversational English — like a helpful colleague, not a telemetry readout.\n"
-        "Greetings (hello, hi, what's this): reply warmly in 1–2 sentences with no numbers unless asked.\n"
-        "Only cite live snapshot values when the user asks about conditions, radiation, EVA, dust, storms, etc.\n"
-        "Default length: 1–3 sentences; use bullets only when listing activities.\n"
-        "Math: KaTeX inline $...$ only when it truly clarifies; skip formulas for casual questions.\n"
-        "Never invent telemetry; say when data is missing.\n\n"
+        "You are Luna, flight-dynamics assistant for L.I.P.A.S. (Moon EVA, Mercury magnetosphere, Earth launch and orbits).\n"
+        "Before you answer, silently check the question against the live snapshot: site, body, radiation, temperature, dust, solar, storm, and EVA status.\n"
+        "Then answer in plain English. Do not show your reasoning steps.\n"
+        "Greetings: one warm sentence, no numbers.\n"
+        "Ops questions: 2–4 sentences that name the site, the call (GO, CAUTION, or NO-GO) if the snapshot has it, and the one constraint that matters.\n"
+        "Never invent telemetry. If a value is missing, say so.\n"
+        "Moon plans are EVA. Earth plans are destinations and spacecraft. Do not talk about an ML model unless asked.\n\n"
         + LUNA_LIPAS_KNOWLEDGE
     )
     messages = [{"role": "system", "content": system}]
@@ -1705,8 +1705,8 @@ def _luna_openai_answer(message, snap, history=None):
     body = json.dumps({
         "model": os.environ.get("OPENAI_MODEL", "gpt-4o-mini"),
         "messages": messages,
-        "temperature": 0.35,
-        "max_tokens": 380,
+        "temperature": 0.3,
+        "max_tokens": 480,
     }).encode("utf-8")
     req = urllib.request.Request(
         "https://api.openai.com/v1/chat/completions",
@@ -1730,10 +1730,10 @@ def _luna_pollinations_answer(message, snap, history=None):
     import urllib.error
     import urllib.request
     system = (
-        "You are Luna, the friendly L.I.P.A.S. lunar assistant. Speak in normal conversational English. "
-        "For greetings or 'what is this', answer simply without dumping numbers. "
-        "Only use the live snapshot when the user asks about conditions, hazards, or EVA. "
-        "Keep answers short unless the user asks for depth."
+        "You are Luna, flight assistant for L.I.P.A.S. Think through the live snapshot first "
+        "(site, radiation, temperature, dust, solar, storm, EVA or launch call), then answer. "
+        "Do not print your reasoning. Plain English, 2–4 sentences for ops questions, one sentence for greetings. "
+        "Never invent numbers. Moon is EVA. Earth is destinations and spacecraft."
     )
     messages = [
         {"role": "system", "content": system},
@@ -1748,8 +1748,8 @@ def _luna_pollinations_answer(message, snap, history=None):
     body = json.dumps({
         "model": os.environ.get("LUNA_FREE_MODEL", "openai"),
         "messages": messages,
-        "temperature": 0.45,
-        "max_tokens": 550,
+        "temperature": 0.35,
+        "max_tokens": 650,
     }).encode("utf-8")
     endpoints = [
         "https://text.pollinations.ai/openai",
@@ -1778,7 +1778,7 @@ def _luna_pollinations_answer(message, snap, history=None):
                     headers={"Content-Type": "application/json"},
                     method="POST",
                 )
-                open_kw: dict[str, Any] = {"timeout": 35}
+                open_kw: dict[str, Any] = {"timeout": 18}
                 if ctx is not None:
                     open_kw["context"] = ctx
                 with urllib.request.urlopen(req, **open_kw) as resp:
@@ -1831,11 +1831,10 @@ def luna_chat():
         answer = None
         source = None
         openai_key = (os.environ.get("OPENAI_API_KEY") or "").strip()
-        use_llm = openai_key or (os.environ.get("LUNA_USE_LLM") or "").strip().lower() in ("1", "true", "yes")
 
-        if use_llm and openai_key:
+        if openai_key:
             answer, source = _luna_openai_answer(message, snap, history)
-        if not answer and use_llm and not openai_key:
+        if not answer:
             answer, source = _luna_pollinations_answer(message, snap, history)
         if not answer:
             answer = _luna_local_answer(message, snap)

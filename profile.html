@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="copyright" content="© 2026 LIPAS Research">
+  <title>LIPAS · Profile</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Outfit:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles/theme.css">
+  <link rel="stylesheet" href="styles/ops-console.css?v=10">
+  <style>
+    .profile-wrap { max-width: 720px; margin: 28px auto 64px; padding: 0 18px; }
+    .profile-card { display: grid; gap: 16px; }
+    .profile-card h1 { font-family: Outfit, sans-serif; font-size: 2rem; letter-spacing: -0.03em; }
+    .agency-row { display: flex; flex-wrap: wrap; gap: 10px; }
+    .agency {
+      border: 1px solid var(--line); background: color-mix(in srgb, var(--void) 70%, transparent);
+      color: var(--text); border-radius: 999px; padding: 10px 16px; font: 600 14px Outfit, sans-serif;
+      cursor: pointer;
+    }
+    .agency.active { background: var(--text); color: var(--void); }
+    label { display: block; font-size: 12px; color: var(--muted); margin-bottom: 6px; }
+    input {
+      width: 100%; border-radius: 14px; border: 1px solid var(--line); background: var(--void);
+      color: var(--text); padding: 12px 14px; font: 15px Outfit, sans-serif;
+    }
+    .profile-save {
+      border: 0; border-radius: 999px; background: var(--text); color: var(--void);
+      font: 600 14px Outfit, sans-serif; padding: 12px 18px; cursor: pointer;
+    }
+    .who { font-family: Outfit, sans-serif; font-size: 15px; }
+    .note { color: var(--muted); font-size: 13px; max-width: 52ch; line-height: 1.45; }
+  </style>
+</head>
+<body>
+  <div id="lipas-topnav" data-active=""></div>
+  <main class="profile-wrap">
+    <form class="profile-card" id="profileForm">
+      <div>
+        <div class="eyebrow" style="margin-bottom:14px"><b>LIPAS</b> Research</div>
+        <h1>Profile</h1>
+        <p class="note">This stays on this browser. Agency buttons set your operator affiliation. They do not open a NASA or ESA account.</p>
+      </div>
+      <div id="who" class="who">Signed in on this browser as LIPAS Research.</div>
+      <div>
+        <div class="agency-row" id="agencies">
+          <button class="agency" type="button" data-agency="NASA">Log in with NASA</button>
+          <button class="agency" type="button" data-agency="ESA">Log in with ESA</button>
+          <button class="agency" type="button" data-agency="LIPAS">LIPAS Research</button>
+        </div>
+      </div>
+      <div>
+        <label for="profileName">Name</label>
+        <input id="profileName" name="name" maxlength="48" autocomplete="name" placeholder="Your name">
+      </div>
+      <div>
+        <label for="profileRole">Role</label>
+        <input id="profileRole" name="role" maxlength="48" placeholder="EVA planner">
+      </div>
+      <div class="row" style="display:flex;gap:12px;align-items:center">
+        <button class="profile-save" type="submit">Save profile</button>
+        <span id="profileSaved" class="note"></span>
+      </div>
+      <p class="lipas-copyright">© 2026 LIPAS Research</p>
+    </form>
+  </main>
+  <script src="js/navbar.js?v=26" defer></script>
+  <script>
+    (function () {
+      const form = document.getElementById("profileForm");
+      const name = document.getElementById("profileName");
+      const role = document.getElementById("profileRole");
+      const saved = document.getElementById("profileSaved");
+      const who = document.getElementById("who");
+      let current = {};
+      try { current = JSON.parse(localStorage.getItem("lipas-profile") || "{}"); } catch (e) {}
+      name.value = current.name || "";
+      role.value = current.role || "";
+      function paint() {
+        document.querySelectorAll(".agency").forEach((btn) => {
+          btn.classList.toggle("active", btn.dataset.agency === (current.agency || "LIPAS"));
+        });
+        const whoName = current.name || (current.agency === "NASA" ? "NASA operator" : current.agency === "ESA" ? "ESA operator" : "LIPAS Research");
+        who.textContent = "Signed in on this browser as " + whoName + (current.agency && current.agency !== "LIPAS" ? " · " + current.agency : "") + ".";
+      }
+      function write(next) {
+        current = next;
+        localStorage.setItem("lipas-profile", JSON.stringify(next));
+        paint();
+        const mark = document.querySelector(".nav-profile span");
+        if (mark) {
+          const parts = (next.name || next.agency || "LIPAS Research").split(/\s+/).filter(Boolean);
+          mark.textContent = ((parts[0][0] || "L") + (parts[1] ? parts[1][0] : "")).toUpperCase();
+          mark.parentElement.title = next.name || next.agency || "LIPAS Research";
+        }
+      }
+      paint();
+      document.getElementById("agencies").addEventListener("click", (e) => {
+        const btn = e.target.closest(".agency");
+        if (!btn) return;
+        const agency = btn.dataset.agency;
+        const defaults = {
+          NASA: { role: "NASA operator", name: name.value.trim() || "NASA operator" },
+          ESA: { role: "ESA operator", name: name.value.trim() || "ESA operator" },
+          LIPAS: { role: role.value.trim() || "Forecast ops", name: name.value.trim() },
+        };
+        name.value = defaults[agency].name;
+        role.value = defaults[agency].role;
+        write({ name: name.value.trim(), role: role.value.trim(), agency });
+        saved.textContent = agency === "LIPAS" ? "LIPAS Research profile saved." : agency + " affiliation saved on this browser.";
+      });
+      form.addEventListener("submit", function (e) {
+        e.preventDefault();
+        write({
+          name: name.value.trim(),
+          role: role.value.trim() || "Forecast ops",
+          agency: current.agency || "LIPAS",
+        });
+        saved.textContent = "Saved. The header mark is updated.";
+      });
+    })();
+  </script>
+</body>
+</html>

@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>L.I.P.A.S. Earth · Dashboard</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=Syne:wght@600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles/theme.css">
+  <link rel="stylesheet" href="styles/main.css">
+  <link rel="stylesheet" href="styles/earth.css?v=2">
+</head>
+<body data-app="earth" class="earth-mode">
+  <div class="loading-screen" id="loadingScreen">
+    <div class="load-label">Loading Earth</div>
+  </div>
+  <div id="lipas-topnav" data-active="dashboard"></div>
+
+  <div class="earth-shell">
+    <aside class="sidebar" id="sidebar" aria-label="Earth locations">
+      <div class="earth-sites-head">
+        <div class="k">Locations</div>
+        <input type="search" id="siteSearch" placeholder="Search Earth…" autocomplete="off">
+      </div>
+      <ul class="location-list" id="siteList"></ul>
+    </aside>
+
+    <main class="earth-main" id="mainPanel">
+      <header class="earth-hero">
+        <div>
+          <div class="k" id="siteKicker">Earth nowcast</div>
+          <h1 id="siteTitle">Earth</h1>
+          <p id="siteNote">Planet-wide space weather from SWPC / OMNI.</p>
+        </div>
+        <div class="hero-actions">
+          <a class="btn-globe" href="earth_globe.html">Open globe</a>
+          <a class="btn-globe" href="earth_mission.html">Mission planner</a>
+        </div>
+      </header>
+
+      <div class="alert-row" id="alertRow"></div>
+
+      <section class="slider-section" id="slider-section">
+        <div class="panel-head">
+          <h2>Next 24 hours</h2>
+          <span id="hourLabel">Now</span>
+        </div>
+        <input type="range" id="hourSlider" min="0" max="24" step="1" value="0">
+        <div class="chart-axis"><span>Now</span><span>+6 h</span><span>+12 h</span><span>+18 h</span><span>+24 h</span></div>
+        <div class="metric-pills" id="metricButtons"></div>
+      </section>
+
+      <div class="kpi-grid" id="kpiGrid"></div>
+
+      <section class="map-panel">
+        <div class="panel-head">
+          <h2 id="mapTitle">Hazard map</h2>
+          <span id="mapMeta">Aurora · HF · GNSS blobs</span>
+        </div>
+        <canvas id="earthMapCanvas" width="920" height="360" aria-label="Earth hazard map"></canvas>
+        <div class="map-legend">
+          <span class="lg aurora">Aurora</span>
+          <span class="lg hf">HF blackout</span>
+          <span class="lg pca">Polar cap</span>
+          <span class="lg gnss">GNSS scint.</span>
+        </div>
+      </section>
+
+      <section class="panel">
+        <div class="panel-head">
+          <h2>Hazard board</h2>
+          <span id="boardMeta">Adapted to this site type</span>
+        </div>
+        <div class="warnings" id="warningsContainer"></div>
+      </section>
+
+      <section class="panel">
+        <div class="panel-head">
+          <h2>24 hour forecast</h2>
+          <span id="chartMeta">Select a channel</span>
+        </div>
+        <canvas id="graphCanvas" height="160"></canvas>
+        <div class="chart-axis"><span>Now</span><span>+12 h</span><span>+24 h</span></div>
+      </section>
+
+      <section class="panel" id="satPanel">
+        <div class="panel-head">
+          <h2>Satellites over Earth</h2>
+          <a href="earth_globe.html">Follow orbits</a>
+        </div>
+        <div class="sat-row" id="satRow"></div>
+      </section>
+
+      <div class="metrics-title">Current metrics</div>
+      <div class="metrics-panel" id="metricsPanel"></div>
+
+      <div class="pdf-box">
+        <div class="pdf-title">Download PDF</div>
+        <p>Site briefing for the location selected in the sidebar — nowcast, 24 h series, and hazard board.</p>
+        <button type="button" id="pdfBtn">Generate professional report</button>
+      </div>
+    </main>
+  </div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js" defer></script>
+  <script src="js/lipas-api.js"></script>
+  <script src="js/earth_dashboard.js?v=6"></script>
+  <script src="js/navbar.js?v=26" defer></script>
+</body>
+</html>

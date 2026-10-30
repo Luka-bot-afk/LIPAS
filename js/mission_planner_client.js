@@ -216,7 +216,7 @@
     const meteor = Number(pred.micrometeorites ?? 1.6);
     const solar = Number(pred.solar ?? 5);
     const levels = hazardLevels(pred, lat);
-    const power = Math.min(100, illumPct * 0.55 + Math.min(solar, 20) * 2.0);
+    let power = Math.min(100, illumPct * 0.55 + Math.min(solar, 20) * 2.0);
     const hab = 100 - (rad * 280 + Math.max(0, dust - 1.0) * 14 + Math.max(0, quakes - 20) * 0.7 + Math.max(0, meteor - 1.2) * 8);
     const nearSide = Math.cos(lon * DEG);
     let comms = 55 + 35 * clamp(nearSide, -1, 1);

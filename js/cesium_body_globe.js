@@ -191,7 +191,7 @@
 
   function normalizeSite(raw, body) {
     if (!raw) return null;
-    const lat = Number(raw.lat);
+    const lat = Number(raw.lat ?? raw.latitude);
     const lon = wrapLon(raw.lon ?? raw.longitude);
     if (!Number.isFinite(lat) || !Number.isFinite(lon)) return null;
     if (body === "sun") {
@@ -406,7 +406,7 @@
     }
 
     function setOptionsOpen(open) {
-      if (!mq.matches || document.body.classList.contains("embed-mode")) {
+      if (document.body.classList.contains("embed-mode")) {
         document.body.classList.remove("globe-options-open");
         return;
       }
@@ -501,12 +501,25 @@
       global.viewer = viewer;
 
       let baseLayers = { color: null, shade: null };
+      const photo = cfg.body === "sun" ? "assets/ui/sun.jpg" : cfg.body === "mercury" ? "assets/ui/mercury.jpg" : "";
+      async function addPhoto(url) {
+        const rectangle = Cesium.Rectangle.fromDegrees(-180, -90, 180, 90);
+        const provider = Cesium.SingleTileImageryProvider.fromUrl
+          ? await Cesium.SingleTileImageryProvider.fromUrl(url, { rectangle })
+          : new Cesium.SingleTileImageryProvider({ url, rectangle });
+        return bodyGlobe.imageryLayers.addImageryProvider(provider);
+      }
+      if (photo) {
+        try { await addPhoto(photo); } catch (photoErr) { console.warn("[LIPAS] body photo", photoErr); }
+      }
       try {
-        if (bodyGlobe.imageryLayers) bodyGlobe.imageryLayers.removeAll();
+        const liveTiles = cfg.imageryKind === "solar"
+          ? true
+          : await fetch(String(cfg.imageryUrl || "").replace("{z}", "0").replace("{x}", "0").replace("{y}", "0"), { cache: "no-store" }).then((r) => r.ok).catch(() => false);
         if (cfg.imageryKind === "solar") baseLayers = await attachSolarImagery(bodyGlobe, ellipsoid, cfg);
-        else baseLayers = attachTrekImagery(bodyGlobe, ellipsoid, cfg);
+        else if (liveTiles) baseLayers = attachTrekImagery(bodyGlobe, ellipsoid, cfg);
       } catch (imageryErr) {
-        console.warn("Base imagery layer failed to attach.", imageryErr);
+        console.warn("Base imagery layer failed to attach. Keeping the surface photo.", imageryErr);
       }
       const baseCount = bodyGlobe.imageryLayers ? bodyGlobe.imageryLayers.length : 1;
 
@@ -672,7 +685,7 @@
         const idx = baseCount + i;
         const layer = bodyGlobe.imageryLayers.addImageryProvider(buildHazardProvider(spec.type, spec.base), idx);
         const on = !!document.getElementById(spec.checkboxId)?.checked;
-        layer.alpha = 0.72;
+        layer.alpha = spec.mode === "sunspots" ? 0.95 : 0.72;
         layer.show = on;
         hazardLayers[spec.type] = { layer, severity: spec.base, on, idx };
       });
@@ -1247,6 +1260,71 @@
           duration: isEmbed ? 0.5 : 2.0,
         });
       }
+
+      (function addBodyTraffic() {
+        if (cfg.body !== "mercury" && cfg.body !== "sun") return;
+        const traffic = cfg.body === "mercury"
+          ? [
+              { name: "BepiColombo", altKm: 3600, inc: 32, period: 140, phase: 0.4, node: 55, note: "ESA/JAXA spacecraft at Mercury. Orbit drawn so the full ring stays in frame." },
+              { name: "MESSENGER", surface: true, lat: 54.4, lon: -149.9, note: "NASA impact site, 30 April 2015, northern volcanic plains." },
+            ]
+          : [
+              { name: "Parker Solar Probe", altKm: cfg.radiusMeters / 1000 * 0.85, inc: 20, period: 90, phase: 0.2, node: 10, note: "NASA probe. Drawn inside the camera frame, closer than its real perihelion." },
+              { name: "Solar Orbiter", altKm: cfg.radiusMeters / 1000 * 1.15, inc: 33, period: 110, phase: 1.7, node: 80, note: "ESA/NASA Solar Orbiter. Distance is schematic so the marker stays visible." },
+            ];
+        const t0 = Date.now();
+        traffic.forEach((c) => {
+          if (!c.surface) {
+            const ring = [];
+            const inc = c.inc * Math.PI / 180;
+            for (let i = 0; i <= 90; i++) {
+              const ang = (i / 90) * Math.PI * 2;
+              const lat = Math.asin(Math.sin(inc) * Math.sin(ang)) * 180 / Math.PI;
+              const lon = Math.atan2(Math.sin(ang) * Math.cos(inc), Math.cos(ang)) * 180 / Math.PI + (c.node || 0);
+              ring.push(Cesium.Cartesian3.fromDegrees(lon, lat, c.altKm * 1000, ellipsoid));
+            }
+            const orbitColor = Cesium.Color.fromCssColorString(cfg.body === "sun" ? "#ffe08a" : "#f0a03c");
+            viewer.entities.add({
+              polyline: {
+                positions: ring,
+                width: 6,
+                arcType: Cesium.ArcType.NONE,
+                material: new Cesium.PolylineGlowMaterialProperty({ glowPower: 0.16, color: orbitColor }),
+                depthFailMaterial: orbitColor.withAlpha(0.45),
+              },
+            });
+          }
+          viewer.entities.add({
+            name: c.name,
+            position: new Cesium.CallbackProperty(() => {
+              if (c.surface) return Cesium.Cartesian3.fromDegrees(c.lon, c.lat, 2000, ellipsoid);
+              const ang = c.phase + ((Date.now() - t0) / 60000) * (Math.PI * 2 / c.period);
+              const inc = c.inc * Math.PI / 180;
+              const lat = Math.asin(Math.sin(inc) * Math.sin(ang)) * 180 / Math.PI;
+              const lon = Math.atan2(Math.sin(ang) * Math.cos(inc), Math.cos(ang)) * 180 / Math.PI + c.node;
+              return Cesium.Cartesian3.fromDegrees(lon, lat, c.altKm * 1000, ellipsoid);
+            }, false),
+            point: {
+              pixelSize: 9,
+              color: Cesium.Color.fromCssColorString(cfg.body === "sun" ? "#ffe08a" : "#f0a03c"),
+              outlineColor: Cesium.Color.BLACK,
+              outlineWidth: 1,
+              disableDepthTestDistance: Number.POSITIVE_INFINITY,
+            },
+            label: {
+              text: c.name,
+              font: "600 12px Outfit, sans-serif",
+              fillColor: Cesium.Color.WHITE,
+              outlineWidth: 2,
+              style: Cesium.LabelStyle.FILL_AND_OUTLINE,
+              outlineColor: Cesium.Color.BLACK,
+              pixelOffset: new Cesium.Cartesian2(12, -10),
+              disableDepthTestDistance: Number.POSITIVE_INFINITY,
+            },
+            description: c.note,
+          });
+        });
+      })();
 
       fetchSites(cfg).then((live) => {
         if (!live.length) return;
