@@ -1,8 +1,6 @@
-
 const REMOTE_BASE = (typeof window !== 'undefined' && window.location && window.location.host)
   ? `${window.location.protocol}
   : 'http://127.0.0.1:5000';
-
 async function fetchServerData() {
   try {
     const r = await fetch(`${REMOTE_BASE}/data`, {cache: 'no-store'});
@@ -18,7 +16,6 @@ async function fetchServerData() {
     return null;
   }
 }
-
 async function fetchServerStatus() {
   try {
     const r = await fetch(`${REMOTE_BASE}/status`, {cache:'no-store'});
@@ -29,7 +26,6 @@ async function fetchServerStatus() {
     return null;
   }
 }
-
 async function serverPredict(input) {
   try {
     const r = await fetch(`${REMOTE_BASE}/predict`, {
@@ -48,7 +44,6 @@ async function serverPredict(input) {
     return null;
   }
 }
-
 async function initRemoteClient(){
   try{
     const cached = localStorage.getItem('lipas:data');
@@ -59,8 +54,7 @@ async function initRemoteClient(){
       window.radiationCache = j.radiation_cache || {};
       console.log('remote_client: hydrated from cache');
     }
-  }catch(e){/* ignore cache errors */}
-
+  }catch(e){}
   fetchServerData().catch(()=>{});
   setInterval(fetchServerData, 60000);
   setInterval(fetchServerStatus, 120000);
@@ -69,5 +63,4 @@ async function initRemoteClient(){
   window.serverPredict = serverPredict;
   console.log('remote_client loaded, server base', REMOTE_BASE);
 }
-
 initRemoteClient();

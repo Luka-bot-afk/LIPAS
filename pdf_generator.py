@@ -1,17 +1,14 @@
 """LIPAS."""
 from __future__ import annotations
-
 import io
 from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional
-
 def _safe(val: Any, default: str = "-") -> str:
     if val is None:
         return default
     if isinstance(val, float):
         return f"{val:.4g}"
     return str(val)
-
 def _status_label(status: str) -> str:
     s = (status or "").lower()
     if s in ("go", "green", "safe"):
@@ -21,14 +18,12 @@ def _status_label(status: str) -> str:
     if s in ("nogo", "no-go", "red", "unsafe"):
         return "NO-GO - SHELTER / HOLD"
     return (status or "UNKNOWN").upper()
-
 def generate_mission_pdf(plan: Dict[str, Any]) -> bytes:
     """Return PDF bytes for the given mission plan dict."""
     try:
         return _generate_with_reportlab(plan)
     except Exception:
         return _generate_minimal_pdf(plan)
-
 def _generate_with_reportlab(plan: Dict[str, Any]) -> bytes:
     from reportlab.lib import colors
     from reportlab.lib.pagesizes import A4
@@ -42,7 +37,6 @@ def _generate_with_reportlab(plan: Dict[str, Any]) -> bytes:
         TableStyle,
         HRFlowable,
     )
-
     buf = io.BytesIO()
     doc = SimpleDocTemplate(
         buf,
@@ -53,7 +47,6 @@ def _generate_with_reportlab(plan: Dict[str, Any]) -> bytes:
         bottomMargin=14 * mm,
         title="L.I.P.A.S. Mission Plan",
     )
-
     styles = getSampleStyleSheet()
     title = ParagraphStyle(
         "LipasTitle",
@@ -93,7 +86,6 @@ def _generate_with_reportlab(plan: Dict[str, Any]) -> bytes:
         textColor=colors.HexColor("#5a6a7a"),
         leading=10,
     )
-
     site = plan.get("site") or {}
     eva_now = plan.get("eva_now") or {}
     conditions = plan.get("conditions") or {}
@@ -101,7 +93,6 @@ def _generate_with_reportlab(plan: Dict[str, Any]) -> bytes:
     zones = plan.get("landing_zones") or []
     dose = plan.get("dose") or {}
     generated = plan.get("generated_at") or datetime.now(timezone.utc).isoformat()
-
     story: List[Any] = []
     story.append(Paragraph("L.I.P.A.S. - Lunar Mission Plan", title))
     story.append(
@@ -113,7 +104,6 @@ def _generate_with_reportlab(plan: Dict[str, Any]) -> bytes:
     story.append(
         HRFlowable(width="100%", thickness=1, color=colors.HexColor("#0077c8"), spaceAfter=8)
     )
-
     story.append(Paragraph("1. Mission Parameters", h2))
     params_data = [
         ["Site / Callsign", _safe(site.get("name"), "Custom coordinates")],
@@ -138,7 +128,6 @@ def _generate_with_reportlab(plan: Dict[str, Any]) -> bytes:
         )
     )
     story.append(t)
-
     story.append(Paragraph("2. EVA Safety - Current Window", h2))
     story.append(
         Paragraph(
@@ -152,7 +141,6 @@ def _generate_with_reportlab(plan: Dict[str, Any]) -> bytes:
     if reasons:
         for r in reasons:
             story.append(Paragraph(f"• {_safe(r)}", small))
-
     story.append(Paragraph("3. Predicted Surface Conditions", h2))
     cond_rows = [
         ["Metric", "Value"],
@@ -181,7 +169,6 @@ def _generate_with_reportlab(plan: Dict[str, Any]) -> bytes:
         )
     )
     story.append(ct)
-
     story.append(Paragraph("4. Recommended EVA Windows (next 24 h)", h2))
     if not windows:
         story.append(Paragraph("No EVA windows computed for the requested duration.", body))
@@ -213,7 +200,6 @@ def _generate_with_reportlab(plan: Dict[str, Any]) -> bytes:
             )
         )
         story.append(wt)
-
     story.append(Paragraph("5. Ranked Landing Zones", h2))
     if not zones:
         story.append(Paragraph("No landing zones ranked.", body))
@@ -245,7 +231,6 @@ def _generate_with_reportlab(plan: Dict[str, Any]) -> bytes:
             )
         )
         story.append(zt)
-
     story.append(Paragraph("6. Crew Dose Estimate", h2))
     story.append(
         Paragraph(
@@ -258,34 +243,28 @@ def _generate_with_reportlab(plan: Dict[str, Any]) -> bytes:
             body,
         )
     )
-
     hourly = plan.get("hourly") or []
     if hourly:
         story.append(Paragraph("7. 24 h Hazard Trend (Radiation · Solar · Dust)", h2))
         try:
             from reportlab.graphics.shapes import Drawing, Line, PolyLine, String, Rect
-
             w, h = 460, 150
             d = Drawing(w, h)
             d.add(Rect(0, 0, w, h, fillColor=colors.HexColor("#f4f7fa"), strokeColor=colors.HexColor("#c8d2dc")))
             pad_l, pad_r, pad_t, pad_b = 36, 12, 14, 22
             plot_w = w - pad_l - pad_r
             plot_h = h - pad_t - pad_b
-
             def series(key):
                 vals = [float(x.get(key) or 0) for x in hourly[:48]]
                 return vals or [0.0]
-
             rad = series("radiation")
             sol = series("solar")
             dus = series("dust")
-
             def norm(vals):
                 lo, hi = min(vals), max(vals)
                 if hi - lo < 1e-9:
                     return [0.5] * len(vals)
                 return [(v - lo) / (hi - lo) for v in vals]
-
             def polyline(vals, color):
                 n = max(1, len(vals) - 1)
                 pts = []
@@ -294,7 +273,6 @@ def _generate_with_reportlab(plan: Dict[str, Any]) -> bytes:
                     y = pad_b + v * plot_h
                     pts.extend([x, y])
                 d.add(PolyLine(pts, strokeColor=color, strokeWidth=1.6))
-
             d.add(Line(pad_l, pad_b, pad_l + plot_w, pad_b, strokeColor=colors.HexColor("#8fa3b8"), strokeWidth=0.6))
             d.add(Line(pad_l, pad_b, pad_l, pad_b + plot_h, strokeColor=colors.HexColor("#8fa3b8"), strokeWidth=0.6))
             polyline(rad, colors.HexColor("#e25b5b"))
@@ -315,7 +293,6 @@ def _generate_with_reportlab(plan: Dict[str, Any]) -> bytes:
             )
         except Exception:
             story.append(Paragraph("Hourly series available but chart render skipped.", small))
-
     story.append(Spacer(1, 10))
     story.append(
         HRFlowable(width="100%", thickness=0.5, color=colors.HexColor("#a0b0c0"), spaceAfter=6)
@@ -335,10 +312,8 @@ def _generate_with_reportlab(plan: Dict[str, Any]) -> bytes:
             small,
         )
     )
-
     doc.build(story)
     return buf.getvalue()
-
 def _escape_pdf_text(text: str) -> str:
     return (
         text.replace("\\", "\\\\")
@@ -347,7 +322,6 @@ def _escape_pdf_text(text: str) -> str:
         .replace("\r", " ")
         .replace("\n", " ")
     )
-
 def _generate_minimal_pdf(plan: Dict[str, Any]) -> bytes:
     """Dependency-free single-page text PDF."""
     site = plan.get("site") or {}
@@ -357,7 +331,6 @@ def _generate_minimal_pdf(plan: Dict[str, Any]) -> bytes:
     zones = plan.get("landing_zones") or []
     dose = plan.get("dose") or {}
     generated = plan.get("generated_at") or datetime.now(timezone.utc).isoformat()
-
     lines = [
         "L.I.P.A.S. - LUNAR MISSION PLAN",
         "Hazard-informed EVA windows / landing zones / crew dose",
@@ -399,7 +372,6 @@ def _generate_minimal_pdf(plan: Dict[str, Any]) -> bytes:
     lines.append("")
     lines.append("© 2026 Luka Takki · LIPAS")
     lines.append("Advisory only - clear with Mission Control before EVA.")
-
     y_start = 800
     content_parts = ["BT", "/F1 10 Tf", "14 TL", f"50 {y_start} Td"]
     for i, line in enumerate(lines):
@@ -414,7 +386,6 @@ def _generate_minimal_pdf(plan: Dict[str, Any]) -> bytes:
             content_parts.append("T*")
     content_parts.append("ET")
     stream = "\n".join(content_parts).encode("latin-1", errors="replace")
-
     objs: List[bytes] = []
     objs.append(b"1 0 obj<< /Type /Catalog /Pages 2 0 R >>endobj\n")
     objs.append(b"2 0 obj<< /Type /Pages /Kids [3 0 R] /Count 1 >>endobj\n")
@@ -428,7 +399,6 @@ def _generate_minimal_pdf(plan: Dict[str, Any]) -> bytes:
         + b"\nendstream\nendobj\n"
     )
     objs.append(b"5 0 obj<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>endobj\n")
-
     out = io.BytesIO()
     out.write(b"%PDF-1.4\n")
     offsets = [0]
@@ -446,7 +416,6 @@ def _generate_minimal_pdf(plan: Dict[str, Any]) -> bytes:
         )
     )
     return out.getvalue()
-
 def build_filename(plan: Optional[Dict[str, Any]] = None) -> str:
     site = (plan or {}).get("site") or {}
     name = str(site.get("name") or "custom").replace(" ", "_")[:40]

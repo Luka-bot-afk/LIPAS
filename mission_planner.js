@@ -1,6 +1,5 @@
 (function () {
   "use strict";
-
   const PRESETS = [
     { name: "Shackleton Crater Rim", lat: -89.68, lon: 166.15 },
     { name: "Malapert Massif", lat: -85.9, lon: 12.9 },
@@ -15,7 +14,6 @@
     { name: "Mare Orientale", lat: -19.4, lon: -92.8 },
     { name: "Daedalus Crater", lat: -5.9, lon: 179.4 },
   ];
-
   const HZ_LABEL = {
     green: "GO",
     yellow: "WATCH",
@@ -24,49 +22,41 @@
     caution: "WATCH",
     nogo: "ALERT",
   };
-
   const state = {
     plan: null,
     busy: false,
     chart: null,
     clockTimer: null,
   };
-
   const $ = (id) => document.getElementById(id);
-
   function el(tag, cls, html) {
     const n = document.createElement(tag);
     if (cls) n.className = cls;
     if (html != null) n.innerHTML = html;
     return n;
   }
-
   function fmt(n, d = 2) {
     if (n == null || Number.isNaN(Number(n))) return "-";
     return Number(n).toFixed(d);
   }
-
   function statusClass(s) {
     const v = String(s || "").toLowerCase();
     if (v === "go" || v === "green" || v === "safe") return "go";
     if (v === "caution" || v === "yellow" || v === "moderate" || v === "watch") return "caution";
     return "nogo";
   }
-
   function statusLabel(s) {
     const c = statusClass(s);
     if (c === "go") return "GO";
     if (c === "caution") return "CAUTION";
     return "NO-GO";
   }
-
   function hzClass(level) {
     const v = String(level || "").toLowerCase();
     if (v === "green" || v === "go") return "go";
     if (v === "yellow" || v === "caution") return "caution";
     return "nogo";
   }
-
   function readForm() {
     let lat = parseFloat($("inp-lat").value);
     let lon = parseFloat($("inp-lon").value);
@@ -87,7 +77,6 @@
       risk_posture: $("inp-risk").value || "nominal",
     };
   }
-
   function setBusy(on, msg) {
     state.busy = on;
     const btn = $("btn-run");
@@ -100,7 +89,6 @@
     const pulse = $("compute-pulse");
     if (pulse) pulse.classList.toggle("active", on);
   }
-
   function setBanner(msg, kind) {
     const b = $("ops-banner");
     if (!b) return;
@@ -109,20 +97,16 @@
     b.title = msg || "";
     b.dataset.kind = kind || "info";
   }
-
   function apiUrl(path) {
     return typeof window.lipasApiUrl === "function" ? window.lipasApiUrl(path) : path;
   }
-
   function clientPlan(body) {
     if (typeof window.computeMissionPlanClient !== "function") {
       throw new Error("No LIPAS backend on this host. Run: python server.py — or deploy the Flask API and set lipas-api-base.");
     }
     return window.computeMissionPlanClient(body);
   }
-
   function shouldUseClientFallback(status) {
-    // Static hosts (Netlify, python -m http.server) reject POST with 501/405/404.
     return (
       status === 404 ||
       status === 405 ||
@@ -135,12 +119,10 @@
       status === 504
     );
   }
-
   function isStaticHostFailure(err) {
     const msg = String(err && err.message ? err.message : err);
     return /\b(404|405|501|502|503)\b/.test(msg) || /static host|no lipas backend/i.test(msg);
   }
-
   async function apiPlan(body) {
     const url = apiUrl("/api/mission/plan");
     try {
@@ -170,7 +152,6 @@
       throw e;
     }
   }
-
   async function apiEvaNow(body) {
     const url = apiUrl("/api/mission/eva-now");
     try {
@@ -213,12 +194,10 @@
       throw e;
     }
   }
-
   function confLabel(pct) {
     if (pct == null || Number.isNaN(Number(pct))) return "Conf -";
     return `Conf <strong>${Math.round(Number(pct))}%</strong>`;
   }
-
   function renderGoDial(eva) {
     const dial = $("go-dial");
     const label = $("go-label");
@@ -241,7 +220,6 @@
       });
     }
   }
-
   function renderConditions(c) {
     if (!c) return;
     const conf = c.confidence_pct;
@@ -271,7 +249,6 @@
             : "var(--nogo)";
     }
   }
-
   function renderHazardMatrix(matrix, siteBase, confidencePct) {
     const grid = $("hz-grid");
     if (!grid || !matrix) return;
@@ -313,7 +290,6 @@
       });
     }
   }
-
   function renderWindows(windows) {
     const rail = $("window-rail");
     const list = $("window-list");
@@ -331,7 +307,6 @@
       seg.innerHTML = `<span class="rail-rank">${i + 1}</span><span class="rail-time">${w.label.split("-")[0]}</span>`;
       seg.addEventListener("click", () => highlightWindow(i));
       rail.appendChild(seg);
-
       const extras = [];
       if (w.storm_hours) extras.push(`${w.storm_hours}h storm`);
       if (w.equip_hours) extras.push(`${w.equip_hours}h equip`);
@@ -351,7 +326,6 @@
       list.appendChild(row);
     });
   }
-
   function renderLandingWindows(windows) {
     const list = $("landing-window-list");
     if (!list) return;
@@ -378,7 +352,6 @@
       list.appendChild(row);
     });
   }
-
   function highlightWindow(idx) {
     document.querySelectorAll(".window-row").forEach((r) => {
       r.classList.toggle("focus", r.dataset.idx === String(idx));
@@ -387,7 +360,6 @@
       s.classList.toggle("focus", i === idx);
     });
   }
-
   function renderBasePick(best) {
     if (!best) return;
     const name = $("bp-name");
@@ -423,14 +395,13 @@
     if (use) {
       use.onclick = () => {
         $("inp-lat").value = best.lat;
-        $("inp-lon").value = best.lon;
+        $("inp-lon").value = Math.round(Number(best.lon) * 100) / 100;
         $("inp-site").value = best.name;
         document.querySelectorAll(".preset-chip").forEach((c) => c.classList.remove("active"));
         runPlan();
       };
     }
   }
-
   function renderZones(zones) {
     const host = $("zone-list");
     if (!host) return;
@@ -451,7 +422,7 @@
         </div>`;
       row.addEventListener("click", () => {
         $("inp-lat").value = z.lat;
-        $("inp-lon").value = z.lon;
+        $("inp-lon").value = Math.round(Number(z.lon) * 100) / 100;
         $("inp-site").value = z.name;
         document.querySelectorAll(".preset-chip").forEach((c) => c.classList.remove("active"));
         runPlan();
@@ -459,7 +430,6 @@
       host.appendChild(row);
     });
   }
-
   function renderDose(dose) {
     if (!dose) return;
     const set = (id, v) => {
@@ -475,7 +445,6 @@
     const riskEl = $("dose-risk");
     if (riskEl) riskEl.dataset.risk = String(dose.risk || "").toLowerCase();
   }
-
   function normalizeSeries1d(arr) {
     const nums = arr.map(Number).filter((v) => Number.isFinite(v));
     if (!nums.length) return arr.map(() => 0.5);
@@ -487,7 +456,6 @@
       return Number.isFinite(n) ? (n - min) / (max - min) : 0.5;
     });
   }
-
   function renderHourlyChart(hourly) {
     const canvas = $("hazard-chart");
     if (!canvas || typeof Chart === "undefined" || !hourly || !hourly.length) return;
@@ -560,7 +528,6 @@
       },
     });
   }
-
   function renderMeta(plan) {
     const src = $("model-source");
     const gen = $("plan-generated");
@@ -598,7 +565,6 @@
             : "Hybrid predict ready";
     }
   }
-
   function applyPlan(plan) {
     state.plan = plan;
     const conf = plan.eva_now?.confidence_pct ?? plan.conditions?.confidence_pct;
@@ -622,7 +588,6 @@
       statusClass(plan.eva_now.status)
     );
   }
-
   async function runPlan() {
     if (state.busy) return;
     let body;
@@ -639,7 +604,7 @@
       applyPlan(plan);
       if (plan._fallback === "physics-client" || plan.client_mode) {
         setBanner(
-          `${statusLabel(plan.eva_now.status)} · physics only on static host. Run server.py for ML.`,
+          `${statusLabel(plan.eva_now.status)} · onboard EVA physics. Live SWPC numbers stay on the dashboards.`,
           statusClass(plan.eva_now.status)
         );
       }
@@ -660,7 +625,6 @@
       setBusy(false);
     }
   }
-
   async function quickEvaCheck() {
     try {
       const body = readForm();
@@ -689,7 +653,6 @@
       setBanner("Live check unavailable - run a full plan.", "caution");
     }
   }
-
   async function downloadPdf() {
     if (!state.plan) {
       setBanner("Run a plan before exporting PDF.", "caution");
@@ -727,7 +690,6 @@
       setBusy(false);
     }
   }
-
   function renderPresets() {
     const host = $("preset-row");
     if (!host) return;
@@ -739,20 +701,18 @@
         host.querySelectorAll(".preset-chip").forEach((c) => c.classList.remove("active"));
         chip.classList.add("active");
         $("inp-lat").value = p.lat;
-        $("inp-lon").value = p.lon;
+        $("inp-lon").value = Math.round(Number(p.lon) * 100) / 100;
         $("inp-site").value = p.name;
         runPlan();
       });
       host.appendChild(chip);
     });
   }
-
   function tickClock() {
     const n = $("utc-clock");
     if (!n) return;
     n.textContent = new Date().toISOString().replace("T", " ").replace(/\.\d+Z$/, " UTC");
   }
-
   function bind() {
     $("btn-run")?.addEventListener("click", runPlan);
     $("btn-pdf")?.addEventListener("click", downloadPdf);
@@ -766,7 +726,6 @@
       if (state.plan) runPlan();
     });
   }
-
   function boot() {
     renderPresets();
     bind();
@@ -792,7 +751,6 @@
       if (!state.busy && document.visibilityState === "visible") quickEvaCheck();
     }, 120000);
   }
-
   if (document.readyState === "loading") {
     document.addEventListener("DOMContentLoaded", boot);
   } else {

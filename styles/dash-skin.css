@@ -1,11 +1,8 @@
-/* Dashboard, globe, and chart surfaces. Loaded last. */
-
 .main-panel,
 .shell {
   background: transparent !important;
   backdrop-filter: none !important;
 }
-
 .slider-section,
 .solar-section,
 .ops-section,
@@ -37,7 +34,6 @@
   margin: 0 0 18px !important;
   overflow: hidden !important;
 }
-
 .hour-slider-container {
   background: color-mix(in srgb, var(--void) 78%, #000) !important;
   border: 1px solid var(--line) !important;
@@ -54,7 +50,6 @@
   margin: 0 5px !important;
   min-width: 72px !important;
 }
-
 .solar-card,
 .metric-box,
 .ops-card,
@@ -81,7 +76,6 @@
 .metric-box.nogo,
 .warning-box.nogo,
 .ops-card.nogo { box-shadow: inset 0 3px 0 var(--nogo) !important; }
-
 .warnings-container {
   display: grid !important;
   grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
@@ -133,7 +127,6 @@
   padding: 6px 6px !important;
 }
 .forecast-values { gap: 6px !important; }
-
 .driver-viz-card {
   overflow: hidden !important;
   min-height: 200px !important;
@@ -159,7 +152,6 @@
   background: var(--void) !important;
 }
 .graph-canvas-container { padding: 12px !important; }
-
 .term-belt { border-radius: 999px !important; height: 36px !important; }
 .term-cols,
 .nearfar-grid,
@@ -187,7 +179,6 @@
 }
 .rank-col.best,
 .rank-col.worst { border-left-width: 1px !important; }
-
 .pdf-box {
   display: flex !important;
   align-items: center !important;
@@ -202,7 +193,6 @@
   font-size: 14px !important;
   font-weight: 600 !important;
 }
-
 html[data-theme="light"] .hour-slider-container,
 html[data-theme="light"] .graph-canvas-container,
 html[data-theme="light"] .solar-storm-banner {
@@ -220,8 +210,6 @@ html[data-theme="light"] .rank-row {
   background: #fff !important;
   color: var(--text) !important;
 }
-
-/* Globe: keep the four chrome pieces in their own lanes. */
 .loc-search-panel {
   top: 80px !important;
   left: 16px !important;
@@ -314,7 +302,6 @@ body:has(#cesiumContainer) .lipas-site-footer--overlay {
   color: var(--text);
 }
 .metric-ico svg { width: 16px; height: 16px; }
-
 .ml-overview, #ml-overview, .model-pill { display: none !important; }
 .mp-stage-panel canvas {
   width: 100% !important;
@@ -328,7 +315,6 @@ body:has(#cesiumContainer) .lipas-site-footer--overlay {
 .hz-cell.go { box-shadow: inset 0 3px 0 var(--go) !important; }
 .hz-cell.caution { box-shadow: inset 0 3px 0 var(--caution) !important; }
 .hz-cell.nogo { box-shadow: inset 0 3px 0 var(--nogo) !important; }
-
 body[data-app="earth"] .sat-panel {
   left: auto !important;
   right: 16px !important;
@@ -346,7 +332,6 @@ body[data-app="earth"] .legend-panel {
   bottom: 118px !important;
   max-width: 240px !important;
 }
-
 html[data-theme="light"] body.mercury-mode,
 html[data-theme="light"] body.earth-mode {
   --text: #1a1916;
@@ -600,7 +585,6 @@ html[data-theme="light"] body.earth-mode #overviewBtn {
   color: #1a1916 !important;
   border-color: rgba(26,25,22,.12) !important;
 }
-
 @media (max-width: 800px) {
   .metrics-panel, .solar-metrics, .ops-grid, .kpi-grid, .term-cols, .nearfar-grid {
     grid-template-columns: 1fr !important;
@@ -630,7 +614,6 @@ html[data-theme="light"] body.earth-mode #overviewBtn {
   }
   .shell { padding: 12px !important; }
 }
-
 @media (max-width: 1100px) {
   .map-controls { display: none !important; }
   body.globe-options-open .map-controls {

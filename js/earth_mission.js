@@ -1,6 +1,5 @@
 (function () {
   "use strict";
-
   const api = (p) => (typeof window.lipasApiUrl === "function" ? window.lipasApiUrl(p) : p);
   const PRESETS = [
     { name: "Starbase → KSC", meta: "LEO · Gulf corridor", from: "starbase", to: "ksc", alt2: 220, vehicle: "leo", hours: 6 },
@@ -37,7 +36,6 @@
     insertion: "#4ee09a",
     "on-orbit": "#9ec9b4",
   };
-
   const OFFLINE_SITES = [
     { id: "ksc", name: "Kennedy Space Center", group: "launch", lat: 28.57, lon: -80.65, alt_km: 0 },
     { id: "starbase", name: "Starbase", group: "launch", lat: 25.99, lon: -97.16, alt_km: 0 },
@@ -50,11 +48,9 @@
     { id: "goes16", name: "GOES-16", group: "satellite", lat: 0, lon: -75.2, alt_km: 35786 },
     { id: "terra", name: "Terra", group: "satellite", lat: -10, lon: 40, alt_km: 705 },
   ];
-
   let sites = [];
   let plan = null;
   let hoverIdx = -1;
-
   function $(id) { return document.getElementById(id); }
   function fmt(v, d) {
     if (v == null || !Number.isFinite(Number(v))) return "—";
@@ -70,7 +66,6 @@
     const ew = Number(lon) >= 0 ? "E" : "W";
     return `${fmt(Math.abs(lat), 2)}°${ns}  ${fmt(Math.abs(lon), 2)}°${ew}\n${fmt(alt, 0)} km`;
   }
-
   function fillSelects() {
     const groups = [
       ["launch", "Launch pads"],
@@ -87,7 +82,6 @@
     $("inp-from").value = "starbase";
     $("inp-to").value = "ksc";
   }
-
   function applySite(sel, latId, lonId, altId) {
     const s = siteById(sel.value);
     if (!s) return;
@@ -96,7 +90,6 @@
     if (altId) $(altId).value = s.alt_km || (s.group === "satellite" ? 400 : 0);
     updateRouteMeta();
   }
-
   function updateRouteMeta() {
     const a = siteById($("inp-from").value);
     const b = siteById($("inp-to").value);
@@ -107,7 +100,6 @@
       ? coordLine(b.lat, b.lon, $("alt2").value || b.alt_km || 0)
       : coordLine($("lat2").value, $("lon2").value, $("alt2").value);
   }
-
   function payload() {
     const inc = $("inp-inc").value;
     return {
@@ -128,12 +120,10 @@
       inclination: inc === "" ? null : Number(inc),
     };
   }
-
   function setBusy(on) {
     document.body.classList.toggle("planner-busy", on);
     $("btn-run").textContent = on ? "Computing…" : "Run trajectory plan";
   }
-
   function renderPlan(p) {
     plan = p;
     const status = p.status || "caution";
@@ -149,14 +139,12 @@
     $("go-reasons").innerHTML = (p.reasons || []).map((r) => `<li>${r}</li>`).join("");
     $("ops-banner").dataset.kind = status;
     $("active-site").textContent = p.name || "Corridor";
-
     $("kpi-row").innerHTML = [
       ["Peak alt", `${fmt(p.peak_alt_km, 0)} km`],
       ["Ground track", `${fmt(p.ground_track_km, 0)} km`],
       ["T0", `+${fmt(p.t0_h, 0)} h`],
       ["Duration", `${p.hours} h`],
     ].map(([k, v]) => `<div class="kpi"><div class="k">${k}</div><div class="v">${v}</div></div>`).join("");
-
     const worst = p.worst || {};
     $("hz-grid").innerHTML = MATRIX.map((m) => {
       const st = (p.hazard_matrix || {})[m.id] || "go";
@@ -169,7 +157,6 @@
         <div class="hbar"><i style="width:${pct}%;background:currentColor"></i></div>
       </div>`;
     }).join("");
-
     renderWindows(p);
     renderPhases(p.samples || []);
     renderSamples(p.samples || []);
@@ -177,7 +164,6 @@
     $("loadingScreen")?.classList.add("hidden");
     setBusy(false);
   }
-
   function renderWindows(p) {
     const windows = p.windows || [];
     const bestH = p.best_window && p.best_window.start_offset_h;
@@ -211,7 +197,6 @@
       ? `Best open slot ${best.label} · ${best.status.toUpperCase()} ${best.score}`
       : "Click a slot to set T0 and recompute";
   }
-
   function renderPhases(samples) {
     if (!samples.length) { $("phase-rail").innerHTML = ""; return; }
     const segs = [];
@@ -228,7 +213,6 @@
       </div>`;
     }).join("");
   }
-
   function renderSamples(samples) {
     const rows = samples.filter((_, i) => i % 4 === 0);
     $("sample-list").innerHTML =
@@ -244,14 +228,12 @@
         </div>`
       ).join("");
   }
-
   function wrapLon(lon) {
     let x = Number(lon);
     while (x > 180) x -= 360;
     while (x < -180) x += 360;
     return x;
   }
-
   function bounds(samples) {
     const lats = samples.map((s) => s.lat);
     let lons = samples.map((s) => wrapLon(s.lon));
@@ -272,14 +254,12 @@
       lons,
     };
   }
-
   function drawAll() {
     const samples = (plan && plan.samples) || [];
     drawPath(samples);
     drawAlt(samples);
     drawGlobe(samples);
   }
-
   function drawGlobe(samples) {
     const c = $("globe3d");
     if (!c) return;
@@ -300,7 +280,7 @@
     const g = ctx.createRadialGradient(cx - 30, cy - 36, 10, cx, cy, R);
     g.addColorStop(0, "#d7f3e4");
     g.addColorStop(0.45, "#2f6d52");
-    g.addColorStop(1, "#07140f");
+    g.addColorStop(1, light ? "#8fbfa6" : "#07140f");
     ctx.beginPath();
     ctx.arc(cx, cy, R, 0, Math.PI * 2);
     ctx.fillStyle = g;
@@ -347,10 +327,9 @@
     ctx.fillStyle = light ? "#1c1915" : "#d7f8e8";
     ctx.font = "12px IBM Plex Sans, sans-serif";
     ctx.fillText("Corridor in altitude", w * 0.68, 36);
-    ctx.fillStyle = "#8fb8a8";
+    ctx.fillStyle = document.documentElement.dataset.theme === "light" ? "#5c564c" : "#8fb8a8";
     ctx.fillText(`Peak ${Math.round(maxAlt)} km`, w * 0.68, 56);
   }
-
   function drawPath(samples) {
     const c = $("pathCanvas");
     if (!c) return;
@@ -361,7 +340,7 @@
     c.width = w * dpr; c.height = h * dpr;
     c.style.height = h + "px";
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-    ctx.fillStyle = "#07140f";
+    ctx.fillStyle = document.documentElement.dataset.theme === "light" ? "#f7f4ee" : "#07140f";
     ctx.fillRect(0, 0, w, h);
     if (!samples.length) return;
     const b = bounds(samples);
@@ -371,7 +350,6 @@
       return 18 + ((x - b.loLo) / ((b.hiLo - b.loLo) || 1)) * (w - 36);
     };
     const py = (lat) => 22 + (1 - (lat - b.loLa) / ((b.hiLa - b.loLa) || 1)) * (h - 40);
-
     ctx.strokeStyle = "rgba(62,207,142,0.08)";
     ctx.lineWidth = 1;
     for (let i = 0; i <= 6; i++) {
@@ -382,7 +360,6 @@
       const x = 18 + (i / 8) * (w - 36);
       ctx.beginPath(); ctx.moveTo(x, 22); ctx.lineTo(x, h - 18); ctx.stroke();
     }
-
     const saa = { lat: -25, lon: -50, rla: 18, rlo: 38 };
     ctx.fillStyle = "rgba(226,91,91,0.12)";
     ctx.beginPath();
@@ -391,7 +368,6 @@
     ctx.fillStyle = "rgba(226,91,91,0.45)";
     ctx.font = "10px IBM Plex Sans, sans-serif";
     ctx.fillText("SAA", px(saa.lon) - 10, py(saa.lat));
-
     if (b.loLa < 0 && b.hiLa > 0) {
       ctx.strokeStyle = "rgba(126,224,176,0.28)";
       ctx.setLineDash([4, 5]);
@@ -400,7 +376,6 @@
       ctx.fillStyle = "rgba(158,201,180,0.7)";
       ctx.fillText("equator", 22, py(0) - 4);
     }
-
     for (let i = 1; i < samples.length; i++) {
       ctx.beginPath();
       ctx.moveTo(px(samples[i - 1].lon), py(samples[i - 1].lat));
@@ -412,21 +387,18 @@
       ctx.stroke();
       ctx.shadowBlur = 0;
     }
-
     const a = samples[0];
     const z = samples[samples.length - 1];
     ctx.fillStyle = "#7ee0b0";
     ctx.beginPath(); ctx.arc(px(a.lon), py(a.lat), 5, 0, Math.PI * 2); ctx.fill();
     ctx.fillStyle = "#e0b14a";
     ctx.beginPath(); ctx.arc(px(z.lon), py(z.lat), 5, 0, Math.PI * 2); ctx.fill();
-
     if (hoverIdx >= 0 && samples[hoverIdx]) {
       const s = samples[hoverIdx];
       ctx.strokeStyle = "#e8f6ee";
       ctx.lineWidth = 1.5;
       ctx.beginPath(); ctx.arc(px(s.lon), py(s.lat), 7, 0, Math.PI * 2); ctx.stroke();
     }
-
     ctx.shadowBlur = 0;
     ctx.fillStyle = "#c5ddd0";
     ctx.font = "600 12px IBM Plex Sans, sans-serif";
@@ -438,7 +410,6 @@
     ctx.font = "11px IBM Plex Sans, sans-serif";
     ctx.fillText("Ground track", 18, 16);
   }
-
   function drawAlt(samples) {
     const c = $("altCanvas");
     if (!c) return;
@@ -449,7 +420,8 @@
     c.width = w * dpr; c.height = h * dpr;
     c.style.height = h + "px";
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-    ctx.fillStyle = "#07140f";
+    const light = document.documentElement.dataset.theme === "light";
+    ctx.fillStyle = light ? "#f7f4ee" : "#07140f";
     ctx.fillRect(0, 0, w, h);
     if (!samples.length) return;
     const alts = samples.map((s) => Number(s.alt_km) || 0);
@@ -457,7 +429,6 @@
     const left = 48, right = 16, top = 22, bot = 28;
     const xAt = (i) => left + (i / Math.max(1, samples.length - 1)) * (w - left - right);
     const yAt = (alt) => top + (1 - alt / hi) * (h - top - bot);
-
     ctx.strokeStyle = "rgba(62,207,142,0.1)";
     ctx.fillStyle = "rgba(158,201,180,0.55)";
     ctx.font = "10px IBM Plex Sans, sans-serif";
@@ -468,7 +439,6 @@
       ctx.fillText(fmt(hi * f, hi > 1000 ? 0 : 0) + " km", left - 6, y + 3);
     });
     ctx.textAlign = "left";
-
     ctx.beginPath();
     samples.forEach((s, i) => {
       const x = xAt(i), y = yAt(alts[i]);
@@ -482,7 +452,6 @@
     ctx.closePath();
     ctx.fillStyle = "rgba(62,207,142,0.12)";
     ctx.fill();
-
     for (let i = 1; i < samples.length; i++) {
       ctx.beginPath();
       ctx.moveTo(xAt(i - 1), yAt(alts[i - 1]));
@@ -491,24 +460,21 @@
       ctx.lineWidth = 2.4;
       ctx.stroke();
     }
-
     if (hoverIdx >= 0 && samples[hoverIdx]) {
       const s = samples[hoverIdx];
       const x = xAt(hoverIdx);
       ctx.strokeStyle = "rgba(232,246,238,0.35)";
       ctx.beginPath(); ctx.moveTo(x, top); ctx.lineTo(x, h - bot); ctx.stroke();
-      ctx.fillStyle = "#e8f6ee";
+      ctx.fillStyle = light ? "#1a1916" : "#e8f6ee";
       ctx.beginPath(); ctx.arc(x, yAt(alts[hoverIdx]), 4, 0, Math.PI * 2); ctx.fill();
-      ctx.fillStyle = "#c5ddd0";
+      ctx.fillStyle = light ? "#5c564c" : "#c5ddd0";
       ctx.font = "11px IBM Plex Sans, sans-serif";
       ctx.fillText(`${s.phase} · ${fmt(s.alt_km, 0)} km · Kp ${fmt(s.kp, 1)}`, Math.min(w - 180, x + 8), yAt(alts[hoverIdx]) - 8);
     }
-
-    ctx.fillStyle = "#9ec9b4";
+    ctx.fillStyle = light ? "#5c564c" : "#9ec9b4";
     ctx.font = "11px IBM Plex Sans, sans-serif";
     ctx.fillText(`Altitude · peak ${fmt(hi, 0)} km`, left, 16);
   }
-
   function sampleAtEvent(canvas, ev) {
     const samples = (plan && plan.samples) || [];
     if (!samples.length) return -1;
@@ -517,7 +483,6 @@
     const t = Math.max(0, Math.min(1, x / Math.max(1, r.width)));
     return Math.round(t * (samples.length - 1));
   }
-
   function onHover(ev) {
     const idx = sampleAtEvent(ev.currentTarget, ev);
     if (idx === hoverIdx) return;
@@ -529,7 +494,6 @@
     }
     drawAll();
   }
-
   function downloadPDF() {
     if (!plan) { alert("Run a plan first."); return; }
     if (!window.jspdf || !window.jspdf.jsPDF) { alert("PDF still loading."); return; }
@@ -583,7 +547,6 @@
     }
     doc.save(`LIPAS_Earth_Mission_${Date.now()}.pdf`);
   }
-
   async function run() {
     setBusy(true);
     try {
@@ -598,13 +561,11 @@
       renderPlan(localPlan(payload()));
     }
   }
-
   function applyBest() {
     if (!plan || !plan.best_window) return;
     $("t0").value = plan.best_window.start_offset_h;
     run().catch(() => setBusy(false));
   }
-
   function localPlan(body) {
     const hours = Math.max(1, Number(body.hours) || 6);
     const t0 = Number(body.t0_h) || 0;
@@ -654,7 +615,6 @@
       source: "offline-estimate",
     };
   }
-
   async function boot() {
     sites = OFFLINE_SITES.slice();
     try {
@@ -703,12 +663,28 @@
     $("btn-run").addEventListener("click", () => run().catch(() => setBusy(false)));
     $("btn-best").addEventListener("click", applyBest);
     $("btn-pdf").addEventListener("click", downloadPDF);
+    $("btn-luna")?.addEventListener("click", async () => {
+      const out = $("luna-plan-out");
+      if (!out) return;
+      out.textContent = "Thinking through the corridor…";
+      const ask = window.lipasAskLuna;
+      if (typeof ask !== "function") {
+        out.textContent = "Luna is not on this page yet.";
+        return;
+      }
+      const text = await ask(
+        "Review this Earth corridor as a planning helper. Say if the window is usable and what to watch. Do not claim this replaces a range commit.",
+        { plan: plan || {}, site: $("inp-name")?.value }
+      );
+      out.textContent = text || "Luna did not return a review. Try again.";
+    });
     ["pathCanvas", "altCanvas"].forEach((id) => {
       const el = $(id);
       el.addEventListener("mousemove", onHover);
       el.addEventListener("mouseleave", () => { hoverIdx = -1; $("chart-hover").textContent = "Hover the plots for sample readout"; drawAll(); });
     });
     window.addEventListener("resize", () => drawAll());
+    window.addEventListener("lipas-theme-change", () => drawAll());
     const tick = () => { $("utc-clock").textContent = new Date().toISOString().slice(11, 19) + "Z"; };
     tick(); setInterval(tick, 1000);
     applySite($("inp-from"), "lat1", "lon1", "alt1");
@@ -717,7 +693,6 @@
     updateRouteMeta();
     await run();
   }
-
   boot().catch(() => {
     $("loadingScreen")?.classList.add("hidden");
     setBusy(false);

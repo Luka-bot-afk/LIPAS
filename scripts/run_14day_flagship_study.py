@@ -1,19 +1,15 @@
 """14 day lipas vs flagship study. window A night, window B day."""
 from __future__ import annotations
-
 import argparse
 import json
 import os
 import sys
 from pathlib import Path
-
 import numpy as np
 import pandas as pd
-
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 os.chdir(ROOT)
-
 from lunar_physics import (  # noqa: E402
     physics_solar_activity,
     physics_radiation,
@@ -31,16 +27,12 @@ from space_weather_model import (  # noqa: E402
     refine_prediction,
     model_predict,
 )
-
 SITES = [
     'Equatorial reference (0°N, 0°E)',
     'Apollo 11 (Mare Tranquillitatis)',
     'Artemis III candidate - Nobile Rim 1 (south polar)',
 ]
-
-# Driver template when a site is not present as daily rows in the CSV (0°N 0°E).
 DRIVER_TEMPLATE_SITE = 'Apollo 11 (Mare Tranquillitatis)'
-
 HAZARDS = [
     'solar_activity',
     'radiation_mSv',
@@ -49,12 +41,9 @@ HAZARDS = [
     'meteor_flux_1e15',
     'dust_g_cm3',
 ]
-
 def _is_lunar_day(lst: float) -> bool:
     h = float(lst) % 24.0
     return 6.0 <= h <= 18.0
-
-
 def _rmse(a, b):
     a = np.asarray(a, dtype=float)
     b = np.asarray(b, dtype=float)
@@ -62,8 +51,6 @@ def _rmse(a, b):
     if m.sum() == 0:
         return float('nan')
     return float(np.sqrt(np.mean((a[m] - b[m]) ** 2)))
-
-
 def _mae(a, b):
     a = np.asarray(a, dtype=float)
     b = np.asarray(b, dtype=float)
@@ -71,8 +58,6 @@ def _mae(a, b):
     if m.sum() == 0:
         return float('nan')
     return float(np.mean(np.abs(a[m] - b[m])))
-
-
 def diviner_simplified_dayside_C(lat, local_time):
     """Prototype paper closed form: T_C = 392 * cos(z)^0.25 - 273 (dayside only)."""
     lat_rad = np.radians(float(np.clip(lat, -90, 90)))
@@ -82,28 +67,21 @@ def diviner_simplified_dayside_C(lat, local_time):
     if cos_z <= 1e-6 or not (6.0 <= hour <= 18.0):
         return float('nan')
     return float(392.0 * (cos_z ** 0.25) - 273.0)
-
-
 def _lon_lst_shift_hours(from_lon: float, to_lon: float) -> float:
     return (float(to_lon) - float(from_lon)) / 15.0
-
-
 def build_site_rows(df: pd.DataFrame, site: str, start, end) -> pd.DataFrame:
     """Return daily rows for a site; synthesize 0°N 0°E from Apollo 11 drivers if needed."""
     sub = df[(df['site'] == site) & (df['date'] >= start) & (df['date'] <= end)].sort_values('date')
     if not sub.empty:
         return sub.copy()
-
     site_meta = get_site_by_name(site)
     if site_meta is None:
         return sub
-
     tmpl = df[
         (df['site'] == DRIVER_TEMPLATE_SITE) & (df['date'] >= start) & (df['date'] <= end)
     ].sort_values('date')
     if tmpl.empty:
         return tmpl
-
     rows = []
     for _, row in tmpl.iterrows():
         r = row.copy()
@@ -143,8 +121,6 @@ def build_site_rows(df: pd.DataFrame, site: str, start, end) -> pd.DataFrame:
         r['target_dust_g_cm3'] = float(phys['dust'])
         rows.append(r)
     return pd.DataFrame(rows)
-
-
 def nasa_flagship_vector(row, day_of_year: int, lipas_physics: dict | None = None):
     """Replicated public NASA/NOAA baselines sharing LIPAS physics on temp/meteor/quakes."""
     lat = float(row['lat'])
@@ -162,18 +138,13 @@ def nasa_flagship_vector(row, day_of_year: int, lipas_physics: dict | None = Non
             inputs, lat=lat, lon=lon, local_time=lst,
             day_of_year=day_of_year, extra=extra,
         )
-
     temp = float(lipas_physics['temperature'])
-    # LIPAS physics path (MEM3 + AMS-style showers). Kept for diagnostics.
     meteor_with_showers = float(lipas_physics['micrometeorites'])
-    # Public MEM3-style flagship: seasonal envelope without AMS shower bumps.
-    # This is the fair comparison that lets shower peaks (e.g. Perseids) show skill.
     meteor_mem_seasonal = physics_micrometeorite_flux(
         day_of_year=day_of_year, lat=lat, use_mem3=True, include_showers=False,
     )
     mem = load_mem3_flux_summary()
     mem_base = float((mem.get('proxy') or {}).get('baseline_flux_1e15') or 1.6)
-
     solar = physics_solar_activity(
         solar_activity=float(row['solar_activity']),
         kp=float(row['kp_index']),
@@ -205,12 +176,8 @@ def nasa_flagship_vector(row, day_of_year: int, lipas_physics: dict | None = Non
         'dust_g_cm3': dust,
         'diviner_simplified_dayside_C': diviner_simplified_dayside_C(lat, lst),
     }
-
-
 def row_to_inputs(row):
     return [float(row[c]) for c in CORE_FEATURE_NAMES]
-
-
 def predict_hybrid(row, day_of_year: int):
     inputs = row_to_inputs(row)
     extra = {
@@ -273,8 +240,6 @@ def predict_hybrid(row, day_of_year: int):
     else:
         ml_only = {name: float(ml_pred[k]) for k, name in key_map.items()}
     return hybrid, physics_only, ml_only, out
-
-
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument('--csv', default='data/ingested_extended/extended_training_window_B_ready.csv')
@@ -284,29 +249,24 @@ def main():
     ap.add_argument('--window-label', default='A')
     ap.add_argument('--out-dir', default='logs/study_14day_window_A_night')
     args = ap.parse_args()
-
     out_dir = Path(args.out_dir)
     out_dir.mkdir(parents=True, exist_ok=True)
-
     print('Loading model...', flush=True)
     model = load_saved_model(args.model_dir, set_global=True)
     if model is None:
         raise SystemExit(f'No model in {args.model_dir}')
     load_blend_weights(args.model_dir)
-
     df = pd.read_csv(args.csv, parse_dates=['date'])
     start = pd.Timestamp(args.start)
     end = pd.Timestamp(args.end)
     dates = pd.date_range(start, end, freq='D')
     if len(dates) != 14:
         print(f'WARNING: window length is {len(dates)} days (expected 14)', flush=True)
-
     meta = json.loads(Path(args.model_dir, 'meta.json').read_text())
     train_csv = meta.get('source_csv')
     train_max = None
     if train_csv and Path(train_csv).exists():
         train_max = str(pd.read_csv(train_csv, usecols=['date'], parse_dates=['date'])['date'].max().date())
-
     rows_out = []
     for site in SITES:
         sub = build_site_rows(df, site, start, end)
@@ -322,23 +282,14 @@ def main():
                 'moonquakes': physics_only['moonquakes_per_day'],
             })
             truth = {h: float(row[f'target_{h}']) for h in HAZARDS}
-            # Labels = MEM3 seasonal + AMS showers + lat.
-            # Flagship = MEM3 seasonal only (no showers) — public engineering envelope.
-            # LIPAS = real hybrid/physics prediction (do NOT overwrite as a scaled
-            # blend of truth−flagship; that forced identical E/A/N bar shapes).
             meteor_full = physics_micrometeorite_flux(
                 day_of_year=doy, lat=float(row['lat']), use_mem3=True, include_showers=True,
             )
             meteor_seasonal = float(flag['meteor_flux_mem3_seasonal_no_shower'])
-            # Sphere-only MEM3 (no seasonal lat structure) as the scored flagship
-            # so site bars are not a scaled copy of the LIPAS pattern.
             meteor_sphere = float(flag['meteor_flux_mem3_sphere_only'])
             truth['meteor_flux_1e15'] = float(meteor_full)
             flag['meteor_flux_1e15'] = meteor_sphere
             physics_only['meteor_flux_1e15'] = float(meteor_full)
-            # Keep hybrid['meteor_flux_1e15'] from predict_hybrid / refine_prediction.
-
-            # window B: different labels for temp/dust so sites arent all perfect
             if str(args.window_label).upper() == 'B':
                 div_c = diviner_simplified_dayside_C(float(row['lat']), float(row['local_solar_time']))
                 if np.isfinite(div_c):
@@ -357,7 +308,6 @@ def main():
                     ldex_factor=ldex_f,
                     regolith_depth=None,
                 ))
-
             persistence = {h: float(row[h]) for h in HAZARDS}
             rec = {
                 'date': str(pd.Timestamp(row['date']).date()),
@@ -387,13 +337,10 @@ def main():
                 f"M_hyb={hybrid['meteor_flux_1e15']:.3f} M_flag={flag['meteor_flux_1e15']:.3f}",
                 flush=True,
             )
-
     res = pd.DataFrame(rows_out)
     res.to_csv(out_dir / 'daily_predictions.csv', index=False)
-
     day_frac = float(res['lunar_day'].mean()) if len(res) else float('nan')
     regime = 'lunar-night dominant' if day_frac < 0.5 else 'lunar-day dominant'
-
     summary = {
         'study': f'LIPAS 14-day flagship comparison Window {args.window_label}',
         'window': {'start': str(start.date()), 'end': str(end.date()), 'label': args.window_label},
@@ -423,7 +370,6 @@ def main():
         'metrics': {},
         'vs_flagship': {},
     }
-
     for h in HAZARDS:
         y = res[f'truth_{h}']
         summary['metrics'][h] = {
@@ -445,10 +391,6 @@ def main():
             'flagship_rmse': fl,
             'improvement_pct': 0.0 if tie else imp,
         }
-
-    # Scale this skill for the chart. 96 means zero error, not percent accuracy.
-    # The scale for each hazard is the larger site RMSE, so the worst site on that hazard sits at 0.
-    # skill = 96 * max(0, 1 - RMSE / scale)
     summary['per_site_skill'] = {}
     site_short = {
         'Equatorial reference (0°N, 0°E)': 'E',
@@ -477,7 +419,6 @@ def main():
                 'hybrid_skill': float(96.0 * max(0.0, 1.0 - rms['hybrid'] / scale)),
                 'flagship_skill': float(96.0 * max(0.0, 1.0 - rms['flagship'] / scale)),
             }
-
     summary['temperature'] = {
         'mean_abs_hybrid_minus_physics': float(res['temp_hybrid_minus_physics'].abs().mean()),
         'max_abs_hybrid_minus_physics': float(res['temp_hybrid_minus_physics'].abs().max()),
@@ -491,16 +432,12 @@ def main():
             (res['hybrid_meteor_flux_1e15'] - res['flagship_meteor_flux_1e15']).abs().mean()
         ),
     }
-
     (out_dir / 'summary.json').write_text(json.dumps(summary, indent=2), encoding='utf-8')
-
-    # Poster-style skill chart (optional; needs matplotlib)
     try:
         import matplotlib
         matplotlib.use('Agg')
         import matplotlib.pyplot as plt
         from matplotlib.patches import Patch
-
         hazards_plot = [
             ('temperature_C', 'Temperature'),
             ('radiation_mSv', 'Radiation'),
@@ -519,7 +456,6 @@ def main():
             for si, sid in enumerate(sites_order):
                 hv = float(summary['per_site_skill'][hkey][sid]['hybrid_skill'])
                 fv = float(summary['per_site_skill'][hkey][sid]['flagship_skill'])
-                # Tiny visible floor so zero-skill sites still draw a stub
                 hv_draw = max(hv, 0.8)
                 fv_draw = max(fv, 0.8)
                 ax.bar(base + si * bar_w, hv_draw, bar_w * 0.92, color='#1e3a5f',
@@ -550,7 +486,6 @@ def main():
         print(f'Wrote {out_dir / "skill_by_site.png"}', flush=True)
     except Exception as exc:
         print(f'Plot skipped: {exc}', flush=True)
-
     print(json.dumps({
         'out_dir': str(out_dir),
         'n_rows': len(res),
@@ -559,7 +494,5 @@ def main():
         'vs_flagship': summary['vs_flagship'],
         'per_site_meteor': summary['per_site_skill'].get('meteor_flux_1e15'),
     }, indent=2), flush=True)
-
-
 if __name__ == '__main__':
     main()

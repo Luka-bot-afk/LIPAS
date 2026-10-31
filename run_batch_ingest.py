@@ -1,8 +1,6 @@
-
 import argparse
 import json
 from data_ingestion import fetch_real_source_data, batch_ingest_from_sources, load_json_or_csv
-
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Batch ingest remote or local source datasets.')
     parser.add_argument('--sources', type=str, help='Path to JSON file containing source payloads')
@@ -14,7 +12,6 @@ if __name__ == '__main__':
     parser.add_argument('--extra-url', action='append', default=[], help='Additional remote source URL in the form key=url')
     parser.add_argument('--out-dir', type=str, default='data/ingested', help='Directory to save ingested data')
     args = parser.parse_args()
-
     sources = {}
     if args.sources:
         sources = load_json_or_csv(args.sources)
@@ -24,7 +21,6 @@ if __name__ == '__main__':
             sources = sources.to_dict(orient='list')
         else:
             raise ValueError('sources file must contain a JSON object')
-
     if args.source_dir:
         from pathlib import Path
         source_path = Path(args.source_dir)
@@ -35,7 +31,6 @@ if __name__ == '__main__':
             if label in sources:
                 label = f'{label}_{len(sources)}'
             sources[label] = str(path)
-
     if args.fetch_remote:
         extra_urls = {}
         for item in args.extra_url:
@@ -44,10 +39,8 @@ if __name__ == '__main__':
                 extra_urls[key] = url
         remote = fetch_real_source_data(start_date=args.start, end_date=args.end, nasa_key=args.nasa_key or 'DEMO_KEY', extra_urls=extra_urls)
         sources.update(remote)
-
     if not sources:
         raise SystemExit('No source payloads provided. Use --sources or --fetch-remote.')
-
     paths = batch_ingest_from_sources(sources, out_dir=args.out_dir)
     print('Wrote ingested chunks:')
     for p in paths:

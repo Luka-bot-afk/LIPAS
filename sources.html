@@ -72,13 +72,11 @@
     })();
   </script>
   <div id="lipas-topnav" data-active="sources"></div>
-
   <div class="shell">
     <header class="mast">
       <h1 id="srcTitle">Data sources</h1>
       <p id="srcLead">Public NASA and NOAA space-weather archives, lunar mission datasets, and the OMNI heliophysics stack used by lunar LIPAS.</p>
     </header>
-
     <div class="src-list">
       <article class="src-card" data-for="moon mercury">
         <h2>NOAA Space Weather Prediction Center</h2>
@@ -113,16 +111,13 @@
         <p>Six Hermean sites (Caloris, Rachmaninoff, equator, Beethoven, Prokofiev, Chao Meng-Fu) with USGS/MESSENGER-style coordinates.</p>
       </article>
     </div>
-
     <p class="note" id="srcNote">LIPAS combines public archives with physics-constrained forecasts for lunar sites. The Mercury layer reuses the same 1 AU drivers with magnetosphere physics and does not apply the lunar LSTM weights.</p>
-
     <footer class="lipas-site-footer">
       <p class="lipas-copyright">© 2026 LIPAS Research</p>
     </footer>
   </div>
-
   <script src="js/lipas-api.js"></script>
-  <script src="js/navbar.js?v=26" defer></script>
+  <script src="js/navbar.js?v=30" defer></script>
   <script>
     (function () {
       var app = document.body.dataset.app || "moon";

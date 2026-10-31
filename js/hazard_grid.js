@@ -1,9 +1,7 @@
 (function (global) {
   "use strict";
-
   const W = 1024;
   const H = 512;
-
   const TYPE_CHANNEL = {
     Radiation: "radiation",
     Micrometeorites: "micrometeorites",
@@ -14,7 +12,6 @@
     SEP: "radiation",
     CME: "solar",
   };
-
   const PALETTES = {
     Radiation: { c0: [255, 70, 60], c1: [255, 140, 70], c2: [180, 40, 100] },
     Micrometeorites: { c0: [255, 200, 60], c1: [255, 140, 40], c2: [220, 100, 30] },
@@ -28,40 +25,32 @@
     Flare: { c0: [255, 180, 60], c1: [255, 90, 30], c2: [180, 40, 10] },
     ActiveRegion: { c0: [8, 3, 1], c1: [70, 32, 8], c2: [210, 140, 50] },
   };
-
   const DAYSIDE_TYPES = new Set(["Solar", "Temperature"]);
   const DAYSIDE_SOFT = new Set(["SEP", "CME", "Storm", "Flare"]);
-
   let gridCache = null;
   let gridPromise = null;
-
   function apiUrl(path) {
     return typeof global.lipasApiUrl === "function" ? global.lipasApiUrl(path) : path;
   }
-
   function wrapLon(lon) {
     let x = lon;
     while (x > 180) x -= 360;
     while (x < -180) x += 360;
     return x;
   }
-
   function sampleField(field, lats, lons, lat, lon) {
     if (!field?.length || !lats?.length || !lons?.length) return null;
     const lo = wrapLon(lon);
     const la = Math.max(-90, Math.min(90, lat));
-
     let i1 = 0;
     while (i1 < lats.length - 1 && lats[i1 + 1] < la) i1++;
     const i0 = Math.max(0, i1 - 1);
     i1 = Math.min(lats.length - 1, i0 + 1);
-
     let j0 = 0;
     for (let j = 0; j < lons.length; j++) {
       if (Math.abs(wrapLon(lons[j] - lo)) < Math.abs(wrapLon(lons[j0] - lo))) j0 = j;
     }
     const j1 = (j0 + 1) % lons.length;
-
     const lat0 = lats[i0];
     const lat1 = lats[i1];
     const lon0 = lons[j0];
@@ -72,7 +61,6 @@
     let dlo = wrapLon(lo - lon0);
     if (Math.abs(dlo) > 180) dlo = dlo > 0 ? dlo - 360 : dlo + 360;
     const tx = Math.abs(dlon) < 1e-9 ? 0.5 : dlo / dlon;
-
     const v00 = field[i0]?.[j0];
     const v01 = field[i0]?.[j1];
     const v10 = field[i1]?.[j0];
@@ -80,12 +68,10 @@
     const vals = [v00, v01, v10, v11].filter((v) => Number.isFinite(v));
     if (!vals.length) return null;
     if (vals.length < 4) return vals.reduce((a, b) => a + b, 0) / vals.length;
-
     const a = v00 * (1 - tx) + v01 * tx;
     const b = v10 * (1 - tx) + v11 * tx;
     return a * (1 - ty) + b * ty;
   }
-
   function fieldStats(field) {
     let min = Infinity;
     let max = -Infinity;
@@ -118,14 +104,11 @@
     }
     return { min, max, mean, stdev: Math.sqrt(varSum / n), span: max - min };
   }
-
-  /** Collect hotspot cells — always returns localized peaks for blob splats. */
   function collectHotspots(field, lats, lons, stats, maxPeaks) {
     const cells = [];
     const nLat = field.length;
     const nLon = field[0]?.length || 0;
     const span = Math.max(stats.span, 1e-9);
-
     for (let i = 0; i < nLat; i++) {
       for (let j = 0; j < nLon; j++) {
         const v = field[i][j];
@@ -135,7 +118,6 @@
       }
     }
     cells.sort((a, b) => b.value - a.value);
-
     const peaks = [];
     const minSep = 0.08;
     for (const c of cells) {
@@ -145,21 +127,17 @@
       );
       if (!tooClose) peaks.push(c);
     }
-
     if (!peaks.length && cells.length) {
       peaks.push(cells[0], cells[Math.floor(cells.length / 2)], cells[cells.length - 1]);
     }
     return peaks;
   }
-
   function lonToPx(lon, width) {
     return ((wrapLon(lon) + 180) / 360) * Math.max(1, width - 1);
   }
-
   function latToPy(lat, height) {
     return ((90 - lat) / 180) * Math.max(1, height - 1);
   }
-
   function splatBlob(ctx, px, py, radius, pal, intensity, alphaScale) {
     const local = Math.max(0.25, Math.min(1, intensity));
     const a0 = (0.28 + local * 0.52) * alphaScale;
@@ -176,21 +154,18 @@
       ctx.fill();
     });
   }
-
   function emptyCanvas() {
     const canvas = document.createElement("canvas");
     canvas.width = W;
     canvas.height = H;
     return canvas;
   }
-
   function cosineMu(lat, lon, subLat, subLon) {
     const la = (lat * Math.PI) / 180;
     const sla = (subLat * Math.PI) / 180;
     const dlon = (wrapLon(lon - subLon) * Math.PI) / 180;
     return Math.sin(la) * Math.sin(sla) + Math.cos(la) * Math.cos(sla) * Math.cos(dlon);
   }
-
   function makeMercuryFieldCanvas(type, opts) {
     const pal = PALETTES[type] || PALETTES.Solar;
     const subLon = Number.isFinite(Number(opts?.subsolarLon)) ? Number(opts.subsolarLon) : 0;
@@ -262,7 +237,6 @@
     ctx.putImageData(img, 0, 0);
     return canvas;
   }
-
   function makeIlluminationCanvas(type, opts) {
     const pal = PALETTES[type] || PALETTES.Solar;
     const subLon = Number(opts?.subsolarLon);
@@ -315,14 +289,12 @@
     ctx.putImageData(img, 0, 0);
     return canvas;
   }
-
   function driftedLon(lon, hour, degPerHour) {
     const drift = Number(degPerHour);
     const h = Number(hour) || 0;
     if (!Number.isFinite(drift)) return wrapLon(lon);
     return wrapLon(lon - drift * h);
   }
-
   function makeSunspotCanvas(spots, opts) {
     const style = opts?.style || "umbra";
     const hour = Number(opts?.hour) || 0;
@@ -396,7 +368,6 @@
     });
     return canvas;
   }
-
   function frameIndex(grid, hour) {
     const n = grid?.frames?.length || 0;
     if (!n) return 0;
@@ -404,7 +375,6 @@
     if (!Number.isFinite(h)) return 0;
     return Math.min(n - 1, Math.max(0, Math.floor(((h % 24) / 24) * n)));
   }
-
   async function fetchGrid(force) {
     if (gridCache && !force) return gridCache;
     if (gridPromise && !force) return gridPromise;
@@ -429,7 +399,6 @@
     })();
     return gridPromise;
   }
-
   function paintHotspots(ctx, type, peaks, sev) {
     const pal = PALETTES[type] || PALETTES.Radiation;
     const intensity = Math.max(0.35, Math.min(1, sev != null ? sev : 0.55));
@@ -443,7 +412,6 @@
       splatBlob(ctx, px, py, r, pal, Math.min(1, local * 1.2), 1.45);
     });
   }
-
   function makeHotspotCanvas(type, peaks, sev) {
     const list = Array.isArray(peaks) ? peaks.filter((p) => Number.isFinite(p?.lat) && Number.isFinite(p?.lon)) : [];
     if (!list.length) return emptyCanvas();
@@ -451,7 +419,6 @@
     paintHotspots(canvas.getContext("2d"), type, list, sev);
     return canvas;
   }
-
   function makeGridCanvas(type, grid, frameIdx, meta) {
     const subLon = Number(meta?.subsolarLon ?? grid?.frames?.[frameIdx | 0]?.subsolar?.lon);
     const subLat = Number(meta?.subsolarLat ?? grid?.frames?.[frameIdx | 0]?.subsolar?.lat) || 0;
@@ -463,16 +430,13 @@
         severity: Number.isFinite(sevHint) ? sevHint : 0.55,
       });
     }
-
     const channel = TYPE_CHANNEL[type] || "radiation";
     const fr = grid?.frames?.[frameIdx | 0];
     let field = fr?.fields?.[channel];
     const lats = grid?.lats;
     const lons = grid?.lons;
-
     if (type === "SEP" && fr?.fields?.radiation) field = fr.fields.radiation;
     if (type === "CME" && fr?.fields?.solar) field = fr.fields.solar;
-
     let canvas = null;
     if (DAYSIDE_SOFT.has(type) && Number.isFinite(subLon)) {
       canvas = makeIlluminationCanvas(type, {
@@ -481,7 +445,6 @@
         severity: Number.isFinite(sevHint) ? sevHint : 0.55,
       });
     }
-
     if (!field || !lats?.length || !lons?.length) {
       if (canvas) return canvas;
       if (type === "Radiation" && Number.isFinite(subLon)) {
@@ -493,7 +456,6 @@
       }
       return emptyCanvas();
     }
-
     const stats = fieldStats(field);
     const metaBoost =
       type === "SEP"
@@ -504,10 +466,8 @@
     const sev = Math.max(0.35, Math.min(1, 0.4 + stats.span * 0.5 + metaBoost * 0.2));
     if (!canvas) canvas = emptyCanvas();
     const ctx = canvas.getContext("2d");
-
     const peaks = collectHotspots(field, lats, lons, stats, 16);
     if (!peaks.length) return canvas;
-
     const boost = 1 + metaBoost * 0.45;
     peaks.forEach((p, idx) => {
       const px = lonToPx(p.lon, W);
@@ -517,17 +477,14 @@
       const alpha = 1.05 + rank * 0.4;
       splatBlob(ctx, px, py, r, PALETTES[type] || PALETTES.Radiation, Math.min(1, p.intensity * boost * (0.75 + rank * 0.5)), alpha);
     });
-
     return canvas;
   }
-
   function siteSample(grid, channel, lat, lon, frameIdx) {
     const fr = grid?.frames?.[frameIdx | 0];
     const field = fr?.fields?.[channel];
     if (!field) return null;
     return sampleField(field, grid.lats, grid.lons, lat, lon);
   }
-
   function normChannel(channel, v) {
     const x = Number(v);
     if (!Number.isFinite(x)) return 0.12;
@@ -548,7 +505,6 @@
         return 0.2;
     }
   }
-
   global.LipasHazardGrid = {
     fetchGrid,
     makeGridCanvas,

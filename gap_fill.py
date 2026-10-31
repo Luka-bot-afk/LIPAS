@@ -1,11 +1,8 @@
 """LIPAS."""
 from __future__ import annotations
-
 import numpy as np
 import pandas as pd
-
 from lunar_physics import clamp
-
 def kp_from_ap(ap: float) -> float:
     """Bartels-style Ap→Kp proxy (piecewise, deterministic)."""
     a = float(max(0.0, ap))
@@ -25,7 +22,6 @@ def kp_from_ap(ap: float) -> float:
             t = (a - a0) / max(a1 - a0, 1e-6)
             return float(k0 + t * (k1 - k0))
     return 9.0
-
 def ap_from_kp(kp: float) -> float:
     """Kp→Ap proxy (midpoint of NOAA bins)."""
     k = float(clamp(kp, 0.0, 9.0, 3.0))
@@ -33,17 +29,14 @@ def ap_from_kp(kp: float) -> float:
     idx = int(round(k * 3.0))
     idx = max(0, min(len(bins) - 1, idx))
     return float(bins[idx])
-
 def f107_from_ssn(ssn: float) -> float:
     """Empirical F10.7 from sunspot number (quiet≈70)."""
     s = float(max(0.0, ssn))
     return float(clamp(67.0 + 0.55 * s + 0.0012 * s * s, 60.0, 400.0, 70.0))
-
 def ssn_from_f107(f107: float) -> float:
     """Rough inverse of f107_from_ssn for blending."""
     f = float(max(60.0, f107))
     return float(clamp((f - 67.0) / 0.55, 0.0, 400.0, 0.0))
-
 def interpolate_numeric_columns(df: pd.DataFrame, cols: list[str], limit: int = 5) -> pd.DataFrame:
     """Time-ordered linear interpolation with short forward/back fill (drivers only)."""
     out = df.copy()
@@ -57,12 +50,10 @@ def interpolate_numeric_columns(df: pd.DataFrame, cols: list[str], limit: int = 
         s = s.ffill(limit=limit).bfill(limit=limit)
         out[col] = s
     return out
-
 def cross_fill_omni_drivers(df: pd.DataFrame) -> pd.DataFrame:
 \
 \
 \
-
     out = df.copy()
     if 'kp_index' in out.columns and 'ap' in out.columns:
         miss_kp = out['kp_index'].isna()
@@ -99,24 +90,19 @@ def cross_fill_omni_drivers(df: pd.DataFrame) -> pd.DataFrame:
         if col in out.columns:
             out[col] = pd.to_numeric(out[col], errors='coerce').fillna(val)
     return out
-
 def expand_base_to_omni_spine(base: pd.DataFrame, omni: pd.DataFrame, max_gap_days: int = 3) -> pd.DataFrame:
 \
 \
 \
 \
-
     _ = (omni, max_gap_days)
     return base
-
 _DRIVER_INPUT_COLS = (
     'solar_wind_speed', 'solar_wind_density', 'imf_bz', 'kp_index',
 )
-
 _SITE_CONST_COLS = (
     'regolith_depth', 'thermal_inertia', 'lat', 'lon',
 )
-
 _REQUIRED_TRAINING_COLS = [
     'solar_activity', 'radiation_mSv', 'temperature_C', 'moonquakes_per_day',
     'meteor_flux_1e15', 'dust_g_cm3',
@@ -126,12 +112,9 @@ _REQUIRED_TRAINING_COLS = [
     'target_solar_activity', 'target_radiation_mSv', 'target_temperature_C',
     'target_moonquakes_per_day', 'target_meteor_flux_1e15', 'target_dust_g_cm3',
 ]
-
 def gap_fill_extended_training(df: pd.DataFrame) -> pd.DataFrame:
-
     out = df.copy()
     out = out.sort_values(['site', 'date']).reset_index(drop=True)
-
     chunks = []
     for _site, g in out.groupby('site', sort=False):
         g2 = interpolate_numeric_columns(
@@ -139,18 +122,15 @@ def gap_fill_extended_training(df: pd.DataFrame) -> pd.DataFrame:
         )
         chunks.append(g2)
     out = pd.concat(chunks, ignore_index=True)
-
     for col in _SITE_CONST_COLS:
         if col in out.columns:
             out[col] = out.groupby('site')[col].transform(lambda s: s.ffill().bfill())
-
     if 'date' in out.columns:
         dts = pd.to_datetime(out['date'], errors='coerce')
         if 'day_of_month' in out.columns:
             out['day_of_month'] = out['day_of_month'].fillna(dts.dt.day.astype(float))
         if 'month_of_year' in out.columns:
             out['month_of_year'] = out['month_of_year'].fillna(dts.dt.month.astype(float))
-
     before = len(out)
     need = [c for c in _REQUIRED_TRAINING_COLS if c in out.columns]
     out = out.dropna(subset=need, axis=0, how='any')

@@ -1,5 +1,4 @@
 from __future__ import annotations
-
 import json
 import math
 import urllib.parse
@@ -7,13 +6,11 @@ import urllib.request
 from datetime import datetime, timezone, timedelta
 from pathlib import Path
 from typing import Any
-
 ROOT = Path(__file__).resolve().parent
 REPO = ROOT.parent
 CACHE = ROOT / 'data'
 HORIZONS_API = 'https://ssd.jpl.nasa.gov/api/horizons.api'
 HORIZONS_JSON = CACHE / 'horizons_mercury_daily.json'
-
 def _parse_horizons_result(text: str) -> list[dict[str, Any]]:
     rows: list[dict[str, Any]] = []
     if '$$SOE' not in text or '$$EOE' not in text:
@@ -23,7 +20,6 @@ def _parse_horizons_result(text: str) -> list[dict[str, Any]]:
         line = raw.strip()
         if not line or line.startswith('*'):
             continue
-
         parts = [p.strip() for p in line.split(',')]
         if len(parts) < 5:
             parts = line.split()
@@ -37,10 +33,8 @@ def _parse_horizons_result(text: str) -> list[dict[str, Any]]:
                     cal = p
         if len(nums) < 3:
             continue
-
         if len(nums) >= 4:
             x, y, z = nums[-3], nums[-2], nums[-1] if len(nums) == 4 else nums[1:4][0:3]
-
             if nums[0] > 1e6 and len(nums) >= 4:
                 x, y, z = nums[1], nums[2], nums[3]
             else:
@@ -57,7 +51,6 @@ def _parse_horizons_result(text: str) -> list[dict[str, Any]]:
             rec['jd'] = nums[0]
         rows.append(rec)
     return rows
-
 def fetch_horizons_mercury(start: str, end: str, step: str = '1d') -> Path:
     CACHE.mkdir(parents=True, exist_ok=True)
     params = {
@@ -83,7 +76,6 @@ def fetch_horizons_mercury(start: str, end: str, step: str = '1d') -> Path:
     rows = _parse_horizons_result(result)
     if not rows:
         raise RuntimeError('Horizons returned no usable Mercury vectors')
-
     start_dt = datetime.fromisoformat(start).replace(tzinfo=timezone.utc)
     step_days = 1.0
     if step.endswith('d'):
@@ -93,7 +85,6 @@ def fetch_horizons_mercury(start: str, end: str, step: str = '1d') -> Path:
             step_days = 1.0
     for i, rec in enumerate(rows):
         rec['date'] = (start_dt + timedelta(days=i * step_days)).date().isoformat()
-
     existing: dict[str, dict] = {}
     if HORIZONS_JSON.exists():
         try:
@@ -115,7 +106,6 @@ def fetch_horizons_mercury(start: str, end: str, step: str = '1d') -> Path:
     }
     HORIZONS_JSON.write_text(json.dumps(out), encoding='utf-8')
     return HORIZONS_JSON
-
 def horizons_r_au(when: datetime | None = None) -> float | None:
     if not HORIZONS_JSON.exists():
         return None
@@ -131,7 +121,6 @@ def horizons_r_au(when: datetime | None = None) -> float | None:
     exact = next((r for r in rows if r.get('date') == day), None)
     if exact and exact.get('r_au'):
         return float(exact['r_au'])
-
     best = None
     best_d = 10**9
     for r in rows:
@@ -148,12 +137,9 @@ def horizons_r_au(when: datetime | None = None) -> float | None:
     if best and best_d <= 3 and best.get('r_au'):
         return float(best['r_au'])
     return None
-
 def reuse_lipas_omni2() -> Path:
     return REPO / 'data' / 'archives' / 'omni2_daily.csv'
-
 def load_lipas_drivers(local_time: float | None = 12.0) -> dict[str, Any]:
-
     import sys
     if str(REPO) not in sys.path:
         sys.path.insert(0, str(REPO))
@@ -173,7 +159,6 @@ def load_lipas_drivers(local_time: float | None = 12.0) -> dict[str, Any]:
     ):
         if drv.get(k) is not None:
             extra[k] = drv[k]
-
     if extra.get('flare_index') is not None:
         fi = float(extra['flare_index'])
         extra['solar_activity'] = max(float(extra.get('solar_activity') or 5.0), 4.0 + fi * 0.9)
@@ -184,9 +169,7 @@ def load_lipas_drivers(local_time: float | None = 12.0) -> dict[str, Any]:
             min(12.0, 3.0 + (f107 - 70.0) / 30.0),
         )
     return extra
-
 def fetch_messenger_epps(start: str, end: str):
-
     _ = (start, end)
     return {
         'status': 'unavailable',

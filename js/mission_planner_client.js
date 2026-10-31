@@ -1,6 +1,5 @@
 (function () {
   "use strict";
-
   const MISSION_CANDIDATE_SITES = [
     { name: "Shackleton Crater Rim", lat: -89.68, lon: 166.15, notes: "Near-constant illumination, polar ice access" },
     { name: "Malapert Massif", lat: -85.9, lon: 12.9, notes: "Earth-facing high ground, comms favorable" },
@@ -25,13 +24,10 @@
     { name: "Mare Orientale", lat: -19.4, lon: -92.8, notes: "Far-side limb multi-ring basin" },
     { name: "Aitken Crater", lat: -16.8, lon: 173.4, notes: "Far side-SPA namesake crater" },
   ];
-
   const DEG = Math.PI / 180;
-
   function clamp(v, lo, hi) {
     return Math.max(lo, Math.min(hi, v));
   }
-
   function baselineInputs(lat, lon, hour) {
     const lst = (hour + lon / 15.0) % 24.0;
     const latR = lat * DEG;
@@ -68,7 +64,6 @@
       clamp(dust, 0.5, 5),
     ];
   }
-
   function predFromBase(base) {
     return {
       solar: base[0],
@@ -79,7 +74,6 @@
       dust: base[5],
     };
   }
-
   function lvl(val, yellow, red, higherWorse = true) {
     if (higherWorse) {
       if (val >= red) return "red";
@@ -90,7 +84,6 @@
     if (val <= yellow) return "yellow";
     return "green";
   }
-
   function hazardLevels(pred, lat) {
     const rad = Number(pred.radiation ?? 0.08);
     const dust = Number(pred.dust ?? 1.5);
@@ -125,7 +118,6 @@
       equip_impact: impact,
     };
   }
-
   function shortReason(key, pred) {
     const rad = Number(pred.radiation ?? 0);
     const dust = Number(pred.dust ?? 0);
@@ -144,7 +136,6 @@
     };
     return map[key] || key;
   }
-
   function evaScore(pred, riskPosture = "nominal", lat = null) {
     const rad = Number(pred.radiation ?? 0.08);
     const dust = Number(pred.dust ?? 1.5);
@@ -195,7 +186,6 @@
       }[status] || "",
     };
   }
-
   function siteIllumination(lat, lon, hour) {
     const lst = (hour + lon / 15.0) % 24.0;
     const latR = lat * DEG;
@@ -208,7 +198,6 @@
     }
     return clamp(Math.round(cosZ * 100), 0, 100);
   }
-
   function baseSuitability(pred, lat, lon, illumPct) {
     const rad = Number(pred.radiation ?? 0.08);
     const dust = Number(pred.dust ?? 1.5);
@@ -242,7 +231,6 @@
       status: score >= 68 && levels.equipment !== "red" ? "go" : score >= 45 ? "caution" : "nogo",
     };
   }
-
   function confidencePct(plausibility, status, lat, lon) {
     let p = Number(plausibility);
     if (!Number.isFinite(p)) p = 0.68;
@@ -255,17 +243,14 @@
     if (lat != null && Math.abs(Number(lat)) >= 80) pct += 2;
     return Math.round(clamp(pct, 42, 96));
   }
-
   function fmtUtc(d) {
     return d.toISOString().replace(/\.\d{3}Z$/, "Z");
   }
-
   function fmtUtcShort(d) {
     const h = String(d.getUTCHours()).padStart(2, "0");
     const m = String(d.getUTCMinutes()).padStart(2, "0");
     return `${h}:${m}`;
   }
-
   function landingOpsWindows(hourly, now, riskPosture, lat, plausibility) {
     const landH = 2;
     const windows = [];
@@ -315,7 +300,6 @@
     windows.sort((a, b) => b.score - a.score || a.avg_radiation - b.avg_radiation);
     return windows.slice(0, 4);
   }
-
   function scoreZone(site, hour0, riskPosture) {
     const b = baselineInputs(site.lat, site.lon, hour0);
     const p = predFromBase(b);
@@ -349,7 +333,6 @@
       scored_with: "physics",
     };
   }
-
   function computeMissionPlanClient(payload) {
     let lat = Number(payload.lat ?? -89.68);
     let lon = Number(payload.lon ?? 166.15);
@@ -361,7 +344,6 @@
     const evaPerDay = clamp(Number(payload.eva_per_day ?? Math.min(evaH, 4)), 0, 12);
     let riskPosture = String(payload.risk_posture || "nominal").toLowerCase();
     if (!["conservative", "nominal", "aggressive"].includes(riskPosture)) riskPosture = "nominal";
-
     const now = new Date();
     const hour0 = now.getUTCHours() + now.getUTCMinutes() / 60.0;
     const base0 = baselineInputs(lat, lon, hour0);
@@ -372,7 +354,6 @@
     const rad0 = pred0.radiation;
     const sol0 = pred0.solar;
     const plausibility = 0.68;
-
     const hourly = [];
     for (let h = 0; h < 24; h++) {
       const t = (hour0 + h) % 24.0;
@@ -397,7 +378,6 @@
         equipment: hz.equipment,
       });
     }
-
     const windows = [];
     for (let h = 0; h <= 24 - evaH; h++) {
       const slice = hourly.slice(h, h + evaH);
@@ -434,14 +414,12 @@
     windows.sort((a, b) => b.score - a.score || a.avg_radiation - b.avg_radiation);
     const topWindows = windows.slice(0, 6);
     const landingWindows = landingOpsWindows(hourly, now, riskPosture, lat, plausibility);
-
     const candidates = MISSION_CANDIDATE_SITES.concat([
       { name, lat, lon, notes: "Your planned site", is_query: true },
     ]);
     const zones = candidates.map((s) => scoreZone(s, hour0, riskPosture));
     zones.sort((a, b) => b.ops_rank - a.ops_rank || b.base_pct - a.base_pct);
     const bestBase = zones[0] || null;
-
     const radH = pred0.radiation;
     const gcr = 0.022;
     const interior = gcr * 0.35;
@@ -455,7 +433,6 @@
     const confNow = confidencePct(plausibility, evaNow.status, lat, lon);
     const evaNowOut = { ...evaNow, confidence_pct: confNow };
     const siteBaseOut = { ...siteBase, confidence_pct: confidencePct(plausibility, siteBase.status, lat, lon) };
-
     return {
       site: { name, lat, lon },
       eva_duration_h: evaH,
@@ -514,6 +491,5 @@
       },
     };
   }
-
   window.computeMissionPlanClient = computeMissionPlanClient;
 })();

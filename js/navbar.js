@@ -1,8 +1,6 @@
 (function () {
   "use strict";
-
   const COPYRIGHT = "© 2026 LIPAS Research";
-
   try {
     const saved = localStorage.getItem("lipas-theme");
     document.documentElement.dataset.theme = saved === "light" ? "light" : "dark";
@@ -34,10 +32,9 @@
     const fix = document.createElement("link");
     fix.id = "lipas-page-fix";
     fix.rel = "stylesheet";
-    fix.href = "styles/page-fix.css?v=6";
+    fix.href = "styles/page-fix.css?v=10";
     document.head.appendChild(fix);
   }
-
   async function lipasAskLuna(question, ctx, history) {
     const snapshot = ctx || {};
     try {
@@ -78,7 +75,6 @@
     return "";
   }
   window.lipasAskLuna = lipasAskLuna;
-
   function installChartSkin() {
     const Chart = window.Chart;
     if (!Chart || Chart.__lipasSkin) return;
@@ -112,7 +108,6 @@
     });
   }
   installChartSkin();
-
   const ICO = {
     dash: '<svg viewBox="0 0 16 16" aria-hidden="true"><rect x="1.5" y="1.5" width="5.5" height="5.5" rx="1.2" fill="none" stroke="currentColor" stroke-width="1.4"/><rect x="9" y="1.5" width="5.5" height="5.5" rx="1.2" fill="none" stroke="currentColor" stroke-width="1.4"/><rect x="1.5" y="9" width="5.5" height="5.5" rx="1.2" fill="none" stroke="currentColor" stroke-width="1.4"/><rect x="9" y="9" width="5.5" height="5.5" rx="1.2" fill="none" stroke="currentColor" stroke-width="1.4"/></svg>',
     mission: '<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M2 12.5 6.2 8.2 8.4 10.4 14 3.5" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/><path d="M10.2 3.5H14V7.2" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>',
@@ -120,7 +115,6 @@
     sun: '<svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="2.4" fill="none" stroke="currentColor" stroke-width="1.4"/><path d="M8 1.6v1.8M8 12.6v1.8M1.6 8h1.8M12.6 8h1.8M3.4 3.4l1.3 1.3M11.3 11.3l1.3 1.3M12.6 3.4l-1.3 1.3M4.7 11.3l-1.3 1.3" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>',
     book: '<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3 2.5h7.2A2.3 2.3 0 0 1 12.5 4.8V13.5H4.6A1.6 1.6 0 0 0 3 15V2.5Z" fill="none" stroke="currentColor" stroke-width="1.3"/><path d="M3 13.2h9.5" stroke="currentColor" stroke-width="1.3"/></svg>',
   };
-
   const FAMILIES = {
     moon: {
       label: "Moon",
@@ -156,14 +150,12 @@
       ],
     },
   };
-
   const PAGES = [
     { id: "dashboard", href: "doctype.html", label: "Dashboard" },
     { id: "mission", href: "mission_planning.html", label: "Mission Planner" },
     { id: "globe", href: "cesium_map.html", label: "Globe" },
     { id: "sources", href: "sources.html", label: "Sources" },
   ];
-
   const MASCOT_SVG = `
 <svg class="moon-mascot" viewBox="0 0 64 64" aria-hidden="true" xmlns="http://www.w3.org/2000/svg">
   <defs>
@@ -185,13 +177,10 @@
   <circle cx="44" cy="36" r="2.1" fill="#f0b7b0"/>
   <path d="M26 39.5c2.2 3 9.8 3 12 0" fill="none" stroke="#1c2838" stroke-width="1.6" stroke-linecap="round"/>
 </svg>`;
-
   const chatHistory = [];
-
   function pageFile() {
     return (location.pathname.split("/").pop() || "").toLowerCase();
   }
-
   function currentFamily() {
     const file = pageFile();
     const app = new URLSearchParams(location.search).get("app");
@@ -216,11 +205,9 @@
     if ((file.includes("sources") || file.includes("landing") || file === "") && FAMILIES[family]) return family;
     return "moon";
   }
-
   function isMercuryUi() {
     return currentFamily() === "mercury";
   }
-
   function detectActive() {
     const file = pageFile() || "landing.html";
     if (file.includes("sun_globe") || file === "sun.html") return "sun";
@@ -230,7 +217,6 @@
     if (file.includes("sources")) return "sources";
     return "";
   }
-
   function profileRecord() {
     try {
       const raw = JSON.parse(localStorage.getItem("lipas-profile") || "{}");
@@ -240,13 +226,11 @@
       return { name: "LIPAS Research", role: "Forecast ops" };
     }
   }
-
   function profileMark(name) {
     if (!name || name === "LIPAS Research") return "LR";
     const parts = name.split(/\s+/).filter(Boolean);
     return ((parts[0] || "L")[0] + (parts[1] ? parts[1][0] : "")).toUpperCase();
   }
-
   function buildNav(active) {
     const familyId = currentFamily();
     const family = FAMILIES[familyId];
@@ -288,7 +272,6 @@
   </div>
 </nav>`;
   }
-
   function mountNav() {
     const familyId = currentFamily();
     try { sessionStorage.setItem("lipas-family", familyId); } catch (_) {}
@@ -320,7 +303,6 @@
         });
       }
     }
-
     const nav = document.getElementById("lipasTopnav");
     const toggle = document.getElementById("lipasNavToggle");
     if (nav && toggle) {
@@ -366,12 +348,10 @@
       });
     }
   }
-
   function num(v) {
     const n = Number(v);
     return Number.isFinite(n) ? n : null;
   }
-
   function gatherLipasContext() {
     const loc =
       (typeof window.currentLocation === "object" && window.currentLocation) ||
@@ -411,7 +391,6 @@
     if (ctx.illumination == null) ctx.illumination = pick("illumination");
     return ctx;
   }
-
   function bandRad(usvh) {
     if (usvh == null) return "unknown";
     if (usvh < 0.08) return "go";
@@ -439,19 +418,16 @@
     if (bands.includes("go")) return "go";
     return "unknown";
   }
-
   function fmt(v, digits) {
     if (v == null || !Number.isFinite(Number(v))) return "n/a";
     return Number(v).toFixed(digits ?? (Math.abs(v) >= 10 ? 0 : 2));
   }
-
   function coord(lat, lon) {
     if (lat == null || lon == null) return "";
     const ns = lat >= 0 ? "N" : "S";
     const ew = lon >= 0 ? "E" : "W";
     return `${Math.abs(lat).toFixed(2)}°${ns}, ${Math.abs(lon).toFixed(2)}°${ew}`;
   }
-
   function assess(ctx) {
     const rad = bandRad(ctx.radiation);
     const dust = bandIndex(ctx.dust, 2.0, 3.5);
@@ -469,7 +445,6 @@
         : worstBand([rad, dust, solar, thermal, mets]);
     return { rad, dust, solar, mets, quakes, thermal, eva };
   }
-
   const INTENTS = [
     {
       id: "activities",
@@ -558,7 +533,6 @@
       keys: ["hello", "hi ", "hey", "help", "what can you", "who are you"],
     },
   ];
-
   function detectIntents(q) {
     const t = ` ${String(q || "").toLowerCase().trim()} `;
     const hits = [];
@@ -579,7 +553,6 @@
     }
     return hits.slice(0, 3);
   }
-
   const SITE_NOTES = [
     {
       match: /shackleton|south\s*pole|malapert|de\s*gerlache|connecting\s*ridge/i,
@@ -598,7 +571,6 @@
       note: "Basin terrain offers unique geology with complex topography - prioritize hazard overlays and rover pathfinding before long traverses.",
     },
   ];
-
   function siteNote(ctx) {
     const hay = `${ctx.site || ""} ${ctx.summary || ""}`;
     for (const s of SITE_NOTES) {
@@ -612,7 +584,6 @@
     }
     return null;
   }
-
   function liveLine(ctx, bands) {
     const parts = [`${ctx.site}`];
     const c = coord(ctx.lat, ctx.lon);
@@ -631,7 +602,6 @@
     }
     return `${parts.join(" ")}: ${metrics.join(" · ")}.`;
   }
-
   function genActivities(ctx, bands) {
     const site = ctx.site || "this site";
     const lines = [];
@@ -642,39 +612,32 @@
     } else {
       lines.push(`• NO-GO - Hold suit egress at ${site} until radiation/thermal/storm channels cool.`);
     }
-
     if (bands.solar === "go") {
       lines.push("• GO - Geology sampling / rover traverse: solar drivers quiet.");
     } else {
       lines.push(`• ${bandLabel(bands.solar)} - Re-check Mission Planner before open-field rover ops (solar/storm elevated).`);
     }
-
     if (bands.thermal === "go") {
       lines.push(`• GO - Habitat logistics / radiator checks OK (T ≈ ${fmt(ctx.temperature, 0)} K).`);
     } else {
       lines.push(`• CAUTION - Thermal pacing: stage radiator checks; limit suit thermal load between waypoints.`);
     }
-
     if (bands.dust !== "go") {
       lines.push(`• ${bandLabel(bands.dust)} - Dust mitigation: sealed sample transfers; wipe seals before repress.`);
     } else {
       lines.push("• GO - Dust index nominal; standard seal hygiene still required.");
     }
-
     if (bands.mets !== "go") {
       lines.push(`• ${bandLabel(bands.mets)} - Prefer canopy/rover cover for long exposed work.`);
     }
-
     const note = siteNote(ctx);
     if (note) lines.push(`• Note - ${note}`);
     lines.push("• Next - Open Mission Planner → Run plan for ranked 24h GO / CAUTION / NO-GO windows.");
     return lines.join("\n");
   }
-
   function answerForIntent(id, ctx, bands, q) {
     const live = liveLine(ctx, bands);
     const note = siteNote(ctx);
-
     switch (id) {
       case "hello":
         return (
@@ -682,7 +645,6 @@
           `${live}\n\n` +
           `Ask for a status briefing, EVA call, activity suggestions, or a polar / far-side site trade.`
         );
-
       case "briefing":
         return (
           `Ops briefing - ${live}` +
@@ -690,10 +652,8 @@
           `\n\nDrivers to watch: radiation [${bandLabel(bands.rad)}], thermal [${bandLabel(bands.thermal)}], dust [${bandLabel(bands.dust)}], solar [${bandLabel(bands.solar)}]. ` +
           `Overall EVA posture: ${bandLabel(bands.eva)}. Use Mission Planner for timed windows.`
         );
-
       case "activities":
         return `Suggested activities for ${ctx.site}:\n${genActivities(ctx, bands)}\n\n${live}`;
-
       case "radiation": {
         const tip =
           bands.rad === "nogo"
@@ -708,7 +668,6 @@
           `L.I.P.A.S. folds NOAA/SWPC drivers into the hybrid radiation channel on the Dashboard.`
         );
       }
-
       case "temperature": {
         const tC = ctx.temperature != null ? ctx.temperature - 273.15 : null;
         return (
@@ -718,7 +677,6 @@
           `L.I.P.A.S. blends Stefan-Boltzmann dayside physics with Apollo nightside polynomials for site forecasts. Pace EVA around illumination.`
         );
       }
-
       case "dust":
         return (
           `${live}\n\n` +
@@ -726,7 +684,6 @@
           `Dust risk rises near dawn/dusk and after surface ops kick material up. ` +
           `Current dust band: ${bandLabel(bands.dust)}. Prefer sealed sample transfers when elevated.`
         );
-
       case "solar":
         return (
           `${live}\n\n` +
@@ -736,7 +693,6 @@
           (ctx.cme != null ? `, CME ${fmt(ctx.cme, 2)}` : "") +
           `), shorten EVA or hold for a quieter window. Dashboard solar panels + Mission Planner are the go/no-go gate.`
         );
-
       case "eva":
         return (
           `${live}\n\n` +
@@ -749,21 +705,18 @@
               : "Hold egress. Reassess when hybrid channels improve.") +
           `\n\n${genActivities(ctx, bands)}`
         );
-
       case "micrometeor":
         return (
           `${live}\n\n` +
           `Micrometeoroid flux is continuous and higher than on Earth - probabilistic but real for long EVA and exposed hardware. ` +
           `Current band: ${bandLabel(bands.mets)}. When elevated, harden posture and shorten open-field work.`
         );
-
       case "seismic":
         return (
           `${live}\n\n` +
           `Deep, shallow, and thermal moonquakes are usually low magnitude vs Earth, but habitats and precision instruments still care. ` +
           `Seismic band now: ${bandLabel(bands.quakes)}. Radiation/thermal usually dominate EVA risk more than quakes.`
         );
-
       case "sites":
         return (
           `${live}\n\n` +
@@ -772,7 +725,6 @@
           `Far-side basins (Von Kármán, Mare Ingenii, Compton) are radio-quiet but need relay. ` +
           `Use Mission Planner ranking and Dashboard overlays to compare risk across candidates.`
         );
-
       case "illumination":
         return (
           `${live}\n\n` +
@@ -780,14 +732,12 @@
           (ctx.illumination != null ? `Illumination at ${ctx.site}: ~${fmt(ctx.illumination, 0)}%. ` : "") +
           `Illumination drives power, thermal, and dust-charging risk together.`
         );
-
       case "water":
         return (
           `Permanently shadowed regions near the poles can trap water ice and volatiles - a core Artemis science/ISRU driver. ` +
           `Pair illuminated ridges (power) with nearby PSRs (ice). ${live}` +
           (note ? `\n${note}` : "")
         );
-
       case "model":
         return (
           `${live}\n\n` +
@@ -795,7 +745,6 @@
           `(Stefan-Boltzmann / Apollo thermal curves), map overlays, Cesium globe, and Mission Planner EVA windows with PDF reports. ` +
           `Plausibility flags when ML and physics disagree - trust physics bounds when they diverge.`
         );
-
       case "comms":
         return (
           `${live}\n\n` +
@@ -804,24 +753,20 @@
           (ctx.comms != null ? `Comms metric now: ${fmt(ctx.comms, 0)}%. ` : "") +
           `Treat relay coverage as a mission-critical resource on far-side EVAs.`
         );
-
       case "gravity":
         return (
           `Lunar gravity ≈ 1/6 g (1.62 m/s²); escape ≈ 2.38 km/s. Easier mobility, worse dust lofting and traction. ` +
           `Suit and rover designs trade that carefully. ${live}`
         );
-
       case "distance":
         return (
           `Average Earth-Moon distance ≈ 384,400 km; one-way light time ≈ 1.3 s. ` +
           `That latency matters for teleops and contingency voice loops. ${live}`
         );
-
       case "atmosphere":
         return (
           `The Moon has only a tenuous exosphere - effectively vacuum for ops. No Earth-like weather, but plasma, UV, and dust charging still shape surface conditions. ${live}`
         );
-
       default:
         return (
           `${live}\n\n` +
@@ -829,13 +774,11 @@
         );
     }
   }
-
   function composeAnswer(question, ctx) {
     const bands = assess(ctx);
     const intents = detectIntents(question);
     const primary = intents[0].id;
     let answer = answerForIntent(primary, ctx, bands, question);
-
     if (intents.length > 1) {
       const secondary = intents[1].id;
       const combo = new Set(["radiation", "dust", "solar", "temperature", "micrometeor", "seismic"]);
@@ -850,7 +793,6 @@
         if (extra.length) answer += `\n\nAlso noted: ${extra.join("; ")}.`;
       }
     }
-
     const t = (question || "").toLowerCase();
     if (/\bwhy\b/.test(t) && primary === "eva") {
       answer +=
@@ -860,22 +802,22 @@
       answer +=
         "\n\nFor ranked sites, open Mission Planner and run a plan across candidates - Luna's live brief is for the currently selected site.";
     }
-
     return answer;
   }
-
   function lunaAnswer(question) {
     const q = String(question || "").trim();
     if (!q) return "Ask anything about lunar hazards, EVA windows, or L.I.P.A.S. ops.";
     const ctx = gatherLipasContext();
     return composeAnswer(q, ctx);
   }
-
   function mountAssistant() {
+    const path = (location.pathname || "").toLowerCase();
+    if (path.endsWith("/profile.html") || path.endsWith("/profile")) {
+      document.querySelectorAll("#moonAssist, #floatingOrb, .floating-orb, .moon-assist").forEach((el) => el.remove());
+      return;
+    }
     document.querySelectorAll("#floatingOrb, .floating-orb").forEach((el) => el.remove());
-
     if (document.getElementById("moonAssist")) return;
-
     const root = document.createElement("div");
     root.className = "moon-assist";
     root.id = "moonAssist";
@@ -910,23 +852,19 @@
       </button>
     `;
     document.body.appendChild(root);
-
     const panel = document.getElementById("moonAssistPanel");
     const fab = document.getElementById("moonAssistFab");
     const msgs = document.getElementById("moonAssistMsgs");
     const form = document.getElementById("moonAssistForm");
     const input = document.getElementById("moonAssistInput");
-
     function setOpen(open) {
       panel.classList.toggle("open", open);
       panel.setAttribute("aria-hidden", open ? "false" : "true");
       fab.setAttribute("aria-expanded", open ? "true" : "false");
       if (open) setTimeout(() => input.focus(), 80);
     }
-
     fab.addEventListener("click", () => setOpen(!panel.classList.contains("open")));
     document.getElementById("moonAssistClose").addEventListener("click", () => setOpen(false));
-
     function push(role, text) {
       const el = document.createElement("div");
       el.className = `moon-msg ${role}`;
@@ -934,7 +872,6 @@
       msgs.appendChild(el);
       msgs.scrollTop = msgs.scrollHeight;
     }
-
     async function ask(q) {
       const question = (q || "").trim();
       if (!question) return "";
@@ -955,25 +892,21 @@
       msgs.scrollTop = msgs.scrollHeight;
       return answer;
     }
-
     form.addEventListener("submit", (e) => {
       e.preventDefault();
       const q = input.value;
       input.value = "";
       ask(q);
     });
-
     document.getElementById("moonAssistChips").addEventListener("click", (e) => {
       const btn = e.target.closest(".moon-chip");
       if (!btn) return;
       setOpen(true);
       ask(btn.dataset.q);
     });
-
     document.addEventListener("keydown", (e) => {
       if (e.key === "Escape" && panel.classList.contains("open")) setOpen(false);
     });
-
     window.askLuna = function (question) {
       setOpen(true);
       return Promise.resolve(ask(question));
@@ -983,7 +916,6 @@
     };
     window.lunaAnswer = lunaAnswer;
   }
-
   function mountCopyright() {
     document.querySelectorAll(".lipas-copyright").forEach((el) => {
       el.textContent = COPYRIGHT;
@@ -1018,14 +950,12 @@
       document.head.appendChild(copy);
     }
   }
-
   function boot() {
     installChartSkin();
     mountNav();
     mountAssistant();
     mountCopyright();
   }
-
   if (document.readyState === "loading") {
     document.addEventListener("DOMContentLoaded", boot);
   } else {

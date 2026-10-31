@@ -1,7 +1,5 @@
 from __future__ import annotations
-
 from dataclasses import asdict, dataclass
-
 @dataclass
 class MercurySite:
     id: str
@@ -14,17 +12,14 @@ class MercurySite:
     image: str = ''
     quadrant: str = ''
     group: str = 'sites'
-
 def _img(name: str) -> str:
     return ''
-
 SITES = [
     MercurySite(
         'overview', 'Mercury', 0.0, 0.0, 'intercrater', 0.10,
         'All sites. Wind, heat, radiation, and the magnetic shield.',
         _img('equator'), 'overview', 'overview',
     ),
-
     MercurySite(
         'antipode', 'Caloris antipode', -30.0, -18.5, 'chaotic', 0.11,
         'Rough ground opposite Caloris.',
@@ -45,7 +40,6 @@ SITES = [
         'East of the antipode.',
         _img('antipode'), 'antipode', 'antipodes',
     ),
-
     MercurySite(
         'equator', 'Equator', 0.0, 0.0, 'intercrater', 0.10,
         '0°N, 0°E.',
@@ -97,19 +91,15 @@ SITES = [
         _img('chao'), 'S', 'sites',
     ),
 ]
-
 PHYSICS_SITES = [s for s in SITES if s.group != 'overview']
 SITE_IDS = {s.id for s in SITES}
-
 def sites_payload() -> list[dict]:
     return [asdict(s) for s in SITES]
-
 def require_site(site_id: str) -> MercurySite:
     for s in SITES:
         if s.id == site_id:
             return s
     raise KeyError(f'unknown Mercury site {site_id!r}')
-
 def get_site(site_id: str | None = None, name: str | None = None) -> MercurySite:
     if site_id:
         if site_id == 'overview':
@@ -125,7 +115,6 @@ def get_site(site_id: str | None = None, name: str | None = None) -> MercurySite
             if s.name.lower() == n or n in s.name.lower():
                 return s
     return next(s for s in SITES if s.id == 'equator')
-
 def sites_by_quadrant() -> dict[str, list[MercurySite]]:
     out: dict[str, list[MercurySite]] = {}
     for s in SITES:

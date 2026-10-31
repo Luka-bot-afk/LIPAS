@@ -1,17 +1,13 @@
 """Compare Moon vs Mercury on the same 1 AU drivers. Prints retrain verdict."""
 from __future__ import annotations
-
 import json
 import sys
 from pathlib import Path
-
 ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT))
-
 from lunar_physics import physics_radiation, physics_solar_activity, physics_temperature
 from mercurius.mercury_model import RETRAIN_VERDICT, hybrid_forecast
 from mercurius.mercury_physics import mercury_r_au, physics_estimate_mercury
-
 def main():
     extra = {
         'kp_index': 4.0,
@@ -50,6 +46,5 @@ def main():
         'verdict': RETRAIN_VERDICT,
     }, indent=2), encoding='utf-8')
     print(f'wrote {out}')
-
 if __name__ == '__main__':
     main()

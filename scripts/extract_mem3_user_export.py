@@ -1,16 +1,12 @@
-
 """LIPAS."""
 from __future__ import annotations
-
 import json
 import re
 import time
 from pathlib import Path
-
 ROOT = Path(__file__).resolve().parent.parent
 MEM3 = ROOT / 'data' / 'archives' / 'mem3'
 OUT = MEM3 / 'mem3_flux_summary.json'
-
 def _parse_cube_avg(path: Path) -> dict:
     text = path.read_text(encoding='utf-8', errors='replace')
     sphere = None
@@ -21,7 +17,6 @@ def _parse_cube_avg(path: Path) -> dict:
         if m:
             sphere = float(m.group(1))
         if '+x ram' in line and 'zenith' in line:
-
             face_names = [
                 '+x_ram', '-x_wake', '+y_port', '-y_starboard',
                 '+z_zenith', '-z_nadir', 'Earth', 'Sun', 'anti-Sun',
@@ -29,7 +24,6 @@ def _parse_cube_avg(path: Path) -> dict:
             ]
         if line.strip().startswith('# total flux') or line.strip().startswith('total flux'):
             nums = re.findall(r'[0-9.eE+\-]+', line.split(')', 1)[-1] if ')' in line else line)
-
             parts = line.split()
             vals = []
             for p in parts:
@@ -46,24 +40,19 @@ def _parse_cube_avg(path: Path) -> dict:
         'sphere_flux_per_m2_yr': sphere,
         'face_flux_per_m2_yr': faces,
     }
-
 def main() -> int:
     exports = sorted(MEM3.glob('user_export_*'))
     if not exports:
-
         exports = [MEM3] if (MEM3 / 'HiDensity' / 'cube_avg.txt').exists() else []
     if not exports:
         print('No MEM3 user export found under data/archives/mem3/')
         return 1
-
     root = exports[-1]
     hi = _parse_cube_avg(root / 'HiDensity' / 'cube_avg.txt')
     lo = _parse_cube_avg(root / 'LoDensity' / 'cube_avg.txt')
-
     hi_s = hi.get('sphere_flux_per_m2_yr') or 2.62
     lo_s = lo.get('sphere_flux_per_m2_yr') or 1.40
     mid = 0.5 * (hi_s + lo_s)
-
     scale = 1.6 / max(mid, 1e-9)
     summary = {
         'extracted_at': time.strftime('%Y-%m-%dT%H:%M:%SZ', time.gmtime()),
@@ -86,6 +75,5 @@ def main() -> int:
     print(f'Wrote {OUT}')
     print(json.dumps(summary['proxy'], indent=2))
     return 0
-
 if __name__ == '__main__':
     raise SystemExit(main())

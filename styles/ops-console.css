@@ -1,4 +1,3 @@
-/* One visual system for every LIPAS page. Outfit only — no display serif. */
 :root {
   --font-ui: "Outfit", "IBM Plex Sans", system-ui, sans-serif;
   --font-display: "Outfit", "IBM Plex Sans", system-ui, sans-serif;
@@ -6,7 +5,6 @@
   --ops-gold: #e4c27a;
   --radius: 18px;
 }
-
 html[data-theme="dark"] {
   color-scheme: dark;
   --void: #090b10;
@@ -45,7 +43,6 @@ html[data-theme="light"] {
   --card: #fffdf9;
   --nav: rgba(243, 240, 234, 0.9);
 }
-
 html, body {
   font-family: var(--font-ui) !important;
 }
@@ -53,8 +50,6 @@ body {
   background: var(--void) !important;
   color: var(--text) !important;
 }
-
-/* ── Loader: same on every page ── */
 .loading-screen {
   position: fixed !important;
   inset: 0 !important;
@@ -136,8 +131,6 @@ body {
   50% { content: ".."; }
   75% { content: "..."; }
 }
-
-/* Data fetch must not cover the console. */
 .loading-indicator {
   position: fixed !important;
   inset: auto !important;
@@ -176,8 +169,6 @@ body {
   font-size: 12px;
   color: var(--muted);
 }
-
-/* ── Header ── */
 nav.topnav {
   position: sticky;
   top: 0;
@@ -295,8 +286,6 @@ nav.topnav .nav-cta { display: none !important; }
 .topnav-mobile-toggle { display: none; }
 html[data-theme="dark"] .theme-toggle .ico-sun,
 html[data-theme="light"] .theme-toggle .ico-moon { display: none; }
-
-/* ── Shared surfaces so dashboard, globe, and planner match ── */
 body :is(
   .sidebar, .panel, .control-panel, .legend-panel, .loc-search-panel, .sat-panel,
   .stage-panel, .map-panel, .slider-section, .graph-section, .ops-section,
@@ -317,7 +306,6 @@ body :is(.location-header, .mast h1, .ops-title, .warnings-title, .forecast-titl
 body :is(.metric-button .metric-value, .metric .v, .solar-card-value, #go-label, #go-score, .wx-value) {
   font-family: var(--font-mono) !important;
 }
-
 html[data-theme="light"] body :is(
   .sidebar, .main-panel, .panel, .control-panel, .legend-panel, .loc-search-panel,
   .sat-panel, .stage-panel, .planner-rail, .commit-hero, .slider-section,
@@ -353,8 +341,6 @@ html[data-theme="dark"] body :is(.sidebar, .panel, .control-panel, .legend-panel
   color: var(--text) !important;
   border-color: var(--line) !important;
 }
-
-/* ── Luna ── */
 .moon-assist {
   position: fixed !important;
   right: 22px !important;
@@ -406,8 +392,6 @@ html[data-theme="dark"] body :is(.sidebar, .panel, .control-panel, .legend-panel
   border: 0 !important;
 }
 .moon-assist-form input { border-radius: 12px !important; background: var(--void) !important; }
-
-/* ── Landing ── */
 body.lipas-landing { background: var(--void) !important; }
 body.lipas-landing nav.topnav {
   position: absolute;
@@ -595,8 +579,6 @@ body.lipas-landing .cine::before { content: none; }
 .footer a { color: var(--muted); text-decoration: none; margin-right: 12px; }
 #cesiumContainer { background: #05070b; }
 html[data-theme="light"] #cesiumContainer { background: #d5dde6 !important; }
-
-/* Leftover console pieces that still hardcoded the old navy skin. */
 .metric-button {
   display: inline-flex !important;
   flex-direction: column !important;
@@ -686,7 +668,6 @@ html[data-theme="light"] .li-image { filter: none !important; }
 html[data-theme="dark"] .li-name { color: #eef3f8 !important; }
 html[data-theme="dark"] .li-coords,
 html[data-theme="dark"] .li-summary { color: #a9b7c7 !important; }
-
 .loc-search-panel,
 .legend-panel,
 .map-controls .control-panel,
@@ -749,7 +730,6 @@ body:has(#cesiumContainer) .lipas-site-footer--overlay {
   border-radius: 12px !important;
   border: 1px solid var(--line) !important;
 }
-
 .src-card, .note, .profile-card {
   background: var(--card) !important;
   color: var(--text) !important;
@@ -773,8 +753,6 @@ body.lipas-landing { background: var(--void) !important; }
   border: 0; border-radius: 999px; padding: 12px 16px; cursor: pointer;
   background: var(--text); color: var(--void); font: 600 14px var(--font-ui);
 }
-
-/* Dashboard sections that still shipped square navy cards. */
 .slider-section,
 .hour-slider-container,
 .solar-section,
@@ -936,7 +914,6 @@ html[data-theme="light"] .term-chip { color: var(--text) !important; }
   border: 1px solid var(--line-strong) !important;
   padding: 6px 10px !important;
 }
-
 @media (max-width: 980px) {
   .cine { grid-template-columns: 1fr; padding: 96px 22px 40px; }
   .orb { width: min(420px, 86vw); height: min(420px, 86vw); justify-self: center; order: -1; }

@@ -1,19 +1,15 @@
 #!/usr/bin/env python3
 """Verify train2 LIPAS is at maximum serve-time capability; write saved_model/capability.json."""
 from __future__ import annotations
-
 import json
 import sys
 from datetime import datetime, timezone
 from pathlib import Path
-
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
-
 MODEL_DIR = ROOT / "saved_model"
 META = MODEL_DIR / "meta.json"
 OUT = MODEL_DIR / "capability.json"
-
 TRAIN2_BLEND = [0.4, 0.05, 0.0, 0.0, 0.0, 0.0]
 CHANNELS = [
     "solar_activity",
@@ -23,8 +19,6 @@ CHANNELS = [
     "meteor_flux_1e15",
     "dust_g_cm3",
 ]
-
-
 def main() -> None:
     meta = json.loads(META.read_text(encoding="utf-8")) if META.is_file() else {}
     metrics = meta.get("metrics") or {}
@@ -35,7 +29,6 @@ def main() -> None:
         if hybrid_rmse > 0 and persist_rmse > 0
         else None
     )
-
     eval_out = {
         "source": "meta.json held-out chronological test (authoritative train2 metrics)",
         "hybrid_rmse": hybrid_rmse,
@@ -48,7 +41,6 @@ def main() -> None:
             "the chronological holdout."
         ),
     }
-
     capability = {
         "generated_at_utc": datetime.now(timezone.utc).isoformat(),
         "model_generation": "train2",
@@ -84,10 +76,7 @@ def main() -> None:
             "serve_tuning_saturated": True,
         },
     }
-
     OUT.write_text(json.dumps(capability, indent=2), encoding="utf-8")
     print(json.dumps({"wrote": str(OUT), "skill_pct": skill, "hybrid_rmse": hybrid_rmse}, indent=2))
-
-
 if __name__ == "__main__":
     main()

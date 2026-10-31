@@ -1,9 +1,7 @@
 from __future__ import annotations
-
 import math
 from datetime import datetime, timezone, timedelta
 from typing import Any
-
 from mercurius.data_ingestion import load_lipas_drivers, horizons_r_au
 from mercurius.mercury_magnetosphere import magnetosphere_state
 from mercurius.mercury_model import RETRAIN_VERDICT, hybrid_forecast
@@ -13,14 +11,11 @@ from mercurius.mercury_physics import (
     mercury_r_au,
 )
 from mercurius.mercury_sites import SITES, get_site, sites_payload
-
 _DRAW_KEYS = (
     'grid', 'equatorial_grid', 'bmag_grid', 'magnetopause', 'bow_shock',
     'field_lines', 'colors', 'legend',
 )
-
 def _drivers_for_hour(extra: dict, hour: float) -> dict:
-
     try:
         from swpc_nowcast import drivers_at_hour
         out = drivers_at_hour(extra, hour)
@@ -31,9 +26,7 @@ def _drivers_for_hour(extra: dict, hour: float) -> dict:
         fi = float(out.get('flare_index') if out.get('flare_index') is not None else 2.0)
         out['solar_activity'] = max(sa0, 4.0 + fi * 0.85)
     return out
-
 def _flare_hazard(flare_index: float, xray_flux=None, region_probs=None) -> float:
-
     fi = float(flare_index or 0.0)
     if xray_flux is not None:
         try:
@@ -46,7 +39,6 @@ def _flare_hazard(flare_index: float, xray_flux=None, region_probs=None) -> floa
     p_m = float(probs.get('m_flare_probability') or 0.0)
     p_x = float(probs.get('x_flare_probability') or 0.0)
     return float(min(10.0, max(0.0, 0.85 * fi + 0.012 * p_m + 0.03 * p_x)))
-
 def _cme_hazard(kp: float, bz: float, flare_index: float, region_probs=None) -> float:
     probs = region_probs or {}
     p_m = float(probs.get('m_flare_probability') or 0.0)
@@ -58,10 +50,8 @@ def _cme_hazard(kp: float, bz: float, flare_index: float, region_probs=None) -> 
         + flare_index * 0.12
         + 0.02 * p_m + 0.05 * p_x + 0.04 * p_p
     )))
-
 def _sep_index(rad: float, kp: float, bz: float) -> float:
     return float(min(10.0, max(0.0, (rad - 0.05) * 28.0 + max(0.0, kp - 3.0) * 0.9 + max(0.0, -bz) * 0.15)))
-
 def _hermean_surface(st: dict[str, Any], site_lat: float) -> dict[str, float]:
     lst = float(st.get("lst_h") or 12.0)
     rad = float((st.get("prediction") or {}).get("radiation") or 0.05)
@@ -88,8 +78,6 @@ def _hermean_surface(st: dict[str, Any], site_lat: float) -> dict[str, float]:
         "evaRisk": round(eva, 3),
         "comms": round(comms, 3),
     }
-
-
 def _proton_index(proton_flux, rad: float, kp: float) -> float:
     if proton_flux is not None:
         try:
@@ -99,10 +87,8 @@ def _proton_index(proton_flux, rad: float, kp: float) -> float:
         except (TypeError, ValueError):
             pass
     return float(min(10.0, max(0.0, (rad - 0.05) * 35.0 + max(0.0, kp - 2.0) * 0.4)))
-
 def _inputs_from_drivers(extra: dict) -> list[float]:
     from mercurius.mercury_model import one_au_solar_prior
-
     kp = float(extra.get('kp_index') or extra.get('kp') or 3.0)
     solar_seed = float(extra.get('solar_activity') or 5.0)
     solar_1au, _, _ = one_au_solar_prior([solar_seed, 0.06, 0.0, 0.0, 0.0, 0.0], extra)
@@ -116,7 +102,6 @@ def _inputs_from_drivers(extra: dict) -> list[float]:
     else:
         rad = 0.05 + 0.025 * max(0.0, kp - 2.0)
     return [solar_1au, rad, 0.0, 0.0, 0.0, 0.0]
-
 def _alerts(phys: dict, mstate: dict, lst: float) -> list[dict[str, str]]:
     alerts = []
     rss = float(mstate.get('standoff_rm') or 1.45)
@@ -196,10 +181,8 @@ def _alerts(phys: dict, mstate: dict, lst: float) -> list[dict[str, str]]:
             'body': f'Shield {rss:.2f} RM, radiation {rad:.3f} mSv/h.',
         })
     return alerts
-
 def _slim_magnetosphere(mstate: dict) -> dict:
     return {k: v for k, v in mstate.items() if k not in _DRAW_KEYS}
-
 def build_state(
     site_id: str | None = None,
     lat: float | None = None,
@@ -218,7 +201,6 @@ def build_state(
         site_lat, site_lon = site.lat, site.lon
         site_name = site.name
         terrain, albedo = site.terrain, site.albedo
-
     now = datetime.now(timezone.utc) + timedelta(hours=float(hour))
     if extra is None:
         extra = load_lipas_drivers(12.0)
@@ -233,12 +215,10 @@ def build_state(
     extra['hour_of_day'] = float(now.hour) + float(hour)
     extra['day_of_month'] = float(now.day)
     extra['month_of_year'] = float(now.month)
-
     lst_now = local_solar_time_mercury(site_lon, now)
     if lst is None:
         lst = (lst_now + float(hour) * (24.0 / (MERCURY_SOLAR_DAY_D * 24.0))) % 24.0
     lst = float(lst) % 24.0
-
     inputs = _inputs_from_drivers(extra)
     blended = hybrid_forecast(inputs, lat=site_lat, lon=site_lon, local_time=lst, extra=extra)
     phys = blended['physics']
@@ -268,7 +248,6 @@ def build_state(
         except Exception:
             conf = {'overall_pct': 62.0, 'basis': 'physics_persistence', 'per_channel_pct': {}}
     conf_pct = float(conf.get('overall_pct') or 62.0)
-
     out = {
         'utc': now.isoformat(),
         'forecast_hour': float(hour),
@@ -350,12 +329,10 @@ def build_state(
     out['prediction'] = pred
     out['surface'] = surf
     return out
-
 def math_cos_incidence(lat: float, lst_h: float) -> float:
     lat_r = math.radians(lat)
     ha = math.pi * ((lst_h % 24.0) - 12.0) / 12.0
     return float(max(0.0, math.cos(lat_r) * math.cos(ha)))
-
 def build_forecast(site_id: str | None = None, hours: int = 24,
                    lst: float | None = None) -> dict[str, Any]:
     hours = max(1, min(48, int(hours)))
@@ -430,7 +407,6 @@ def build_forecast(site_id: str | None = None, hours: int = 24,
         series['micrometeorites'].append(surf.get('micrometeorites', 0.0))
         series['evaRisk'].append(surf.get('evaRisk', 0.0))
         series['comms'].append(surf.get('comms', 0.0))
-
     lst_curve = {
         'hour': [], 'temperature': [], 'temperature_k': [],
         'radiation': [], 'illumination': [], 'day_night': [],
@@ -450,7 +426,6 @@ def build_forecast(site_id: str | None = None, hours: int = 24,
             max(0.0, math_cos_incidence(site.lat, float(i))) * 100.0
         )
         lst_curve['day_night'].append('day' if 6.0 <= i <= 18.0 else 'night')
-
     snap0 = build_state(site_id=site.id, hour=0.0, lst=lst, extra=extra, include_draw=True)
     return {
         **series,
@@ -492,7 +467,6 @@ def build_forecast(site_id: str | None = None, hours: int = 24,
             'comms': 'flare_plasma',
         },
     }
-
 def build_sites_now() -> dict[str, Any]:
     extra = load_lipas_drivers(12.0)
     rows = []

@@ -1,6 +1,5 @@
 (function () {
   "use strict";
-
   const api = (p) => (typeof window.lipasApiUrl === "function" ? window.lipasApiUrl(p) : p);
   const GROUPS = [
     { id: "overview", label: "Overview" },
@@ -8,7 +7,6 @@
     { id: "launch", label: "Launch facilities" },
     { id: "satellite", label: "Satellites" },
   ];
-
   const OFFLINE_SITES = [
     { id: "overview", name: "Earth", group: "overview", lat: 0, lon: 0, note: "Planet-wide sketch. Live SWPC numbers appear when the forecast service is connected." },
     { id: "boulder", name: "NOAA SWPC Boulder", group: "city", lat: 40.02, lon: -105.27, note: "Space Weather Prediction Center." },
@@ -22,7 +20,6 @@
     { id: "tiangong", name: "Tiangong", group: "satellite", lat: -8, lon: 70, alt_km: 390, note: "China Space Station." },
     { id: "hubble", name: "Hubble", group: "satellite", lat: 20, lon: 140, alt_km: 535, note: "NASA observatory." },
   ];
-
   function offlineForecast(site) {
     const n = 25;
     const time = Array.from({ length: n }, (_, i) => i);
@@ -56,14 +53,12 @@
       source: "offline-estimate",
     };
   }
-
   let siteId = "overview";
   let sites = [];
   let forecast = null;
   let hour = 0;
   let chartKey = "kp";
   let blobs = [];
-
   function $(id) { return document.getElementById(id); }
   function fmt(v, d) {
     if (v == null || !Number.isFinite(Number(v))) return "—";
@@ -90,13 +85,11 @@
     const y = Math.floor((1 - Math.log(Math.tan(latRad) + 1 / Math.cos(latRad)) / Math.PI) / 2 * n);
     return `https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/${z}/${y}/${x}`;
   }
-
   function seriesAt(key, h) {
     const arr = (forecast && forecast[key]) || [];
     const i = Math.max(0, Math.min(arr.length - 1, h | 0));
     return arr[i];
   }
-
   function nowcastView() {
     const base = (forecast && forecast.now && forecast.now.nowcast) || {};
     const out = { ...base };
@@ -108,7 +101,6 @@
     });
     return out;
   }
-
   function renderSites(filter) {
     const q = (filter || "").trim().toLowerCase();
     const list = $("siteList");
@@ -146,7 +138,6 @@
       });
     });
   }
-
   function kpiSet(n, group) {
     if (group === "satellite") {
       return [
@@ -183,7 +174,6 @@
       ["F10.7", fmt(n.f107, 0), "sfu"],
     ];
   }
-
   function renderKpis(n, group) {
     $("kpiGrid").innerHTML = kpiSet(n, group).map(([k, v, u]) =>
       `<div class="kpi"><div class="k">${k}</div><div class="v">${v}</div><div class="u">${u}</div></div>`
@@ -192,7 +182,6 @@
       `<div class="metric-chip"><div class="k">${k}</div><div class="v">${v}</div></div>`
     ).join("");
   }
-
   function renderAlerts(alerts) {
     $("alertRow").innerHTML = (alerts || []).map((a) =>
       `<div class="alert ${a.level}"><b>${a.title}</b>${a.body}</div>`
@@ -201,7 +190,6 @@
       `<div class="warning-box ${a.level === "ok" ? "go" : a.level}"><div class="warning-header">${a.title}</div><div class="warning-desc">${a.body}</div></div>`
     ).join("");
   }
-
   function renderPills(group) {
     const channels = (forecast && forecast.channels) || [];
     const box = $("metricButtons");
@@ -221,7 +209,6 @@
       });
     });
   }
-
   function chartColor(id) {
     const map = {
       kp: "#1f8a56",
@@ -246,7 +233,6 @@
     String(id || "").split("").forEach((c) => { h = (h * 33 + c.charCodeAt(0)) % 360; });
     return `hsl(${h} 48% 34%)`;
   }
-
   function renderChart() {
     const canvas = $("graphCanvas");
     if (!canvas) return;
@@ -333,7 +319,6 @@
     ctx.fillText(String(Math.round(hi * 10) / 10), 6, pad.t + 10);
     ctx.fillText(String(Math.round(lo * 10) / 10), 6, pad.t + h);
   }
-
   function renderSats(sats) {
     const row = $("satRow");
     if (!row) return;
@@ -344,7 +329,6 @@
       </a>`
     ).join("") || `<div class="m">No satellite catalog yet.</div>`;
   }
-
   function drawMap(site) {
     const canvas = $("earthMapCanvas");
     if (!canvas) return;
@@ -391,7 +375,6 @@
       ctx.fillText(site.name || "", x + 8, y - 6);
     }
   }
-
   function downloadPDF() {
     const loc = (forecast && forecast.site) || {};
     const n = nowcastView();
@@ -460,9 +443,7 @@
     const safe = String(loc.name || siteId).replace(/\W+/g, "_");
     doc.save(`LIPAS_Earth_${safe}_${Date.now()}.pdf`);
   }
-
   let hourTimer = 0;
-
   function applyHourView() {
     if (!forecast) return;
     const site = forecast.site || {};
@@ -479,7 +460,6 @@
     clearTimeout(hourTimer);
     hourTimer = setTimeout(() => loadHourLive(), 160);
   }
-
   async function loadHourLive() {
     try {
       const [stRes, satRes] = await Promise.all([
@@ -504,7 +484,6 @@
       }
     } catch (_) {}
   }
-
   async function refresh() {
     let remote = null;
     try {
@@ -534,7 +513,6 @@
     $("loadingScreen")?.classList.add("hidden");
     document.title = `L.I.P.A.S. Earth · ${site.name || "Dashboard"}`;
   }
-
   async function loadBlobs() {
     try {
       const r = await fetch(api("/api/earth/hazards?hour=" + encodeURIComponent(hour)));
@@ -545,7 +523,6 @@
     }
     drawMap((forecast && forecast.site) || null);
   }
-
   async function boot() {
     sites = OFFLINE_SITES.slice();
     try {
@@ -575,6 +552,5 @@
     await refresh();
     await loadBlobs();
   }
-
   boot().catch(() => $("loadingScreen")?.classList.add("hidden"));
 })();

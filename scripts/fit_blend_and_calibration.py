@@ -1,12 +1,9 @@
-
 """LIPAS."""
 import argparse
 import json
 import sys
 from pathlib import Path
-
 sys.path.insert(0, str(Path(__file__).parent.parent))
-
 import numpy as np
 import pandas as pd
 from space_weather_model import (
@@ -15,10 +12,8 @@ from space_weather_model import (
     CORE_FEATURE_NAMES, NUM_CORE_FEATURES, physics_estimate,
 )
 from data_ingestion import split_extended_dataset, get_target_columns, EXTENDED_INPUT_COLUMNS
-
 def _physics_anchor_matrix(X_raw: np.ndarray, dates: np.ndarray | None = None) -> np.ndarray:
     """Build Nx6 physics anchors from unscaled extended feature rows."""
-
     try:
         lat_i = EXTENDED_INPUT_COLUMNS.index('lat')
         lon_i = EXTENDED_INPUT_COLUMNS.index('lon')
@@ -27,7 +22,6 @@ def _physics_anchor_matrix(X_raw: np.ndarray, dates: np.ndarray | None = None) -
         day_i = EXTENDED_INPUT_COLUMNS.index('day_of_month')
     except ValueError:
         lat_i, lon_i, lst_i, month_i, day_i = 6, 7, 8, 11, 10
-
     out = np.zeros((len(X_raw), NUM_CORE_FEATURES), dtype=np.float64)
     n = len(X_raw)
     for i in range(n):
@@ -46,7 +40,6 @@ def _physics_anchor_matrix(X_raw: np.ndarray, dates: np.ndarray | None = None) -
             except Exception:
                 doy = None
         if doy is None and X_raw.shape[1] > month_i:
-
             m = max(1, min(12, int(round(float(row[month_i])))))
             d = max(1, min(28, int(round(float(row[day_i])))))
             doy = int(pd.Timestamp(year=2001, month=m, day=d).dayofyear)
@@ -56,7 +49,6 @@ def _physics_anchor_matrix(X_raw: np.ndarray, dates: np.ndarray | None = None) -
             phys['moonquakes'], phys['micrometeorites'], phys['dust'],
         ]
     return out
-
 def main():
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument('--csv', type=str, required=True)
@@ -68,14 +60,12 @@ def main():
                     help='Subsample validation windows for blend/calibration (speeds CPU; 0 = all)')
     ap.add_argument('--dry-run', action='store_true')
     args = ap.parse_args()
-
     model_dir = Path(args.model_dir)
     model = load_saved_model(str(model_dir))
     if model is None:
         raise RuntimeError(f'No saved model in {args.model_dir}')
     scaler = np.load(model_dir / 'scaler.npz')
     mean, std = scaler['mean'], scaler['std']
-
     df = pd.read_csv(args.csv)
     split = split_extended_dataset(df, val_frac=0.15, test_frac=0.15, chronological=True)
     X_val = split['X_val'].astype(np.float32)
@@ -84,22 +74,18 @@ def main():
     if len(X_val) == 0:
         raise RuntimeError('empty validation split')
     Xs_val = (X_val - mean) / std
-
     is_temporal = len(model.input_shape) == 3
     if is_temporal:
         Xw_val, Yw_val = make_sliding_windows_grouped(
             Xs_val, Y_val, g_val,
             sequence_length=args.sequence_length, stride=args.window_stride,
         )
-
         physics_input_raw = Xw_val[:, -1, :] * std + mean
-
         dates = None
     else:
         Xw_val, Yw_val = Xs_val, Y_val
         physics_input_raw = X_val
         dates = None
-
     print(f'Validation windows: {len(Xw_val)}')
     if args.max_windows and len(Xw_val) > args.max_windows:
         rng = np.random.default_rng(42)
@@ -114,7 +100,6 @@ def main():
     physics_anchors = _physics_anchor_matrix(physics_input_raw, dates=dates)
     print('Running model.predict on validation windows...', flush=True)
     raw_preds = model.predict(Xw_val, verbose=0)
-
     print('\n=== Scalar ML blend weight sweep vs physics_estimate (val) ===')
     weights = np.round(np.arange(0.0, 1.01, 0.05), 2)
     best_w, best_rmse = None, np.inf
@@ -128,7 +113,6 @@ def main():
         marker = '  <-- best' if w == best_w else ''
         print(f'  w={w:.2f}  val_rmse={rmse:.4f}{marker}')
     print(f'\nBest scalar ML blend weight: {best_w} (val_rmse={best_rmse:.4f})')
-
     print('\n=== Per-channel ML blend weight sweep vs physics_estimate (val) ===')
     channel_weights = []
     channel_report = []
@@ -144,12 +128,10 @@ def main():
         name = CORE_FEATURE_NAMES[i] if i < len(CORE_FEATURE_NAMES) else cols[i]
         channel_report.append({'channel': name, 'ml_blend_weight': best_ci, 'val_rmse': best_c_rmse})
         print(f'  {name}: w={best_ci:.2f}  val_rmse={best_c_rmse:.4f}')
-
     channel_weights = np.asarray(channel_weights, dtype=np.float64)
     hybrid_ch = channel_weights * raw_preds + (1.0 - channel_weights) * physics_anchors
     rmse_ch = float(np.sqrt(np.mean((hybrid_ch - Yw_val) ** 2)))
     print(f'\nPer-channel hybrid val_rmse={rmse_ch:.4f} (scalar best was {best_rmse:.4f})')
-
     print(f'\n=== Fitting {args.calibration_method} calibration on REAL validation predictions ===')
     calib = fit_calibration(raw_preds, Yw_val, method=args.calibration_method)
     calibrated = apply_calibration(raw_preds, calib)
@@ -160,18 +142,15 @@ def main():
     if calib.get('method') == 'platt':
         for i, c in enumerate(cols):
             print(f'  {c}: y_cal = {calib["A"][i]:.4f} * y_raw + {calib["B"][i]:.4f}')
-
     cal_arr = np.asarray(calibrated, dtype=np.float64)
     hybrid_cal = channel_weights * cal_arr + (1.0 - channel_weights) * physics_anchors
     rmse_cal_blend = float(np.sqrt(np.mean((hybrid_cal - Yw_val) ** 2)))
     print(f'Calibrated + per-channel blend val_rmse={rmse_cal_blend:.4f}')
-
     pers = physics_input_raw[:, :6] if physics_input_raw.ndim == 2 else physics_input_raw
     rmse_pers = float(np.sqrt(np.mean((pers[:, :6] - Yw_val) ** 2)))
     print(f'Persistence (last features) val_rmse={rmse_pers:.4f}')
     rmse_phys_only = float(np.sqrt(np.mean((physics_anchors - Yw_val) ** 2)))
     print(f'Physics-only val_rmse={rmse_phys_only:.4f}')
-
     out = {
         'model_dir': args.model_dir,
         'csv': args.csv,
@@ -190,7 +169,6 @@ def main():
         'val_rmse_raw': rmse_before,
         'val_rmse_calibrated': rmse_after,
     }
-
     if not args.dry_run:
         save_calibration(calib, str(model_dir))
         np.save(model_dir / 'blend_weights.npy', channel_weights)
@@ -216,11 +194,9 @@ def main():
         with open(meta_path, 'w') as f:
             json.dump(meta, f, indent=2, default=str)
         print(f'\nSaved calibration + blend_weights.npy + updated {meta_path}')
-
     out_path = model_dir / 'blend_and_calibration_report.json'
     with open(out_path, 'w') as f:
         json.dump(out, f, indent=2, default=str)
     print(f'Wrote report to {out_path}')
-
 if __name__ == '__main__':
     main()

@@ -1,21 +1,15 @@
 from __future__ import annotations
-
 import collections
 import json
 import threading
 from pathlib import Path
 from typing import Any
-
 import numpy as np
-
 ROOT = Path(__file__).resolve().parents[1]
 MODEL_DIR = ROOT / 'mercurius' / 'saved_model'
 LUNAR_MODEL_DIR = ROOT / 'saved_model'
-
 SEQUENCE_LENGTH = 72
 NUM_FEATURES = 18
-
-# Solar / heliospheric outputs only. Temperature is physics (LST + orbit), not ML.
 SOLAR_FEATURE_IDX = (0, 1, 3, 4, 5)
 CHANNEL_KEYS = ('solar', 'radiation', 'standoff_rm', 'p_dyn_npa', 'imf_b_mag')
 OUTPUT_BOUNDS = [
@@ -28,8 +22,6 @@ OUTPUT_BOUNDS = [
 BLEND_WEIGHTS = np.asarray([0.50, 0.45, 0.40, 0.45, 0.45], dtype=np.float64)
 RIDGE_LAGS = 8
 RIDGE_PATH = MODEL_DIR / 'ridge_residual.joblib'
-# train_extended_model / CSV still use lunar names. Values are Mercury solar physics:
-# moonquakes_per_day = magnetopause R_ss, meteor_flux_1e15 = P_dyn, dust_g_cm3 = |B|.
 HAZARD_COLUMNS = (
     'solar_activity', 'radiation_mSv',
     'moonquakes_per_day', 'meteor_flux_1e15', 'dust_g_cm3',
@@ -38,9 +30,7 @@ TARGET_COLUMNS = (
     'target_solar_activity', 'target_radiation_mSv',
     'target_moonquakes_per_day', 'target_meteor_flux_1e15', 'target_dust_g_cm3',
 )
-
 def mercury_storm_sample_weights(Y: np.ndarray) -> np.ndarray:
-
     Y = np.asarray(Y, dtype=np.float64)
     w = np.ones(len(Y), dtype=np.float32)
     if Y.ndim != 2 or Y.shape[1] < 5:
@@ -52,9 +42,7 @@ def mercury_storm_sample_weights(Y: np.ndarray) -> np.ndarray:
     w += 0.85 * (p_dyn > 40.0).astype(np.float32)
     w += 0.50 * (bmag > 80.0).astype(np.float32)
     return np.clip(w, 1.0, 5.0)
-
 def attach_next_day_targets(df, horizon: int = 1):
-
     if horizon < 1:
         raise ValueError('horizon must be >= 1 (same-day Y leaks identity into the LSTM)')
     out = df.sort_values(['site', 'date']).copy()
@@ -62,12 +50,10 @@ def attach_next_day_targets(df, horizon: int = 1):
     for src, tgt in zip(HAZARD_COLUMNS, TARGET_COLUMNS):
         out[tgt] = grouped[src].shift(-int(horizon))
     return out.dropna(subset=list(TARGET_COLUMNS)).reset_index(drop=True)
-
 def persistence_rmse(df) -> float:
     x = df[list(HAZARD_COLUMNS)].to_numpy(dtype=np.float64)
     y = df[list(TARGET_COLUMNS)].to_numpy(dtype=np.float64)
     return float(np.sqrt(np.mean((x - y) ** 2)))
-
 def mercury_custom_objects() -> dict[str, Any]:
     _install_clip_layer()
     from lipas_tf import PhysicalBoundsLayer, WeightedSum1D
@@ -83,21 +69,15 @@ def mercury_custom_objects() -> dict[str, Any]:
     if WeightedSum1D is not None:
         objs['WeightedSum1D'] = WeightedSum1D
     return objs
-
 class ClipToBounds:
     """Placeholder replaced when TensorFlow is importable."""
-
     def __init__(self, *args, **kwargs):
         raise RuntimeError('TensorFlow is required to build ClipToBounds')
-
 class LastSolarUnscaled:
     """Placeholder replaced when TensorFlow is importable."""
-
     def __init__(self, *args, **kwargs):
         raise RuntimeError('TensorFlow is required to build LastSolarUnscaled')
-
 _CLIP_READY = False
-
 def _install_clip_layer() -> None:
     global ClipToBounds, LastSolarUnscaled, _CLIP_READY
     if _CLIP_READY:
@@ -105,27 +85,22 @@ def _install_clip_layer() -> None:
     from lipas_tf import tf, layers
     if tf is None or layers is None:
         return
-
     @tf.keras.utils.register_keras_serializable(package='mercury')
     class _ClipToBounds(layers.Layer):
         def __init__(self, bounds, **kwargs):
             super().__init__(**kwargs)
             self.bounds = [(float(lo), float(hi)) for lo, hi in bounds]
-
         def build(self, input_shape):
             self.lo = tf.constant([b[0] for b in self.bounds], dtype=tf.float32)
             self.hi = tf.constant([b[1] for b in self.bounds], dtype=tf.float32)
             super().build(input_shape)
-
         def call(self, inputs):
             persist, residual = inputs
             return tf.clip_by_value(persist + residual, self.lo, self.hi)
-
         def get_config(self):
             cfg = super().get_config()
             cfg.update({'bounds': self.bounds})
             return cfg
-
     @tf.keras.utils.register_keras_serializable(package='mercury')
     class _LastSolarUnscaled(layers.Layer):
         def __init__(self, mean_s, std_s, idx, **kwargs):
@@ -133,39 +108,31 @@ def _install_clip_layer() -> None:
             self.mean_s = [float(x) for x in mean_s]
             self.std_s = [float(x) for x in std_s]
             self.idx = [int(x) for x in idx]
-
         def build(self, input_shape):
             self._mean = tf.constant(self.mean_s, dtype=tf.float32)
             self._std = tf.constant(self.std_s, dtype=tf.float32)
             self._idx = tf.constant(self.idx, dtype=tf.int32)
             super().build(input_shape)
-
         def call(self, last):
             gathered = tf.gather(last, self._idx, axis=1)
             return gathered * self._std + self._mean
-
         def get_config(self):
             cfg = super().get_config()
             cfg.update({'mean_s': self.mean_s, 'std_s': self.std_s, 'idx': self.idx})
             return cfg
-
     ClipToBounds = _ClipToBounds
     LastSolarUnscaled = _LastSolarUnscaled
     _CLIP_READY = True
-
 try:
     _install_clip_layer()
 except Exception:
     pass
-
 def persist_from_scaled_windows(windows: np.ndarray, mean: np.ndarray, std: np.ndarray) -> np.ndarray:
     last = np.asarray(windows, dtype=np.float32)[:, -1, :]
     idx = np.asarray(SOLAR_FEATURE_IDX)
     mean = np.asarray(mean, dtype=np.float32)
     std = np.where(np.asarray(std, dtype=np.float32) == 0, 1.0, np.asarray(std, dtype=np.float32))
     return last[:, idx] * std[idx] + mean[idx]
-
-
 def mercury_stack_features(windows: np.ndarray, mean: np.ndarray, std: np.ndarray, lags: int = RIDGE_LAGS) -> np.ndarray:
     """Last-k scaled steps plus unscaled persist / lag-1 solar residuals for Ridge."""
     Xw = np.asarray(windows, dtype=np.float32)
@@ -179,8 +146,6 @@ def mercury_stack_features(windows: np.ndarray, mean: np.ndarray, std: np.ndarra
     persist = last[:, idx] * std[idx] + mean[idx]
     persist_prev = prev[:, idx] * std[idx] + mean[idx]
     return np.concatenate([lastk, persist, persist_prev, persist - persist_prev], axis=1)
-
-
 def fit_ridge_residuals(Xw: np.ndarray, Y: np.ndarray, mean: np.ndarray, std: np.ndarray, alpha: float = 3.0):
     from sklearn.linear_model import Ridge
     persist = persist_from_scaled_windows(Xw, mean, std)
@@ -191,8 +156,6 @@ def fit_ridge_residuals(Xw: np.ndarray, Y: np.ndarray, mean: np.ndarray, std: np
         ridge.fit(feats, np.asarray(Y[:, i], dtype=np.float64) - persist[:, i])
         models.append(ridge)
     return models
-
-
 def ridge_predict(models, Xw: np.ndarray, mean: np.ndarray, std: np.ndarray) -> np.ndarray:
     persist = persist_from_scaled_windows(Xw, mean, std)
     feats = mercury_stack_features(Xw, mean, std)
@@ -202,8 +165,6 @@ def ridge_predict(models, Xw: np.ndarray, mean: np.ndarray, std: np.ndarray) -> 
         lo, hi = OUTPUT_BOUNDS[i]
         pred[:, i] = np.clip(pred[:, i], lo, hi)
     return pred
-
-
 def mix_heads_on_val(lstm: np.ndarray, ridge: np.ndarray, persist: np.ndarray, y: np.ndarray) -> list[dict]:
     """Pick a cheap persist/LSTM/Ridge mix per channel from validation RMSE."""
     grid = (0.0, 0.25, 0.5, 0.75, 1.0)
@@ -221,8 +182,6 @@ def mix_heads_on_val(lstm: np.ndarray, ridge: np.ndarray, persist: np.ndarray, y
                     best = {'lstm': float(a), 'ridge': float(b), 'persist': float(c), 'val_rmse': rmse}
         mix.append(best)
     return mix
-
-
 def apply_channel_mix(lstm: np.ndarray, ridge: np.ndarray, persist: np.ndarray, mix: list[dict]) -> np.ndarray:
     out = np.zeros_like(persist)
     for i, w in enumerate(mix):
@@ -232,8 +191,6 @@ def apply_channel_mix(lstm: np.ndarray, ridge: np.ndarray, persist: np.ndarray, 
             + float(w.get('persist', 0.0)) * persist[:, i]
         )
     return out
-
-
 def build_mercury_solar_model(
     sequence_length: int,
     num_features: int,
@@ -253,7 +210,6 @@ def build_mercury_solar_model(
     mean_s = np.asarray(mean, dtype=np.float32)[idx]
     std_s = np.asarray(std, dtype=np.float32)[idx]
     std_s = np.where(std_s == 0, 1.0, std_s)
-
     inp = layers.Input(shape=(sequence_length, num_features), name='heliosphere_window')
     x = layers.BatchNormalization(name='input_bn')(inp)
     x = layers.LSTM(lstm_units[0], return_sequences=True, kernel_regularizer=regularizers.l2(l2_reg), name='lstm_0')(x)
@@ -278,7 +234,6 @@ def build_mercury_solar_model(
         bias_initializer='zeros',
         name='solar_residual',
     )(x)
-
     last = layers.Cropping1D(cropping=(sequence_length - 1, 0), name='last_crop')(inp)
     last = layers.Reshape((num_features,), name='last_step')(last)
     prev = layers.Cropping1D(cropping=(sequence_length - 2, 1), name='prev_crop')(inp)
@@ -302,7 +257,6 @@ def build_mercury_solar_model(
         metrics=['mae'],
     )
     return model
-
 _MODEL = None
 _SCALER = None
 _META: dict[str, Any] | None = None
@@ -311,17 +265,13 @@ _MIX: list[dict] | None = None
 _LOCK = threading.Lock()
 _HISTORY: collections.OrderedDict[str, collections.deque] = collections.OrderedDict()
 _MAX_SITES = 16
-
 def _site_key(lat: float, lon: float) -> str:
     return f'{round(float(lat), 2):.2f},{round(float(lon), 2):.2f}'
-
 def model_ready() -> bool:
     return (MODEL_DIR / 'scaler.npz').is_file() and (
         (MODEL_DIR / 'best.keras').is_file() or (MODEL_DIR / 'model.keras').is_file()
     )
-
 def load_mercury_model(refresh: bool = False):
-
     global _MODEL, _SCALER, _META, _RIDGE, _MIX
     with _LOCK:
         if _MODEL is not None and not refresh:
@@ -331,7 +281,6 @@ def load_mercury_model(refresh: bool = False):
             return None
         _install_clip_layer()
         import tensorflow as tf
-
         objs = mercury_custom_objects()
         path = MODEL_DIR / 'best.keras'
         if not path.is_file():
@@ -359,7 +308,6 @@ def load_mercury_model(refresh: bool = False):
         if str(LUNAR_MODEL_DIR.resolve()) in str(path.resolve()):
             raise RuntimeError('Mercury LSTM refused to load lunar saved_model')
         return _MODEL
-
 def feature_vector(phys: dict, lat: float, lon: float, lst: float, extra: dict | None = None) -> np.ndarray:
     extra = extra or {}
     sw = phys.get('wind_mercury') or {}
@@ -384,7 +332,6 @@ def feature_vector(phys: dict, lat: float, lon: float, lst: float, extra: dict |
         float(extra.get('albedo', 0.10) or 0.10) * 100.0,
     ]
     return np.asarray(vec, dtype=np.float32)
-
 def _push_history(lat: float, lon: float, vec: np.ndarray) -> np.ndarray:
     key = _site_key(lat, lon)
     dq = _HISTORY.get(key)
@@ -399,7 +346,6 @@ def _push_history(lat: float, lon: float, vec: np.ndarray) -> np.ndarray:
     else:
         dq.append(seed)
     return np.stack(list(dq), axis=0).astype(np.float32)
-
 def predict_channels(phys: dict, lat: float, lon: float, lst: float, extra: dict | None = None) -> dict[str, Any] | None:
     model = load_mercury_model()
     if model is None or _SCALER is None:
@@ -407,7 +353,6 @@ def predict_channels(phys: dict, lat: float, lon: float, lst: float, extra: dict
     extra = extra or {}
     vec = feature_vector(phys, lat, lon, lst, extra)
     window = _push_history(lat, lon, vec)
-
     mean = np.asarray(_SCALER['mean'], dtype=np.float32)
     std = np.asarray(_SCALER['std'], dtype=np.float32)
     std = np.where(std == 0, 1.0, std)
@@ -436,12 +381,10 @@ def predict_channels(phys: dict, lat: float, lon: float, lst: float, extra: dict
         if i < raw.shape[0]:
             lo, hi = OUTPUT_BOUNDS[i]
             out[key_ch] = float(np.clip(raw[i], lo, hi))
-
     out['history_frac'] = 1.0
     out['source'] = 'mercury_lstm'
     out['model_dir'] = str(MODEL_DIR)
     return out
-
 def blend_with_physics(phys: dict, ml: dict | None) -> dict[str, float]:
     hybrid = {
         'solar': float(phys['solar']),

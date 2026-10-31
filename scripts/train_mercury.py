@@ -1,31 +1,24 @@
 """Train a Mercury solar LSTM (no temperature) into mercurius/saved_model.
-
 Head is persistence + residual on solar / radiation / standoff / P_dyn / |B|.
 Temperature stays physics-only. Refuses to save unless test RMSE beats persistence.
 """
 from __future__ import annotations
-
 import argparse
 import json
 import os
 import sys
 from pathlib import Path
-
 import numpy as np
-
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
-
 os.environ.setdefault('MPLCONFIGDIR', '/tmp/mpl')
 os.environ.setdefault('TF_CPP_MIN_LOG_LEVEL', '2')
 os.environ.setdefault('CUDA_VISIBLE_DEVICES', '')
-
 import tensorflow as tf
 try:
     tf.config.set_visible_devices([], 'GPU')
 except Exception:
     pass
-
 from data_ingestion import split_extended_dataset
 from mercurius.mercury_lstm import (
     BLEND_WEIGHTS,
@@ -44,10 +37,7 @@ from mercurius.mercury_lstm import (
 )
 from space_weather_model import make_sliding_windows_grouped
 from training_pipeline import _apply_scaler, _fit_scaler
-
 SOLAR_NAMES = list(HAZARD_COLUMNS)
-
-
 def _metrics(preds: np.ndarray, y: np.ndarray, persist: np.ndarray, names: list[str]) -> dict:
     rmse = float(np.sqrt(np.mean((preds - y) ** 2)))
     pers = float(np.sqrt(np.mean((persist - y) ** 2)))
@@ -66,16 +56,12 @@ def _metrics(preds: np.ndarray, y: np.ndarray, persist: np.ndarray, names: list[
         'test_rmse_persistence_per_channel': pers_ch,
         'skill_pct': skill,
     }
-
-
 def _clip_solar(preds: np.ndarray) -> np.ndarray:
     out = np.asarray(preds, dtype=np.float64).copy()
     for i, (lo, hi) in enumerate(OUTPUT_BOUNDS):
         if i < out.shape[1]:
             out[:, i] = np.clip(out[:, i], lo, hi)
     return out
-
-
 def train_once(
     csv_path: Path,
     model_dir: Path,
@@ -94,23 +80,19 @@ def train_once(
     X_train, Y_train, g_train = split['X_train'].astype(np.float32), split['Y_train'].astype(np.float32)[:, idx], split['groups_train']
     X_val, Y_val, g_val = split['X_val'].astype(np.float32), split['Y_val'].astype(np.float32)[:, idx], split['groups_val']
     X_test, Y_test, g_test = split['X_test'].astype(np.float32), split['Y_test'].astype(np.float32)[:, idx], split['groups_test']
-
     mean, std = _fit_scaler(X_train)
     Xs_train = _apply_scaler(X_train, mean, std)
     Xs_val = _apply_scaler(X_val, mean, std)
     Xs_test = _apply_scaler(X_test, mean, std)
-
     print(f'Windows sequence_length={sequence_length} stride={window_stride}')
     Xw_train, Yw_train = make_sliding_windows_grouped(Xs_train, Y_train, g_train, sequence_length=sequence_length, stride=window_stride)
     Xw_val, Yw_val = make_sliding_windows_grouped(Xs_val, Y_val, g_val, sequence_length=sequence_length, stride=window_stride)
     Xw_test, Yw_test = make_sliding_windows_grouped(Xs_test, Y_test, g_test, sequence_length=sequence_length, stride=window_stride)
     print(f'Windows: train={len(Xw_train)} val={len(Xw_val)} test={len(Xw_test)}')
-
     persist_test = persist_from_scaled_windows(Xw_test, mean, std)
     persist_val = persist_from_scaled_windows(Xw_val, mean, std)
     persist_rmse0 = float(np.sqrt(np.mean((persist_test - Yw_test) ** 2)))
     print(f'Persistence RMSE (solar channels): {persist_rmse0:.4f}')
-
     model = build_mercury_solar_model(
         sequence_length=sequence_length,
         num_features=Xs_train.shape[1],
@@ -121,7 +103,6 @@ def train_once(
     )
     opt = tf.keras.optimizers.Adam(learning_rate=learning_rate, clipnorm=1.0)
     model.compile(optimizer=opt, loss='mse', metrics=['mae'])
-
     print('Fitting LSTM (MSE, no storm weights)...')
     model.fit(
         Xw_train, Yw_train,
@@ -135,7 +116,6 @@ def train_once(
         ],
         verbose=2,
     )
-
     lstm_val = np.asarray(model.predict(Xw_val, verbose=0))
     lstm_test = np.asarray(model.predict(Xw_test, verbose=0))
     print('Fitting Ridge residuals...')
@@ -172,14 +152,11 @@ def train_once(
         'ridges': ridges,
         'mix': mix,
     }
-
-
 def wins_flying_colors(metrics: dict, min_skill_pct: float) -> bool:
     if float(metrics['skill_pct']) < min_skill_pct:
         return False
     if float(metrics['test_rmse']) >= float(metrics['test_rmse_persistence']):
         return False
-    # Every solar channel must at least match persistence (tiny channels get 2% slack).
     for name, rmse in metrics['test_rmse_per_channel'].items():
         pers = metrics['test_rmse_persistence_per_channel'][name]
         if pers < 1e-6:
@@ -188,8 +165,6 @@ def wins_flying_colors(metrics: dict, min_skill_pct: float) -> bool:
             print(f'Channel {name} lost to persistence ({rmse:.4f} > {pers:.4f})')
             return False
     return True
-
-
 def main() -> None:
     ap = argparse.ArgumentParser()
     ap.add_argument('--csv', default=str(ROOT / 'data' / 'ingested_mercury' / 'mercury_training.csv'))
@@ -207,7 +182,6 @@ def main() -> None:
     if model_dir.resolve() == (ROOT / 'saved_model').resolve():
         raise SystemExit('Refusing to write Mercury weights into lunar saved_model/')
     model_dir.mkdir(parents=True, exist_ok=True)
-
     configs = [
         dict(epochs=args.epochs, window_stride=args.window_stride, learning_rate=1e-3, lstm_units=(128, 64, 32)),
         dict(epochs=max(args.epochs, 40), window_stride=2, learning_rate=8e-4, lstm_units=(128, 64, 32)),
@@ -230,7 +204,6 @@ def main() -> None:
             best = result
             break
         print(f'Skill {met["skill_pct"]:.1f}% below {args.min_skill:.0f}% — trying a stronger run.')
-
     assert best is not None
     met = best['metrics']
     if not wins_flying_colors(met, args.min_skill):
@@ -239,7 +212,6 @@ def main() -> None:
             f'(RMSE {met["test_rmse"]:.4f} vs {met["test_rmse_persistence"]:.4f}, '
             f'skill {met["skill_pct"]:.1f}%, need {args.min_skill:.0f}%).'
         )
-
     np.savez(model_dir / 'scaler.npz', mean=best['mean'], std=best['std'])
     best['model'].save(model_dir / 'model.keras')
     best['model'].save(model_dir / 'best.keras')
@@ -268,7 +240,5 @@ def main() -> None:
     (model_dir / 'mercury_meta.json').write_text(json.dumps(extra, indent=2), encoding='utf-8')
     print('Wrote', model_dir / 'mercury_meta.json')
     print(f'Saved solar LSTM with {met["skill_pct"]:.1f}% RMSE skill vs persistence.')
-
-
 if __name__ == '__main__':
     main()

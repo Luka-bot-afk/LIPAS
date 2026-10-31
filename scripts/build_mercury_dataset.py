@@ -1,29 +1,21 @@
 """Build a Mercury LSTM training CSV from the train2 OMNI spine + Mercury labels.
-
 X is day t (1 AU OMNI + same-day Mercury physics). Y is day t+1, matching lunar
 train2 (next-day forecast). Same-day Y would make persistence RMSE ~0.
-
 Does not copy lunar temperature / radiation / quake / dust / meteor labels.
 """
 from __future__ import annotations
-
 import argparse
 import sys
 from datetime import timezone
 from pathlib import Path
-
 import pandas as pd
-
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
-
 from mercurius.mercury_lstm import attach_next_day_targets, persistence_rmse
 from mercurius.mercury_physics import physics_estimate_mercury, local_solar_time_mercury
 from mercurius.mercury_sites import PHYSICS_SITES, require_site
-
 OUT_DIR = ROOT / 'data' / 'ingested_mercury'
 DEFAULT_SRC = ROOT / 'data' / 'ingested_extended' / 'extended_training_window_B_ready.csv'
-
 def _load_heliosphere(src: Path, date_stride: int) -> pd.DataFrame:
     cols = [
         'date', 'solar_activity', 'solar_wind_speed', 'solar_wind_density',
@@ -36,7 +28,6 @@ def _load_heliosphere(src: Path, date_stride: int) -> pd.DataFrame:
     df['day'] = df['date'].dt.strftime('%Y-%m-%d')
     spine = df.sort_values('date').drop_duplicates('day', keep='last').copy()
     return spine.iloc[::max(1, int(date_stride))].reset_index(drop=True)
-
 def build_frame(src: Path, site_ids: list[str], date_stride: int, horizon: int = 1) -> pd.DataFrame:
     spine = _load_heliosphere(src, date_stride)
     rows = []
@@ -97,7 +88,6 @@ def build_frame(src: Path, site_ids: list[str], date_stride: int, horizon: int =
                 print(f'  labeled {done}/{n}', flush=True)
     df = attach_next_day_targets(pd.DataFrame(rows), horizon=horizon)
     return df
-
 def main() -> None:
     ap = argparse.ArgumentParser()
     ap.add_argument('--src', default=str(DEFAULT_SRC))
@@ -125,6 +115,5 @@ def main() -> None:
     print(f'Wrote {len(df)} rows -> {out}')
     print(f'Next-day persistence RMSE (X_t vs Y_t+{args.horizon}): {pers:.4f}')
     print(df[['solar_activity', 'radiation_mSv', 'temperature_C', 'moonquakes_per_day']].describe().to_string())
-
 if __name__ == '__main__':
     main()

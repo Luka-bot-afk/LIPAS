@@ -16,7 +16,6 @@
     <div class="load-label">Computing corridor</div>
   </div>
   <div id="lipas-topnav" data-active="mission"></div>
-
   <div class="planner-shell">
     <aside class="planner-rail" aria-label="Mission setup">
       <div class="rail-kicker">
@@ -25,13 +24,10 @@
       </div>
       <h1>Mission <em>Planner</em></h1>
       <p class="rail-lede">Pick a departure, a destination, and a vehicle. The day shows the space-weather window for that flight.</p>
-
       <label class="field-label" for="inp-name">Callsign</label>
       <input id="inp-name" class="callsign" value="Starbase → KSC corridor" spellcheck="false">
-
       <div class="field-label">Quick corridors</div>
       <div class="preset-row" id="preset-row"></div>
-
       <div class="route-card">
         <div class="route-end">
           <label for="inp-from">From</label>
@@ -47,7 +43,6 @@
           <div class="route-meta" id="to-meta">—</div>
         </div>
       </div>
-
       <div class="field-row">
         <div class="field">
           <label for="inp-vehicle">Vehicle</label>
@@ -92,7 +87,6 @@
           <input id="inp-inc" type="number" step="any" placeholder="auto">
         </div>
       </div>
-
       <details class="adv">
         <summary>3D coordinates</summary>
         <div class="field-row">
@@ -108,14 +102,14 @@
           <div class="field"><label for="lon2">Lon 2</label><input id="lon2" type="number" step="any" value="-80.649"></div>
         </div>
       </details>
-
       <div class="rail-actions">
         <button class="btn btn-primary" id="btn-run" type="button">Run trajectory plan</button>
         <button class="btn btn-ghost" id="btn-best" type="button">Apply best 24 h window</button>
         <button class="btn btn-ghost" id="btn-pdf" type="button">Download PDF report</button>
+        <button class="btn btn-ghost" id="btn-luna" type="button">Ask Luna to review this corridor</button>
+        <p id="luna-plan-out" class="luna-out"></p>
       </div>
     </aside>
-
     <main class="planner-stage">
       <div class="commit-hero" id="ops-banner" data-kind="caution">
         <div class="commit-ring" id="go-dial" data-status="caution">
@@ -135,7 +129,6 @@
         </div>
         <div class="commit-kpis" id="kpi-row"></div>
       </div>
-
       <section class="stage-panel windows-panel">
         <div class="panel-head">
           <h2>Launch windows · next 24 h</h2>
@@ -144,7 +137,6 @@
         <div class="win-strip" id="window-strip"></div>
         <div class="win-detail" id="window-detail">No window selected.</div>
       </section>
-
       <section class="stage-panel">
         <div class="panel-head">
           <h2>Trajectory theater</h2>
@@ -152,7 +144,6 @@
         </div>
         <canvas id="globe3d" height="280" aria-label="3D corridor"></canvas>
       </section>
-
       <section class="stage-panel theater">
         <div class="panel-head">
           <h2>Ground track &amp; altitude</h2>
@@ -164,7 +155,6 @@
         </div>
         <div class="phase-rail" id="phase-rail"></div>
       </section>
-
       <section class="stage-panel">
         <div class="panel-head">
           <h2>Hazard matrix</h2>
@@ -172,7 +162,6 @@
         </div>
         <div class="hz-grid" id="hz-grid"></div>
       </section>
-
       <section class="stage-panel">
         <div class="panel-head">
           <h2>Corridor log</h2>
@@ -182,10 +171,9 @@
       </section>
     </main>
   </div>
-
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js" defer></script>
   <script src="js/lipas-api.js"></script>
-  <script src="js/earth_mission.js?v=7"></script>
-  <script src="js/navbar.js?v=26" defer></script>
+  <script src="js/earth_mission.js?v=8"></script>
+  <script src="js/navbar.js?v=30" defer></script>
 </body>
 </html>

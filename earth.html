@@ -16,7 +16,6 @@
     <div class="load-label">Loading Earth</div>
   </div>
   <div id="lipas-topnav" data-active="dashboard"></div>
-
   <div class="earth-shell">
     <aside class="sidebar" id="sidebar" aria-label="Earth locations">
       <div class="earth-sites-head">
@@ -25,7 +24,6 @@
       </div>
       <ul class="location-list" id="siteList"></ul>
     </aside>
-
     <main class="earth-main" id="mainPanel">
       <header class="earth-hero">
         <div>
@@ -38,9 +36,7 @@
           <a class="btn-globe" href="earth_mission.html">Mission planner</a>
         </div>
       </header>
-
       <div class="alert-row" id="alertRow"></div>
-
       <section class="slider-section" id="slider-section">
         <div class="panel-head">
           <h2>Next 24 hours</h2>
@@ -50,9 +46,7 @@
         <div class="chart-axis"><span>Now</span><span>+6 h</span><span>+12 h</span><span>+18 h</span><span>+24 h</span></div>
         <div class="metric-pills" id="metricButtons"></div>
       </section>
-
       <div class="kpi-grid" id="kpiGrid"></div>
-
       <section class="map-panel">
         <div class="panel-head">
           <h2 id="mapTitle">Hazard map</h2>
@@ -66,7 +60,6 @@
           <span class="lg gnss">GNSS scint.</span>
         </div>
       </section>
-
       <section class="panel">
         <div class="panel-head">
           <h2>Hazard board</h2>
@@ -74,7 +67,6 @@
         </div>
         <div class="warnings" id="warningsContainer"></div>
       </section>
-
       <section class="panel">
         <div class="panel-head">
           <h2>24 hour forecast</h2>
@@ -83,7 +75,6 @@
         <canvas id="graphCanvas" height="160"></canvas>
         <div class="chart-axis"><span>Now</span><span>+12 h</span><span>+24 h</span></div>
       </section>
-
       <section class="panel" id="satPanel">
         <div class="panel-head">
           <h2>Satellites over Earth</h2>
@@ -91,10 +82,8 @@
         </div>
         <div class="sat-row" id="satRow"></div>
       </section>
-
       <div class="metrics-title">Current metrics</div>
       <div class="metrics-panel" id="metricsPanel"></div>
-
       <div class="pdf-box">
         <div class="pdf-title">Download PDF</div>
         <p>Site briefing for the location selected in the sidebar — nowcast, 24 h series, and hazard board.</p>
@@ -102,10 +91,9 @@
       </div>
     </main>
   </div>
-
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js" defer></script>
   <script src="js/lipas-api.js"></script>
   <script src="js/earth_dashboard.js?v=6"></script>
-  <script src="js/navbar.js?v=26" defer></script>
+  <script src="js/navbar.js?v=30" defer></script>
 </body>
 </html>

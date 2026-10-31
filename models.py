@@ -9,9 +9,7 @@ except Exception:
     tf = None
     layers = models = regularizers = optimizers = None
     TF_AVAILABLE = False
-
 DEFAULT_ENSEMBLE_DIR = 'saved_model/ensemble'
-
 def _build_base(input_dim: int = 6, output_dim: int = 6, dropout_rate: float = 0.2, hidden_sizes: tuple[int, ...] = (128, 128, 64)):
     if not TF_AVAILABLE:
         raise RuntimeError('TensorFlow is not available in this environment')
@@ -25,7 +23,6 @@ def _build_base(input_dim: int = 6, output_dim: int = 6, dropout_rate: float = 0
     m = models.Model(inputs=inp, outputs=x)
     m.compile(optimizer=optimizers.Adam(3e-4), loss='mse', metrics=['mae'])
     return m
-
 def train_ensemble(X, Y, n_models=3, epochs=50, batch_size=32, ensemble_dir=DEFAULT_ENSEMBLE_DIR, patience: int = 8):
     os.makedirs(ensemble_dir, exist_ok=True)
     models_paths = []
@@ -53,7 +50,6 @@ def train_ensemble(X, Y, n_models=3, epochs=50, batch_size=32, ensemble_dir=DEFA
         models_paths.append(ckpt_path)
     np.savez(os.path.join(ensemble_dir, 'registry.npz'), paths=np.array(models_paths, dtype=object))
     return models_paths
-
 def load_ensemble(ensemble_dir=DEFAULT_ENSEMBLE_DIR):
     reg = os.path.join(ensemble_dir, 'registry.npz')
     if not os.path.exists(reg):
@@ -76,7 +72,6 @@ def load_ensemble(ensemble_dir=DEFAULT_ENSEMBLE_DIR):
         except Exception:
             pass
     return models
-
 def ensemble_predict(models, X):
     X = np.asarray(X, dtype=np.float32)
     preds = []

@@ -34,7 +34,7 @@
     .note { color: var(--muted); font-size: 13px; max-width: 52ch; line-height: 1.45; }
   </style>
 </head>
-<body>
+<body class="profile-page">
   <div id="lipas-topnav" data-active=""></div>
   <main class="profile-wrap">
     <form class="profile-card" id="profileForm">
@@ -66,7 +66,7 @@
       <p class="lipas-copyright">© 2026 LIPAS Research</p>
     </form>
   </main>
-  <script src="js/navbar.js?v=26" defer></script>
+  <script src="js/navbar.js?v=30" defer></script>
   <script>
     (function () {
       const form = document.getElementById("profileForm");
@@ -91,9 +91,11 @@
         paint();
         const mark = document.querySelector(".nav-profile span");
         if (mark) {
-          const parts = (next.name || next.agency || "LIPAS Research").split(/\s+/).filter(Boolean);
-          mark.textContent = ((parts[0][0] || "L") + (parts[1] ? parts[1][0] : "")).toUpperCase();
-          mark.parentElement.title = next.name || next.agency || "LIPAS Research";
+          const label = next.name || next.agency || "LIPAS Research";
+          const parts = label.split(/\s+/).filter(Boolean);
+          const initials = ((parts[0] || "L")[0] + (parts[1] ? parts[1][0] : "")).toUpperCase();
+          mark.textContent = initials;
+          if (mark.parentElement) mark.parentElement.title = label;
         }
       }
       paint();

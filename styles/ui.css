@@ -12,12 +12,7 @@ a{color:var(--accent);text-decoration:none}
 .btn{background:var(--accent);color:#fff;padding:8px 12px;border-radius:8px;border:none;cursor:pointer}
 .small{font-size:13px;color:var(--muted)}
 .muted{color:var(--muted)}
-/* fast render helpers */
 .hidden{display:none!important}
 .center{text-align:center}
-
-/* lightweight skeleton placeholder */
 .skeleton{background:linear-gradient(90deg, rgba(255,255,255,0.03) 0%, rgba(255,255,255,0.06) 50%, rgba(255,255,255,0.03) 100%);border-radius:8px}
-
-/* responsive */
 @media(max-width:768px){.app-header{padding:10px}.page-wrap{padding-top:64px}}

@@ -1,9 +1,5 @@
-// Live drivers for the static Netlify host.
-// NOAA SWPC, NASA Trek, SDO, and CelesTrak. Trained model weights stay on Flask.
-
 const UA = "Mozilla/5.0 (compatible; LIPAS/3; space-weather-ops)";
 let mem = { at: 0, drivers: null, sats: null };
-
 const MERCURY_SITES = [
   ["overview", "Mercury", 0, 0, "overview", "All sites."],
   ["antipode", "Caloris antipode", -30, -18.5, "antipodes", "Rough ground opposite Caloris."],
@@ -21,7 +17,6 @@ const MERCURY_SITES = [
   ["prokofiev", "Prokofiev", 85.8, 62.9, "sites", "North pole ice crater."],
   ["chao", "Chao Meng-Fu", -87.3, -132.4, "sites", "South pole ice crater."],
 ];
-
 const EARTH_PLACES = [
   ["overview", "Earth", "overview", 0, 0, 0, "Planet-wide conditions from the live SWPC feed."],
   ["boulder", "NOAA SWPC Boulder", "city", 40.02, -105.27, 0, "Space Weather Prediction Center."],
@@ -35,7 +30,6 @@ const EARTH_PLACES = [
   ["mahia", "Mahia", "launch", -39.26, 177.86, 0, "Rocket Lab departure site."],
   ["poker", "Poker Flat", "launch", 65.13, -147.48, 0, "Sounding-rocket range."],
 ];
-
 function json(body, status = 200) {
   return new Response(JSON.stringify(body), {
     status,
@@ -46,32 +40,27 @@ function json(body, status = 200) {
     },
   });
 }
-
 function num(v, dflt = null) {
   const n = Number(v);
   return Number.isFinite(n) ? n : dflt;
 }
-
 function wrap(lon) {
   let x = Number(lon) || 0;
   while (x > 180) x -= 360;
   while (x < -180) x += 360;
   return x;
 }
-
 function round(v, d = 2) {
   const n = Number(v);
   if (!Number.isFinite(n)) return null;
   const p = 10 ** d;
   return Math.round(n * p) / p;
 }
-
 async function getJSON(url) {
   const r = await fetch(url, { headers: { "User-Agent": UA, Accept: "application/json" } });
   if (!r.ok) throw new Error(r.status + " " + url);
   return r.json();
 }
-
 function lastObj(arr) {
   if (!Array.isArray(arr) || !arr.length) return null;
   for (let i = arr.length - 1; i >= 0; i--) {
@@ -79,7 +68,6 @@ function lastObj(arr) {
   }
   return null;
 }
-
 function flareFromFlux(flux) {
   const f = Number(flux);
   if (!Number.isFinite(f) || f <= 0) return { flare_class: "A0", flare_index: 0.4, xray_flux: null };
@@ -96,7 +84,6 @@ function flareFromFlux(flux) {
   }
   return { flare_class: "A0", flare_index: 0.3, xray_flux: f };
 }
-
 function gScale(kp) {
   const k = Number(kp) || 0;
   if (k >= 9) return "G5";
@@ -106,7 +93,6 @@ function gScale(kp) {
   if (k >= 5) return "G1";
   return "G0";
 }
-
 function parseKpRows(rows) {
   if (!Array.isArray(rows)) return [];
   const out = [];
@@ -122,7 +108,6 @@ function parseKpRows(rows) {
   }
   return out;
 }
-
 function parseRegionLocation(loc) {
   const s = String(loc || "").toUpperCase();
   const m = s.match(/([NS])(\d{1,2})([EW])(\d{1,2})/);
@@ -131,7 +116,6 @@ function parseRegionLocation(loc) {
   const lon = (m[3] === "W" ? -1 : 1) * Number(m[4]);
   return { lat, lon };
 }
-
 async function loadDrivers() {
   if (mem.drivers && Date.now() - mem.at < 90_000) return mem.drivers;
   const urls = {
@@ -160,7 +144,6 @@ async function loadDrivers() {
     raw[k] = val;
     if (val) sources.push("noaa-swpc:" + k);
   }
-
   const kpRows = parseKpRows(raw.kp);
   const kpFc = parseKpRows(raw.kpForecast);
   const kpNow = kpRows.length ? kpRows[kpRows.length - 1].kp : 2;
@@ -179,7 +162,6 @@ async function loadDrivers() {
   const protonFlux = num(proton && (proton.flux || proton.proton_flux), 0.2);
   const dstRow = lastObj(raw.dst);
   const dst = num(dstRow && (dstRow.dst || dstRow.Dst || dstRow.value), -15);
-
   const regions = Array.isArray(raw.regions) ? raw.regions : [];
   const newestDate = regions.find((r) => r && r.observed_date)?.observed_date || null;
   const list = newestDate ? regions.filter((r) => r.observed_date === newestDate) : regions;
@@ -208,7 +190,6 @@ async function loadDrivers() {
       intensity: round(Math.min(1, 0.15 + area / 800 + nSpots / 40 + mProb / 80 + xProb / 40), 3),
     });
   }
-
   const kpSeries = (kpFc.length ? kpFc : kpRows.slice(-8)).slice(0, 24);
   const drivers = {
     sources,
@@ -229,7 +210,6 @@ async function loadDrivers() {
   mem = { ...mem, at: Date.now(), drivers };
   return drivers;
 }
-
 function mercuryRau(date) {
   const epoch = Date.UTC(2000, 0, 1, 12);
   const days = (date - epoch) / 86400000;
@@ -240,21 +220,18 @@ function mercuryRau(date) {
   const a = 0.387098;
   return a * (1 - e * Math.cos(E));
 }
-
 function moonSubsolar(date) {
   const epoch = Date.UTC(2024, 0, 11, 11, 57);
   const syn = 29.530588 * 86400000;
   const phase = ((date - epoch) % syn + syn) % syn / syn;
   return { lat: round(1.54 * Math.sin(2 * Math.PI * phase), 2), lon: round(wrap(-phase * 360), 2), phase };
 }
-
 function incidence(lat, lon, sub) {
   const la = lat * Math.PI / 180;
   const dLon = (lon - sub.lon) * Math.PI / 180;
   const sb = sub.lat * Math.PI / 180;
   return Math.max(0, Math.sin(la) * Math.sin(sb) + Math.cos(la) * Math.cos(sb) * Math.cos(dLon));
 }
-
 function magDraw(rss) {
   const R = Math.max(1.15, Number(rss) || 1.42);
   const nx = 56;
@@ -310,7 +287,6 @@ function magDraw(rss) {
     })),
   };
 }
-
 function hourDriver(d, hour) {
   const series = d.kpSeries && d.kpSeries.length ? d.kpSeries : [d.kp];
   const kp = series[Math.min(series.length - 1, Math.max(0, hour | 0))] ?? d.kp;
@@ -325,7 +301,6 @@ function hourDriver(d, hour) {
     dst: d.dst + 4 * Math.sin(hour / 6),
   };
 }
-
 function mercuryAt(site, d, hour, when) {
   const h = hourDriver(d, hour);
   const r = mercuryRau(when + hour * 3600000);
@@ -371,7 +346,6 @@ function mercuryAt(site, d, hour, when) {
     illumination: round(illum * 100, 1),
   };
 }
-
 function moonForecast(lat, lon, hours, d) {
   const when = Date.now();
   const n = Math.max(1, Math.min(168, hours | 0));
@@ -383,7 +357,7 @@ function moonForecast(lat, lon, hours, d) {
     const hd = hourDriver(d, h);
     const rad = 0.045 + 0.012 * Math.log10(1 + hd.proton_flux) + hd.kp * 0.004 + mu * 0.01;
     const solar = Math.min(20, 1.5 + hd.flare_index * 0.9);
-    const temp = 90 + 300 * Math.pow(mu, 0.25);
+    const temp = 90 + 300 * Math.pow(mu, 0.25) - 273.15;
     series.time.push(h);
     series.radiation.push(round(rad, 4));
     series.dust.push(round(0.8 + mu * 2.2, 2));
@@ -415,7 +389,6 @@ function moonForecast(lat, lon, hours, d) {
     channel_origin: { radiation: "goes-protons", solar: "goes-xray", kp: "swpc", illumination: "geometry", temperature: "geometry" },
   };
 }
-
 function hazardGrid(step, times, d) {
   const s = Math.max(10, Math.min(30, Number(step) || 15));
   const lats = [];
@@ -432,7 +405,7 @@ function hazardGrid(step, times, d) {
         const mu = incidence(la, lo, sub);
         rows.solar.push(round((1.2 + hd.flare_index) * (0.06 + 0.94 * mu), 3));
         rows.radiation.push(round(0.045 + 0.01 * Math.log10(1 + hd.proton_flux) + mu * 0.02, 4));
-        rows.temperature.push(round(90 + 300 * Math.pow(mu, 0.25), 1));
+        rows.temperature.push(round(90 + 300 * Math.pow(mu, 0.25) - 273.15, 1));
         rows.moonquakes.push(round(1 + (mu < 0.08 ? 0.6 : 0.15), 2));
         rows.micrometeorites.push(round(1.1 + hd.kp * 0.04, 2));
         rows.dust.push(round(0.7 + mu * 2.4, 2));
@@ -447,7 +420,6 @@ function hazardGrid(step, times, d) {
     note: "Moon-wide fields from live NOAA drivers and the subsolar point. Trained residuals run on the Flask server.",
   };
 }
-
 function propagate(el, hour) {
   const epoch = Date.parse(el.EPOCH);
   const n = num(el.MEAN_MOTION, 15);
@@ -470,7 +442,6 @@ function propagate(el, hour) {
     inclination: num(el.INCLINATION, 0),
   };
 }
-
 function trackOf(el) {
   const n = Math.max(0.5, num(el.MEAN_MOTION, 15));
   const periodH = 24 / n;
@@ -478,7 +449,6 @@ function trackOf(el) {
   for (let i = 0; i <= 72; i++) pts.push(propagate(el, (i / 72) * periodH));
   return pts.map((p) => [round(p.lon, 3), round(p.lat, 3), round(p.alt_km, 1)]);
 }
-
 async function loadSats(hour) {
   if (!mem.sats || Date.now() - mem.sats.at > 10 * 60 * 1000) {
     const groups = ["stations", "gps-ops", "weather", "resource"];
@@ -513,11 +483,9 @@ async function loadSats(hour) {
     };
   });
 }
-
 function earthPlaces() {
   return EARTH_PLACES.map(([id, name, group, lat, lon, alt, note]) => ({ id, name, group, lat, lon, alt_km: alt, note }));
 }
-
 function earthNow(d, hour, site) {
   const h = hourDriver(d, hour);
   const lat = site ? site.lat : 0;
@@ -547,7 +515,6 @@ function earthNow(d, hour, site) {
     lst_h: round((new Date().getUTCHours() + hour + (site ? site.lon : 0) / 15 + 48) % 24, 1),
   };
 }
-
 function earthForecast(site, d) {
   const keys = ["kp", "dst", "aurora_pct", "hf_blackout", "pca", "gnss_scintillation", "aviation_usv_h", "flare_index", "sep", "imf_bz", "f107", "range_hold", "saa", "drag", "charging", "belt_dose", "leo_dose_usv_h"];
   const series = { time: [], site };
@@ -580,7 +547,6 @@ function earthForecast(site, d) {
     source: "noaa-swpc",
   };
 }
-
 function auroraBlobs(d) {
   const edge = 70 - d.kp * 2.1;
   const blobs = [];
@@ -594,13 +560,11 @@ function auroraBlobs(d) {
   blobs.push({ type: "gnss", lat: 65, lon: -150, intensity: Math.min(1, 0.2 + d.kp / 10) }, { type: "gnss", lat: -62, lon: 140, intensity: Math.min(1, 0.2 + d.kp / 10) });
   return blobs;
 }
-
 function level(v, caution, nogo) {
   if (v >= nogo) return "nogo";
   if (v >= caution) return "caution";
   return "go";
 }
-
 function earthMission(body, d) {
   const hours = Math.max(1, num(body.hours, 6));
   const t0 = num(body.t0_h, 0);
@@ -667,7 +631,6 @@ function earthMission(body, d) {
     source: "noaa-swpc",
   };
 }
-
 function clock(body, hour, d) {
   const when = Date.now() + hour * 3600000;
   const sub = body === "sun" ? { lat: 0, lon: 0 } : body === "mercury" ? { lat: 0, lon: round(wrap((when / 86400000) * (360 / 175.9)), 2) } : moonSubsolar(when);
@@ -689,7 +652,6 @@ function clock(body, hour, d) {
     source: "noaa-swpc",
   };
 }
-
 async function proxyImage(url, mime) {
   const r = await fetch(url, { headers: { "User-Agent": UA } });
   if (!r.ok) return json({ error: "upstream " + r.status }, 502);
@@ -703,7 +665,6 @@ async function proxyImage(url, mime) {
     },
   });
 }
-
 async function luna(body) {
   const message = String(body.message || body.question || "").slice(0, 2000);
   const snap = JSON.stringify(body.context || body.snapshot || {}).slice(0, 1600);
@@ -738,12 +699,10 @@ async function luna(body) {
   } catch (_) {}
   return json({ answer: "I could not reach the language model. The snapshot is still on the board. Try again in a moment.", source: "lipas-local" });
 }
-
 export default async function handler(request) {
   const url = new URL(request.url);
   const path = url.pathname.replace(/\/$/, "") || "/";
   if (request.method === "OPTIONS") return new Response(null, { status: 204, headers: { "access-control-allow-origin": "*", "access-control-allow-methods": "GET,POST,OPTIONS", "access-control-allow-headers": "content-type" } });
-
   try {
     if (path.startsWith("/api/trek/")) {
       const sub = path.slice("/api/trek/".length);
@@ -754,9 +713,7 @@ export default async function handler(request) {
       return proxyImage("https://sdo.gsfc.nasa.gov/assets/img/latest/latest_1024_HMII.jpg", "image/jpeg");
     }
     if (path.startsWith("/api/solar/tiles/")) return json({ error: "use the SDO disk" }, 404);
-
     const d = await loadDrivers();
-
     if (path === "/api/real-data-status") {
       return json({
         available: true,
@@ -890,5 +847,4 @@ export default async function handler(request) {
     return json({ error: String(err && err.message ? err.message : err) }, 500);
   }
 }
-
 export const config = { path: "/api/*" };

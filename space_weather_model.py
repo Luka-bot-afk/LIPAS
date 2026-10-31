@@ -1,14 +1,10 @@
 """LIPAS."""
 import os
-
-# load .env if present
-
 try:
     from dotenv import load_dotenv
     load_dotenv()
 except ImportError:
     pass
-
 import time
 import json
 import threading
@@ -16,7 +12,6 @@ import collections
 import requests
 import numpy as np
 from typing import Any
-
 from lipas_tf import (
     TF_AVAILABLE,
     tf,
@@ -31,7 +26,6 @@ from flask import Flask, request, jsonify
 from data_ingestion import get_training_columns, get_schema_example, load_training_csv, build_training_dataset, save_dataset, batch_ingest_from_sources, fetch_real_source_data
 from models import load_ensemble, ensemble_predict, train_ensemble
 from functools import wraps
-
 from lunar_physics import (
     SIGMA_SB,
     SOLAR_CONSTANT_W_M2,
@@ -47,9 +41,7 @@ from lunar_physics import (
     calc_gcr_radiation,
     detect_storm_regime,
 )
-
 TRAINING_API_KEY = os.environ.get('TRAINING_API_KEY')
-
 def require_api_key(f):
     @wraps(f)
     def wrapped(*args, **kwargs):
@@ -61,7 +53,6 @@ def require_api_key(f):
             return jsonify({'error':'unauthorized'}), 401
         return f(*args, **kwargs)
     return wrapped
-
 CONFIG = {
     'NASA_KEY': os.environ.get('NASA_KEY', 'DEMO_KEY'),
     'RADIATION_APIS': {
@@ -72,12 +63,10 @@ CONFIG = {
         'XRAY_SEC': 'https://services.swpc.noaa.gov/json/goes/secondary/xrays-1-day.json'
     }
 }
-
 DEFAULT_ML_BLEND_WEIGHT = 0.4
 TRAIN2_CHANNEL_ML_BLEND = [0.4, 0.05, 0.0, 0.0, 0.0, 0.0]
 PHYSICS_WEIGHT_LOCKED = True
 _CHANNEL_ML_BLEND_WEIGHTS = None
-
 MODEL_DIR = 'saved_model'
 CAPABILITY_FILE = os.path.join(MODEL_DIR, 'capability.json')
 MODEL_FILE = os.path.join(MODEL_DIR, 'model.keras')
@@ -86,23 +75,19 @@ ENSEMBLE_DIR = os.path.join(MODEL_DIR, 'ensemble')
 CALIBRATION_NPZ_FILE = os.path.join(MODEL_DIR, 'calibration.npz')
 CALIBRATION_PKL_FILE = os.path.join(MODEL_DIR, 'calibration.pkl')
 BLEND_WEIGHTS_FILE = os.path.join(MODEL_DIR, 'blend_weights.npy')
-
 CORE_FEATURE_NAMES = [
     'solar_activity', 'radiation_mSv', 'temperature_C',
-    'moonquakes_per_day', 'meteor_flux_1e15', 'dust_g_cm3' 
-    # all the main 6 hazards LIPAS mainly calculates
+    'moonquakes_per_day', 'meteor_flux_1e15', 'dust_g_cm3'
 ]
 EXPANDED_FEATURE_NAMES = CORE_FEATURE_NAMES + [
     'lat', 'lon', 'local_solar_time',
     'hour_of_day', 'day_of_month', 'month_of_year',
     'solar_wind_speed', 'solar_wind_density', 'imf_bz', 'kp_index',
     'regolith_depth', 'thermal_inertia',
-    # the 18 feature LSTM schema LIPAS converts outputs to, including time ones + information indirectly relatited to the hazard eg imf, kp, etc allowing for the forecasting
 ]
 NUM_CORE_FEATURES = len(CORE_FEATURE_NAMES)
 NUM_EXPANDED_FEATURES = len(EXPANDED_FEATURE_NAMES)
 SEQUENCE_LENGTH = 72  # hours for lstm window
-
 PHYSICAL_OUTPUT_BOUNDS = [
     (0.0, 150.0),
     (0.0, 10.0),
@@ -111,7 +96,6 @@ PHYSICAL_OUTPUT_BOUNDS = [
     (0.5, 8.0),
     (0.3, 6.0),
 ]
-
 DEFAULT_TEMPORAL_HYPERPARAMS = {
     'lstm_units': (256, 128, 64),
     'dense_units': (256, 128),
@@ -121,56 +105,42 @@ DEFAULT_TEMPORAL_HYPERPARAMS = {
     'use_attention': False,
     'use_last_timestep_skip': False,
 }
-
 def _bounded_output_layer(x, name='bounded_output', bounds=None):
     bounds = bounds or PHYSICAL_OUTPUT_BOUNDS
     raw = layers.Dense(len(bounds), activation=None, name=f'{name}_raw')(x)
     return PhysicalBoundsLayer(bounds, name=name)(raw)
-
 def build_model(input_shape=(18,), physical_bounds=False, learning_rate=1e-3, output_bounds=None):
     """Dense model for the core features."""
     inp = layers.Input(shape=input_shape)
-
     x = layers.BatchNormalization()(inp)
-
     if len(input_shape) == 2:
-
         seq_length = input_shape[0]
         num_features = input_shape[1]
     else:
-
         x = layers.Reshape((1, input_shape[0]))(x)
         seq_length = 1
         num_features = input_shape[0]
-
     x = layers.LSTM(128, return_sequences=True, kernel_regularizer=regularizers.l2(1e-4))(x)
     x = layers.BatchNormalization()(x)
     x = layers.Dropout(0.3)(x)
-
     x = layers.LSTM(64, return_sequences=False, kernel_regularizer=regularizers.l2(1e-4))(x)
     x = layers.BatchNormalization()(x)
     x = layers.Dropout(0.25)(x)
-
     x = layers.Dense(256, activation='relu', kernel_regularizer=regularizers.l2(1e-4), kernel_initializer='he_normal')(x)
     x = layers.BatchNormalization()(x)
     x = layers.Dropout(0.3)(x)
-
     x = layers.Dense(128, activation='relu', kernel_regularizer=regularizers.l2(1e-4), kernel_initializer='he_normal')(x)
     x = layers.BatchNormalization()(x)
     x = layers.Dropout(0.25)(x)
-
     nowcast = layers.Dense(64, activation='relu', kernel_regularizer=regularizers.l2(1e-4))(x)
     nowcast = layers.Dense(6, activation='linear', name='nowcast')(nowcast)
-
     forecast = layers.Dense(64, activation='relu', kernel_regularizer=regularizers.l2(1e-4))(x)
     forecast = layers.Dense(6, activation='linear', name='forecast')(forecast)
-
     combined = layers.Concatenate()([nowcast, forecast])
     if physical_bounds:
         calibrated = _bounded_output_layer(combined, name='calibrated', bounds=output_bounds)
     else:
         calibrated = layers.Dense(6, activation='linear', name='calibrated')(combined)
-
     model = models.Model(inputs=inp, outputs=calibrated)
     model.compile(
         optimizer=optimizers.Adam(learning_rate=learning_rate),
@@ -178,7 +148,6 @@ def build_model(input_shape=(18,), physical_bounds=False, learning_rate=1e-3, ou
         metrics=['mae']
     )
     return model
-
 def build_temporal_model(sequence_length=72, num_features=18, physical_bounds=False,
                           lstm_units=(256, 128, 64), dense_units=(256, 128),
                           dropout=(0.3, 0.25, 0.2, 0.3, 0.25), l2_reg=1e-4,
@@ -186,24 +155,19 @@ def build_temporal_model(sequence_length=72, num_features=18, physical_bounds=Fa
                           use_last_timestep_skip=False, clipnorm=None,
                           output_bounds=None):
     inp = layers.Input(shape=(sequence_length, num_features)) #number of inputs layers
-
     x = layers.BatchNormalization(name='input_bn')(inp) #batch normalization making sure values are normalized and between 0 and 1
-
     if use_attention:
         gate = layers.Dense(num_features, activation='sigmoid', name='feature_gate',
                             kernel_regularizer=regularizers.l2(l2_reg))(x)
         x = layers.Multiply(name='gated_features')([x, gate])
-
     x = layers.LSTM(lstm_units[0], return_sequences=True, kernel_regularizer=regularizers.l2(l2_reg),
                     name='lstm_0')(x)
     x = layers.BatchNormalization()(x)
     x = layers.Dropout(dropout[0])(x)
-
     x = layers.LSTM(lstm_units[1], return_sequences=True, kernel_regularizer=regularizers.l2(l2_reg),
                     name='lstm_1')(x)
     x = layers.BatchNormalization()(x)
     x = layers.Dropout(dropout[1])(x)
-
     if use_attention:
         score = layers.Dense(1, activation=None, name='attn_score')(x)
         weights = layers.Softmax(axis=1, name='attn_weights')(score)
@@ -211,49 +175,39 @@ def build_temporal_model(sequence_length=72, num_features=18, physical_bounds=Fa
         context = WeightedSum1D(name='attn_context')(weighted)
     else:
         context = None
-
     x = layers.LSTM(lstm_units[2], return_sequences=False, kernel_regularizer=regularizers.l2(l2_reg),
                     name='lstm_2')(x)
     x = layers.BatchNormalization()(x)
     x = layers.Dropout(dropout[2])(x)
-
     if context is not None:
         x = layers.Concatenate(name='lstm_attn_concat')([x, context])
-
     if use_last_timestep_skip and sequence_length > 1:
-
         last = layers.Cropping1D(cropping=(sequence_length - 1, 0), name='last_timestep_crop')(inp)
         last = layers.Reshape((num_features,), name='last_timestep')(last)
         x = layers.Concatenate(name='last_skip_concat')([x, last])
-
     x = layers.Dense(dense_units[0], activation='relu', kernel_regularizer=regularizers.l2(l2_reg),
                      kernel_initializer='he_normal', name='dense_0')(x)
     x = layers.BatchNormalization()(x)
     x = layers.Dropout(dropout[3])(x)
-
     x = layers.Dense(dense_units[1], activation='relu', kernel_regularizer=regularizers.l2(l2_reg),
                      kernel_initializer='he_normal', name='dense_1')(x)
     x = layers.BatchNormalization()(x)
     x = layers.Dropout(dropout[4])(x)
-
     if physical_bounds:
         out = _bounded_output_layer(x, name='hazard_output', bounds=output_bounds)
     else:
         out = layers.Dense(6, activation='linear', name='hazard_output_linear')(x)
-
     model = models.Model(inputs=inp, outputs=out, name='lipas_temporal_hybrid')
     opt_kwargs = {'learning_rate': learning_rate}
     if clipnorm:
         opt_kwargs['clipnorm'] = float(clipnorm)
     model.compile(optimizer=optimizers.Adam(**opt_kwargs), loss='huber', metrics=['mae'])
     return model
-
 def make_channel_normalized_huber(channel_scales, delta=1.0):
     if not TF_AVAILABLE or tf is None:
         return 'huber'
     scales = np.asarray(channel_scales, dtype=np.float32).reshape(-1)
     scales = np.maximum(scales, 1e-4)
-
     def loss_fn(y_true, y_pred):
         s = tf.constant(scales, dtype=y_true.dtype)
         err = (y_true - y_pred) / s
@@ -261,16 +215,13 @@ def make_channel_normalized_huber(channel_scales, delta=1.0):
         quad = tf.minimum(abs_err, delta)
         lin = abs_err - quad
         return tf.reduce_mean(0.5 * tf.square(quad) + delta * lin)
-
     loss_fn.__name__ = 'channel_normalized_huber'
     return loss_fn
-
 def make_weighted_huber(channel_weights, delta=1.0):
     if not TF_AVAILABLE or tf is None:
         return 'huber'
     weights = np.asarray(channel_weights, dtype=np.float32).reshape(-1)
     weights = np.maximum(weights, 1e-6)
-
     def loss_fn(y_true, y_pred):
         w = tf.constant(weights, dtype=y_true.dtype)
         err = y_true - y_pred
@@ -279,10 +230,8 @@ def make_weighted_huber(channel_weights, delta=1.0):
         lin = abs_err - quad
         per = 0.5 * tf.square(quad) + delta * lin
         return tf.reduce_mean(per * w)
-
     loss_fn.__name__ = 'weighted_huber'
     return loss_fn
-
 def build_simple_model(physical_bounds=False):
     inp = layers.Input(shape=(6,))
     x = layers.Dense(128, activation='relu', kernel_regularizer=regularizers.l2(1e-4), kernel_initializer='he_normal')(inp)
@@ -306,7 +255,6 @@ def build_simple_model(physical_bounds=False):
     model = models.Model(inputs=inp, outputs=out)
     model.compile(optimizer=optimizers.Adam(learning_rate=1e-3), loss='huber', metrics=['mae'])
     return model
-
 def _keras_custom_objects():
     objs = {}
     if PhysicalBoundsLayer is not None:
@@ -316,7 +264,6 @@ def _keras_custom_objects():
         objs['WeightedSum1D'] = WeightedSum1D
         objs['lipas>WeightedSum1D'] = WeightedSum1D
     return objs
-
 def load_saved_model(model_dir=MODEL_DIR, set_global=True):
     global _MODEL
     if not TF_AVAILABLE or tf is None:
@@ -349,7 +296,6 @@ def load_saved_model(model_dir=MODEL_DIR, set_global=True):
     if loaded is not None and set_global:
         _MODEL = loaded
     return loaded
-
 def save_keras_model(model, model_dir=MODEL_DIR):
     os.makedirs(model_dir, exist_ok=True)
     model_path = os.path.join(model_dir, 'model.keras')
@@ -363,7 +309,6 @@ def save_keras_model(model, model_dir=MODEL_DIR):
     except Exception:
         pass
     return model_path
-
 _MODEL = None
 _MODEL_LOCK = threading.Lock()
 _ENSEMBLE = []
@@ -373,21 +318,17 @@ _LAST_TRAINING_METRICS = {}
 _SURROGATE_COEFFS = None
 _SURROGATE_INTERCEPT = None
 _SURROGATE_LOCK = threading.Lock()
-
 _FEATURE_HISTORY_BY_SITE = collections.OrderedDict()
 _FEATURE_HISTORY_LOCK = threading.Lock()
 _MAX_TRACKED_SITES = 256
-
 def _site_key(lat, lon):
     try:
         return (round(float(lat), 2), round(float(lon), 2))
     except Exception:
         return (0.0, 0.0)
-
 real_time_data = {'nasa': {}, 'noaa': {}, 'timestamp': 0}
 historical_data = {}
 radiation_cache = {'hourly': [], 'daily': [], 'timestamp': 0, 'raw': {}}
-
 def safe_api(url, tag=None, timeout=10):
     try:
         r = requests.get(url, timeout=timeout)
@@ -395,7 +336,6 @@ def safe_api(url, tag=None, timeout=10):
         return r.json()
     except Exception:
         return None
-
 def fetch_donki(days=60):
     try:
         end = time.gmtime()
@@ -411,7 +351,6 @@ def fetch_donki(days=60):
         return {'sep': sep, 'flares': flr, 'cme': cme, 'geoStorms': gst}
     except Exception:
         return {'sep': [], 'flares': [], 'cme': [], 'geoStorms': []}
-
 def fetch_noaa():
     try:
         xray = safe_api('https://services.swpc.noaa.gov/json/goes/primary/xrays-6-hour.json', 'NOAA/xray') or []
@@ -431,9 +370,7 @@ def fetch_noaa():
         return {'xray': xray, 'protons': protons, 'kp': kp, 'magnetometer': mag, 'radData': radData}
     except Exception:
         return {'xray': [], 'protons': [], 'kp': [], 'magnetometer': [], 'radData': {}}
-
 def fetch_historical():
-
     return {
         'diviner':  {'equator':{'day':390,'night':100}, 'midLat':{'day':380,'night':95}, 'polar':{'day':220,'night':40}},
         'ldex':     {'southPole':{'density':1.2e-15,'var':0.3e-15}, 'equator':{'density':1.5e-15,'var':0.4e-15}},
@@ -441,28 +378,21 @@ def fetch_historical():
         'mem':      {'flux':{'min':1.1e-15,'avg':1.6e-15,'max':3.2e-15}},
         'apollo':   {'measurements':[{'loc':'Hadley Rille','heatFlow':21},{'loc':'Taurus-Littrow','heatFlow':16}]}
     }
-
 def calc_meteor_flux(date=None, loc=None):
     avg = historical_data.get('mem', {}).get('flux', {}).get('avg', 1.6)
-
     try:
         t = time.gmtime() if date is None else time.gmtime(date.timestamp())
         doy = int(time.strftime('%j', t))
-
         frac = 1.0 + 0.12 * np.sin(2*np.pi*(doy/365.0))
         return float(avg * frac)
     except Exception:
         return float(avg)
-
 def calc_dust_activity(date=None, loc=None):
     base = historical_data.get('ldex', {}).get('equator', {}).get('density', 1.5e-15)
-
     proxy = 1.5
-
     mf = calc_meteor_flux(date, loc)
     scale = 1.0 + (mf - 1.6) * 0.12
     return float(max(0.5, min(5.0, proxy * scale)))
-
 def physics_estimate(inputs, lat=None, lon=None, local_time=None, day_of_year=None, extra=None):
     solar, rad, temp, quakes, flux, dust = [float(v) for v in inputs]
     extra = extra or {}
@@ -470,7 +400,6 @@ def physics_estimate(inputs, lat=None, lon=None, local_time=None, day_of_year=No
     sw_speed = float(extra.get('solar_wind_speed', clamp(400.0 + solar * 8.0, 250.0, 900.0, 400.0)))
     sw_dens = float(extra.get('solar_wind_density', clamp(5.0 + solar * 0.1, 0.5, 50.0, 5.0)))
     imf_bz = float(extra.get('imf_bz', clamp(-2.0 - rad * 2.0, -30.0, 30.0, -2.0)))
-
     if lat is not None and lon is not None and (
         extra.get('terrain') is None or extra.get('thermal_inertia') is None
     ):
@@ -481,10 +410,8 @@ def physics_estimate(inputs, lat=None, lon=None, local_time=None, day_of_year=No
         extra.setdefault('albedo', site_alb)
         extra.setdefault('emissivity', site_emis)
     terrain = extra.get('terrain')
-
     if day_of_year is None:
         day_of_year = int(time.strftime('%j', time.gmtime()))
-
     phys_temp = physics_temperature(
         lat or 0.0, lon or 0.0, local_time or 12.0,
         day_of_year=int(day_of_year), terrain=terrain,
@@ -492,7 +419,6 @@ def physics_estimate(inputs, lat=None, lon=None, local_time=None, day_of_year=No
         emissivity=float(extra.get('emissivity') or 0.95),
         thermal_inertia=extra.get('thermal_inertia'),
     )
-
     try:
         from data_ingestion import (
             load_diviner_site_climatology, diviner_temp_C,
@@ -507,7 +433,6 @@ def physics_estimate(inputs, lat=None, lon=None, local_time=None, day_of_year=No
             if _div is not None:
                 phys_temp = 0.75 * float(_div) + 0.25 * float(phys_temp)
                 _diviner_used = True
-
             if abs(float(lat)) >= 70.0:
                 _prp = load_diviner_prp_polar_temps()
                 _prp_t = diviner_prp_polar_temp_C(_prp, _site.name)
@@ -518,7 +443,6 @@ def physics_estimate(inputs, lat=None, lon=None, local_time=None, day_of_year=No
                 extra['diviner_blend'] = True
     except Exception:
         pass
-
     if extra.get('proton_flux') is not None:
         try:
             proton_proxy = max(0.05, float(extra['proton_flux']))
@@ -557,26 +481,21 @@ def physics_estimate(inputs, lat=None, lon=None, local_time=None, day_of_year=No
         )
     except TypeError:
         phys_quakes = physics_moonquake_rate()
-
     if quakes > 5.0:
         phys_quakes = 0.35 * phys_quakes + 0.65 * quakes
-
     sw = analyze_space_weather(real_time_data)
     if sw.get('solarStorms', {}).get('level') == 'red':
         phys_rad = max(phys_rad, phys_rad * 1.12)
         kp_proxy = max(kp_proxy, 7.0)
     sw_rad = float(sw.get('radiation', {}).get('value', 0) or 0)
     if sw_rad > phys_rad:
-        # Storm floor: uplift each cell proportionally so lat/lon structure stays visible on maps.
         blend = min(0.55, max(0.2, 0.25 + abs(float(lat or 0)) / 180.0))
         phys_rad = phys_rad + (sw_rad - phys_rad) * blend
-
     phys_solar = physics_solar_activity(
         solar_activity=solar, kp=kp_proxy, imf_bz=imf_bz,
         solar_wind_speed=sw_speed, solar_wind_density=sw_dens,
         f107=extra.get('f107'),
     )
-
     out = {
         'solar': float(clamp(phys_solar, 0.0, 80.0, solar)),
         'radiation': float(clamp(phys_rad, 0.01, 10.0, phys_rad)),
@@ -595,7 +514,6 @@ def physics_estimate(inputs, lat=None, lon=None, local_time=None, day_of_year=No
     except Exception:
         pass
     return out
-
 def _nearest_site_material(lat, lon):
     try:
         from lunar_sites import nearest_site
@@ -609,30 +527,23 @@ def _nearest_site_material(lat, lon):
         )
     except Exception:
         return 4.5, 50.0, 'mare', 0.07, 0.95
-
 def build_expanded_features(inputs, lat=None, lon=None, local_time=None, extra=None, timestamp=None):
     inputs = list(inputs)
     if len(inputs) >= NUM_EXPANDED_FEATURES:
         return np.asarray(inputs[:NUM_EXPANDED_FEATURES], dtype=np.float32)
-
     core = [float(v) for v in inputs[:NUM_CORE_FEATURES]]
     while len(core) < NUM_CORE_FEATURES:
         core.append(0.0)
     solar_activity, radiation = core[0], core[1]
-
     extra = extra or {}
     t = time.gmtime(timestamp) if timestamp is not None else time.gmtime()
-
     lat_v = float(lat) if lat is not None else float(extra.get('lat', 0.0))
     lon_v = float(lon) if lon is not None else float(extra.get('lon', 0.0))
     local_solar_time = float(local_time) if local_time is not None else float(extra.get('local_solar_time', t.tm_hour))
-
     hour_of_day = float(extra.get('hour_of_day', t.tm_hour))
     day_of_month = float(extra.get('day_of_month', t.tm_mday))
     month_of_year = float(extra.get('month_of_year', t.tm_mon))
-
     kp_default = estimate_kp_proxy(solar_activity, radiation)
-
     try:
         from gap_fill import cross_fill_omni_drivers
         import pandas as _pd
@@ -656,17 +567,14 @@ def build_expanded_features(inputs, lat=None, lon=None, local_time=None, extra=N
     solar_wind_density = float(extra.get('solar_wind_density', clamp(5.0 + solar_activity * 0.1, 0.5, 50.0, 5.0)))
     imf_bz = float(extra.get('imf_bz', clamp(-2.0 - radiation * 2.0, -30.0, 30.0, -2.0)))
     kp_index = float(extra.get('kp_index', kp_default))
-
     site_reg, site_ti, site_terrain, site_alb, site_emis = _nearest_site_material(lat_v, lon_v)
     regolith_depth = float(extra.get('regolith_depth', site_reg))
     thermal_inertia = float(extra.get('thermal_inertia', site_ti))
-
     extra.setdefault('terrain', site_terrain)
     extra.setdefault('albedo', site_alb)
     extra.setdefault('emissivity', site_emis)
     extra.setdefault('regolith_depth', regolith_depth)
     extra.setdefault('thermal_inertia', thermal_inertia)
-
     vector = core + [
         lat_v, lon_v, local_solar_time,
         hour_of_day, day_of_month, month_of_year,
@@ -674,7 +582,6 @@ def build_expanded_features(inputs, lat=None, lon=None, local_time=None, extra=N
         regolith_depth, thermal_inertia
     ]
     return np.asarray(vector, dtype=np.float32)
-
 def record_feature_history(vector, lat=None, lon=None, timestamp=None):
     key = _site_key(lat, lon)
     day = time.strftime('%Y-%m-%d', time.gmtime(timestamp) if timestamp is not None else time.gmtime())
@@ -693,24 +600,20 @@ def record_feature_history(vector, lat=None, lon=None, timestamp=None):
         else:
             entry['deque'].append(vec)
             entry['date'] = day
-
 def _diurnal_pad_history(seed_vector, n_pad, lat=None, lon=None):
     seed = np.asarray(seed_vector, dtype=np.float32).copy()
     dim = seed.shape[0]
     out = []
-
     idx_lst, idx_hod, idx_dom, idx_moy = 8, 9, 10, 11
     idx_temp = 2
     for i in range(n_pad):
         v = seed.copy()
-
         hour = float((12.0 - (n_pad - i)) % 24.0)
         if dim > idx_lst:
             v[idx_lst] = hour / 24.0 if abs(seed[idx_lst]) <= 1.5 else hour
         if dim > idx_hod:
             v[idx_hod] = hour
         if dim > idx_temp:
-
             v[idx_temp] = seed[idx_temp] + 0.15 * np.sin(2.0 * np.pi * hour / 24.0)
         if dim > idx_dom:
             v[idx_dom] = seed[idx_dom]
@@ -718,7 +621,6 @@ def _diurnal_pad_history(seed_vector, n_pad, lat=None, lon=None):
             v[idx_moy] = seed[idx_moy]
         out.append(v)
     return out
-
 def build_sequence_window(current_vector, sequence_length=SEQUENCE_LENGTH, lat=None, lon=None):
     current_vector = np.asarray(current_vector, dtype=np.float32)
     key = _site_key(lat, lon)
@@ -734,7 +636,6 @@ def build_sequence_window(current_vector, sequence_length=SEQUENCE_LENGTH, lat=N
     else:
         history = history[-sequence_length:]
     return np.stack(history, axis=0)
-
 def warm_start_feature_history(model_dir=MODEL_DIR, csv_glob='data/ingested_extended/extended_training_*.csv', max_sites=32):
     global _SCALER
     import glob as _glob
@@ -769,7 +670,6 @@ def warm_start_feature_history(model_dir=MODEL_DIR, csv_glob='data/ingested_exte
         if len(tail) < 8:
             continue
         X = tail[cols].to_numpy(dtype=np.float32)
-
         mean = _SCALER['mean']
         if X.shape[1] < mean.shape[0]:
             pad = np.zeros((X.shape[0], mean.shape[0] - X.shape[1]), dtype=np.float32)
@@ -790,7 +690,6 @@ def warm_start_feature_history(model_dir=MODEL_DIR, csv_glob='data/ingested_exte
             _FEATURE_HISTORY_BY_SITE[key] = {'date': day, 'deque': dq}
         seeded += 1
     return seeded
-
 def make_sliding_windows(X, Y=None, sequence_length=SEQUENCE_LENGTH, stride=1):
     X = np.asarray(X, dtype=np.float32)
     n = X.shape[0]
@@ -806,12 +705,10 @@ def make_sliding_windows(X, Y=None, sequence_length=SEQUENCE_LENGTH, stride=1):
         Y_seq = np.stack([Y[i + sequence_length - 1] for i in starts], axis=0)
         return X_seq, Y_seq
     return X_seq
-
 def make_sliding_windows_grouped(X, Y, groups, sequence_length=SEQUENCE_LENGTH, stride=1):
     X = np.asarray(X, dtype=np.float32)
     Y = np.asarray(Y, dtype=np.float32) if Y is not None else None
     groups = np.asarray(groups)
-
     X_windows, Y_windows = [], []
     for g in np.unique(groups):
         idx = np.where(groups == g)[0]
@@ -824,19 +721,16 @@ def make_sliding_windows_grouped(X, Y, groups, sequence_length=SEQUENCE_LENGTH, 
         else:
             Xw = make_sliding_windows(Xg, None, sequence_length=sequence_length, stride=stride)
         X_windows.append(Xw)
-
     if not X_windows:
         raise ValueError(f'No group in `groups` has at least {sequence_length} rows to build a window.')
     X_out = np.concatenate(X_windows, axis=0)
     if Y is not None:
         return X_out, np.concatenate(Y_windows, axis=0)
     return X_out
-
 def fit_calibration(raw_preds, targets, method='platt'):
     raw = np.asarray(raw_preds, dtype=np.float64).reshape(-1, np.asarray(raw_preds).shape[-1])
     tgt = np.asarray(targets, dtype=np.float64).reshape(-1, np.asarray(targets).shape[-1])
     n_outputs = raw.shape[1]
-
     if method == 'isotonic':
         try:
             from sklearn.isotonic import IsotonicRegression
@@ -848,7 +742,6 @@ def fit_calibration(raw_preds, targets, method='platt'):
             return {'method': 'isotonic', 'calibrators': calibrators, 'n_outputs': n_outputs}
         except Exception:
             method = 'platt'
-
     A = np.ones(n_outputs)
     B = np.zeros(n_outputs)
     for i in range(n_outputs):
@@ -860,13 +753,11 @@ def fit_calibration(raw_preds, targets, method='platt'):
         design = np.vstack([x, np.ones_like(x)]).T
         sol, *_ = np.linalg.lstsq(design, y, rcond=None)
         a_i, b_i = float(sol[0]), float(sol[1])
-
         if not np.isfinite(a_i) or a_i < 0.05 or a_i > 2.5:
             A[i], B[i] = 1.0, 0.0
         else:
             A[i], B[i] = a_i, b_i
     return {'method': 'platt', 'A': A, 'B': B, 'n_outputs': n_outputs}
-
 def save_calibration(calib, model_dir=MODEL_DIR):
     os.makedirs(model_dir, exist_ok=True)
     if calib is None:
@@ -875,7 +766,6 @@ def save_calibration(calib, model_dir=MODEL_DIR):
         import pickle
         with open(os.path.join(model_dir, 'calibration.pkl'), 'wb') as f:
             pickle.dump(calib, f)
-
         try:
             os.remove(os.path.join(model_dir, 'calibration.npz'))
         except Exception:
@@ -886,7 +776,6 @@ def save_calibration(calib, model_dir=MODEL_DIR):
             os.remove(os.path.join(model_dir, 'calibration.pkl'))
         except Exception:
             pass
-
 def load_calibration(model_dir=MODEL_DIR):
     pkl_path = os.path.join(model_dir, 'calibration.pkl')
     npz_path = os.path.join(model_dir, 'calibration.npz')
@@ -904,7 +793,6 @@ def load_calibration(model_dir=MODEL_DIR):
         except Exception:
             pass
     return None
-
 def apply_calibration(preds, calib):
     if calib is None:
         return preds
@@ -921,7 +809,6 @@ def apply_calibration(preds, calib):
     if A is None or B is None:
         return preds_arr
     return preds_arr * A + B
-
 def _resolve_model_feature_dim(model=None, ensemble=None, scaler=None):
     if scaler is not None:
         try:
@@ -942,7 +829,6 @@ def _resolve_model_feature_dim(model=None, ensemble=None, scaler=None):
         except Exception:
             pass
     return None
-
 def _feature_vector_for_dim(target_dim, inputs, lat=None, lon=None, local_time=None, extra=None):
     core_vals = [float(v) for v in list(inputs)[:NUM_CORE_FEATURES]]
     while len(core_vals) < NUM_CORE_FEATURES:
@@ -955,9 +841,7 @@ def _feature_vector_for_dim(target_dim, inputs, lat=None, lon=None, local_time=N
             return expanded[:target_dim]
         return np.pad(expanded, (0, target_dim - len(expanded)))
     return expanded
-
 MC_DROPOUT_PASSES = int(os.environ.get('MC_DROPOUT_PASSES', '2'))
-
 def mc_dropout_predict(model, X, n_passes=MC_DROPOUT_PASSES):
     try:
         if int(n_passes) <= 1:
@@ -971,12 +855,10 @@ def mc_dropout_predict(model, X, n_passes=MC_DROPOUT_PASSES):
             return np.asarray(model.predict(X, verbose=0)), None
         except Exception:
             raise
-
 def model_predict(inputs, model=None, use_ensemble=False, lat=None, lon=None, local_time=None, extra=None, fast=False):
     global _MODEL, _ENSEMBLE, _SCALER, _CALIBRATION
     if model is None:
         model = _MODEL
-
     if model is None and (not use_ensemble or not _ENSEMBLE):
         global _SURROGATE_COEFFS, _SURROGATE_INTERCEPT
         with _SURROGATE_LOCK:
@@ -985,7 +867,6 @@ def model_predict(inputs, model=None, use_ensemble=False, lat=None, lon=None, lo
                 Y = core.dot(_SURROGATE_COEFFS.T) + _SURROGATE_INTERCEPT
                 return {'mean': Y.flatten().tolist(), 'std': None, 'surrogate': True}
         return None
-
     target_dim = _resolve_model_feature_dim(model=model, ensemble=_ENSEMBLE if use_ensemble else None, scaler=_SCALER)
     feature_vector = _feature_vector_for_dim(target_dim, inputs, lat=lat, lon=lon, local_time=local_time, extra=extra)
     X = feature_vector.reshape(1, -1)
@@ -994,7 +875,6 @@ def model_predict(inputs, model=None, use_ensemble=False, lat=None, lon=None, lo
     else:
         X_scaled = X
     record_feature_history(X_scaled.flatten(), lat=lat, lon=lon)
-
     if use_ensemble and _ENSEMBLE:
         mean, std = ensemble_predict(_ENSEMBLE, X_scaled)
         if mean is None:
@@ -1005,7 +885,6 @@ def model_predict(inputs, model=None, use_ensemble=False, lat=None, lon=None, lo
             'std': std.flatten().tolist() if std is not None else None,
             'uncertainty_source': 'ensemble',
         }
-
     try:
         input_shape = model.input_shape
         if isinstance(input_shape, list):
@@ -1016,7 +895,6 @@ def model_predict(inputs, model=None, use_ensemble=False, lat=None, lon=None, lo
             model_input = window.reshape(1, *window.shape)
         else:
             model_input = X_scaled
-
         mean, std = mc_dropout_predict(model, model_input, n_passes=1 if fast else MC_DROPOUT_PASSES)
         mean = apply_calibration(mean, _CALIBRATION)
         return {
@@ -1026,14 +904,12 @@ def model_predict(inputs, model=None, use_ensemble=False, lat=None, lon=None, lo
         }
     except Exception:
         return None
-
 def init_surrogate(n_samples=256, random_seed=42):
     global _SURROGATE_COEFFS, _SURROGATE_INTERCEPT
     rs = np.random.RandomState(random_seed)
     X = []
     Y = []
     for i in range(n_samples):
-
         solar = rs.uniform(0.0, 25.0)
         rad = rs.uniform(0.03, 0.3)
         temp = rs.uniform(-180.0, 140.0)
@@ -1042,7 +918,6 @@ def init_surrogate(n_samples=256, random_seed=42):
         dust = rs.uniform(0.5, 3.5)
         inp = [solar, rad, temp, quakes, flux, dust]
         phys = physics_estimate(inp)
-
         targ = [
             phys['solar'] * (1.0 + rs.normal(0, 0.03)),
             phys['radiation'] * (1.0 + rs.normal(0, 0.05)),
@@ -1055,7 +930,6 @@ def init_surrogate(n_samples=256, random_seed=42):
         Y.append(targ)
     X = np.asarray(X, dtype=np.float32)
     Y = np.asarray(Y, dtype=np.float32)
-
     A = np.concatenate([X, np.ones((X.shape[0], 1), dtype=np.float32)], axis=1)
     try:
         sol, *_ = np.linalg.lstsq(A, Y, rcond=None)
@@ -1067,7 +941,6 @@ def init_surrogate(n_samples=256, random_seed=42):
         return True
     except Exception:
         return False
-
 def surrogate_predict(inputs):
     global _SURROGATE_COEFFS, _SURROGATE_INTERCEPT
     with _SURROGATE_LOCK:
@@ -1076,14 +949,12 @@ def surrogate_predict(inputs):
         X = np.asarray(inputs, dtype=np.float32).reshape(1, -1)
         Y = X.dot(_SURROGATE_COEFFS.T) + _SURROGATE_INTERCEPT
         return {'mean': Y.flatten().tolist(), 'std': None, 'surrogate': True}
-
 def get_channel_blend_weights(scalar_fallback=None):
     global _CHANNEL_ML_BLEND_WEIGHTS
     if _CHANNEL_ML_BLEND_WEIGHTS is not None and len(_CHANNEL_ML_BLEND_WEIGHTS) == NUM_CORE_FEATURES:
         return list(_CHANNEL_ML_BLEND_WEIGHTS)
     w = float(DEFAULT_ML_BLEND_WEIGHT if scalar_fallback is None else scalar_fallback)
     return [w] * NUM_CORE_FEATURES
-
 def load_blend_weights(model_dir=MODEL_DIR):
     global _CHANNEL_ML_BLEND_WEIGHTS, DEFAULT_ML_BLEND_WEIGHT
     npy = os.path.join(model_dir, 'blend_weights.npy')
@@ -1109,13 +980,11 @@ def load_blend_weights(model_dir=MODEL_DIR):
                 return _CHANNEL_ML_BLEND_WEIGHTS
             best = meta.get('best_physics_weight')
             if best is not None:
-
                 DEFAULT_ML_BLEND_WEIGHT = float(clamp(best, 0.0, 1.0, DEFAULT_ML_BLEND_WEIGHT))
     except Exception:
         pass
     _CHANNEL_ML_BLEND_WEIGHTS = list(TRAIN2_CHANNEL_ML_BLEND)
     return _CHANNEL_ML_BLEND_WEIGHTS
-
 def load_train2_capability(refresh=False):
     """load the train2 capability report from scripts/verify_train2_capability.py if its there"""
     path = CAPABILITY_FILE
@@ -1126,13 +995,11 @@ def load_train2_capability(refresh=False):
         except Exception:
             pass
     return None
-
 def adaptive_channel_blend_weights(base_weights, physics_dict, ml_std=None, inputs=None, local_time=None):
     w = [float(x) for x in base_weights]
     regime = (physics_dict or {}).get('regime') or {}
     level = regime.get('level', 'quiet')
     if level == 'storm':
-
         w[0] = min(1.0, w[0] + 0.12)
         w[1] = min(1.0, w[1] + 0.08)
         w[2] = max(0.0, w[2] - 0.05)
@@ -1141,7 +1008,6 @@ def adaptive_channel_blend_weights(base_weights, physics_dict, ml_std=None, inpu
     elif level == 'unsettled':
         w[0] = min(1.0, w[0] + 0.05)
         w[1] = min(1.0, w[1] + 0.04)
-
     if local_time is not None:
         try:
             hour = float(local_time) % 24.0
@@ -1152,36 +1018,29 @@ def adaptive_channel_blend_weights(base_weights, physics_dict, ml_std=None, inpu
                 w[3] = max(0.0, w[3] * 0.90)
         except Exception:
             pass
-
     if isinstance(physics_dict, dict) and physics_dict.get('dust') is not None:
         try:
             if float(physics_dict['dust']) > 2.0:
                 w[5] = max(0.0, min(w[5], w[5] * 0.85))
         except Exception:
             pass
-
     if isinstance(physics_dict, dict) and physics_dict.get('diviner_blend'):
         w[2] = min(w[2], 0.70)
-
     if isinstance(physics_dict, dict) and physics_dict.get('mem3_blend'):
         w[4] = min(w[4], 0.15)
-
     if ml_std is not None:
         try:
             std = np.asarray(ml_std, dtype=np.float64).flatten()
             spans = np.array([hi - lo for lo, hi in PHYSICAL_OUTPUT_BOUNDS], dtype=np.float64)
             for i in range(min(len(w), len(std))):
                 rel = float(std[i] / max(spans[i], 1e-6))
-
                 shrink = float(clamp(1.0 - 1.6 * rel, 0.35, 1.0, 1.0))
                 w[i] = float(clamp(w[i] * shrink, 0.0, 1.0, w[i]))
         except Exception:
             pass
-
     if inputs is not None and len(inputs) > 1 and float(inputs[1]) > 0.25:
         w[1] = min(w[1], 0.35)
     return w
-
 def refine_prediction(inputs, lat=None, lon=None, local_time=None, physics_weight=DEFAULT_ML_BLEND_WEIGHT, use_ensemble=False, extra=None, day_of_year=None, fast=False):
     extra = dict(extra or {})
     if day_of_year is None:
@@ -1211,7 +1070,6 @@ def refine_prediction(inputs, lat=None, lon=None, local_time=None, physics_weigh
                 'confidence': {'overall_pct': round(100.0 * plaus, 1), 'per_channel_pct': None,
                                'basis': 'physics_plausibility_only', 'model_uncertainty_available': False},
                 'regime': base.get('regime')}
-
     ml_mean = model_out['mean']
     ml_pred = {
         'solar': ml_mean[0],
@@ -1221,13 +1079,11 @@ def refine_prediction(inputs, lat=None, lon=None, local_time=None, physics_weigh
         'micrometeorites': ml_mean[4],
         'dust': ml_mean[5]
     }
-
     base_weights = get_channel_blend_weights(scalar_fallback=physics_weight)
     weights = adaptive_channel_blend_weights(
         base_weights, base, ml_std=model_out.get('std'), inputs=inputs, local_time=local_time,
     )
     keys = ['solar', 'radiation', 'temperature', 'moonquakes', 'micrometeorites', 'dust']
-
     bounds = list(PHYSICAL_OUTPUT_BOUNDS)
     hybrid = {}
     for i, k in enumerate(keys):
@@ -1247,7 +1103,6 @@ def refine_prediction(inputs, lat=None, lon=None, local_time=None, physics_weigh
         'blend_weights_base': {keys[i]: base_weights[i] for i in range(6)},
         'regime': base.get('regime'),
     }
-
 def analyze_space_weather(data):
     out = {
         'radiation': {'level': 'green', 'value': 0.057, 'confidence': 85, 'variance': 0.008},
@@ -1255,15 +1110,12 @@ def analyze_space_weather(data):
         'solarActivity': {'value': 5, 'illumination': 0, 'confidence': 75}
     }
     try:
-
         out['radiation']['value'] = out['radiation']['value'] + calc_gcr_radiation()
-
         if data.get('nasa') and data['nasa'].get('sep') and len(data['nasa']['sep'])>0:
             week = [e for e in data['nasa']['sep'] if (time.time()*1000 - int(parse_time_ms(e.get('eventTime') or 0))) < 7*864e5]
             if len(week)>0:
                 out['radiation']['value'] *= 1.2
                 out['solarStorms']['level'] = 'yellow'
-
         if data.get('nasa') and data['nasa'].get('flares') and len(data['nasa']['flares'])>0:
             recent = data['nasa']['flares']
             xF = [f for f in recent if f.get('classType','').startswith('X')]
@@ -1272,22 +1124,18 @@ def analyze_space_weather(data):
             out['solarActivity']['value'] = min(30, 5 + score * 0.8)
             if len(xF)>0: out['solarStorms']['level'] = 'red'
             elif len(mF)>0: out['solarStorms']['level'] = 'yellow'
-
         if data.get('nasa') and data['nasa'].get('cme') and len(data['nasa']['cme'])>0:
             out['solarStorms']['level'] = 'yellow' if out['solarStorms']['level'] != 'red' else 'red'
     except Exception:
         pass
     return out
-
 def parse_time_ms(ts):
     try:
         if isinstance(ts, (int,float)):
             return int(ts)
-
         return int(time.mktime(time.strptime(ts.split('.')[0], "%Y-%m-%dT%H:%M:%S")) * 1000)
     except Exception:
         return 0
-
 def fetch_all_data():
     global real_time_data, historical_data, radiation_cache
     try:
@@ -1299,7 +1147,6 @@ def fetch_all_data():
         radiation_cache = {'hourly': [], 'daily': [], 'timestamp': int(time.time()*1000), 'raw': noaa.get('radData', {})}
     except Exception:
         pass
-
 def background_updater(interval_sec=900):
     while True:
         try:
@@ -1307,23 +1154,18 @@ def background_updater(interval_sec=900):
         except Exception:
             pass
         time.sleep(interval_sec)
-
 def predict_space_weather(inputs, model=None, lat=None, lon=None, local_time=None, extra=None):
     if len(inputs) != NUM_CORE_FEATURES:
         raise ValueError(f'inputs must be a {NUM_CORE_FEATURES}-element list or array')
-
     fast = physics_estimate(inputs, lat=lat, lon=lon, local_time=local_time)
     if model is None:
         model = _MODEL
-
     if model is None and not _ENSEMBLE:
         return fast
-
     refined = refine_prediction(inputs, lat=lat, lon=lon, local_time=local_time, physics_weight=DEFAULT_ML_BLEND_WEIGHT, use_ensemble=bool(_ENSEMBLE), extra=extra)
     if refined and 'hybrid' in refined:
         return refined['hybrid']
     return fast
-
 def load_scaler(model_dir=MODEL_DIR):
     p = os.path.join(model_dir, 'scaler.npz')
     if not os.path.exists(p):
@@ -1333,12 +1175,10 @@ def load_scaler(model_dir=MODEL_DIR):
         return {'mean': data['mean'], 'std': data['std']}
     except Exception:
         return None
-
 def apply_scaler(X, scaler):
     if scaler is None:
         return X
     return (np.asarray(X, dtype=np.float32) - scaler['mean']) / scaler['std']
-
 def estimate_kp_from_inputs(inputs: list) -> float:
     """Infer a proxy Kp value from solar activity when Kp is unavailable."""
     try:
@@ -1346,7 +1186,6 @@ def estimate_kp_from_inputs(inputs: list) -> float:
         return float(clamp((solar - 4.0) * 0.5 + 3.0, 0.0, 9.0, 3.0))
     except Exception:
         return 3.0
-
 def uncertainty_confidence_pct(std, bounds=None):
     if std is None:
         return None
@@ -1355,18 +1194,15 @@ def uncertainty_confidence_pct(std, bounds=None):
     spans[spans == 0] = 1.0
     std_arr = np.abs(np.asarray(std, dtype=np.float64).flatten())
     if std_arr.shape[0] != spans.shape[0]:
-
         spans = np.full_like(std_arr, float(np.mean(spans)))
     rel = std_arr / spans
     pct = 99.0 * np.exp(-rel / 0.065)
     return np.clip(pct, 25.0, 99.0).tolist()
-
 def combined_confidence_pct(std, prediction: dict, inputs: list, lat=None, lon=None, local_time=None, channel_order=None) -> dict:
     """UQ plus physics plausibility."""
     phys_pct = 100.0 * plausibility_score(prediction, inputs, lat=lat, lon=lon, local_time=local_time)
     model_pcts = uncertainty_confidence_pct(std)
     order = channel_order or CORE_FEATURE_NAMES
-
     try:
         blend_w = get_channel_blend_weights()
     except Exception:
@@ -1379,11 +1215,9 @@ def combined_confidence_pct(std, prediction: dict, inputs: list, lat=None, lon=N
     per_channel = {}
     for i in range(min(len(order), len(model_pcts))):
         w_ml = float(blend_w[i]) if i < len(blend_w) else float(DEFAULT_ML_BLEND_WEIGHT)
-
         if w_ml <= 0.05:
             per_channel[order[i]] = round(max(80.0, min(96.0, 0.25 * phys_pct + 0.75 * 90.0)), 1)
             continue
-
         model_mix = 0.65 * w_ml
         phys_mix = 1.0 - model_mix
         per_channel[order[i]] = round(model_mix * model_pcts[i] + phys_mix * phys_pct, 1)
@@ -1391,7 +1225,6 @@ def combined_confidence_pct(std, prediction: dict, inputs: list, lat=None, lon=N
     return {'overall_pct': overall, 'per_channel_pct': per_channel,
             'basis': 'mc_dropout_plus_physics_blend_aware', 'model_uncertainty_available': True,
             'channel_ml_blend_weights': {order[i]: float(blend_w[i]) for i in range(min(len(order), len(blend_w)))}}
-
 def plausibility_score(prediction: dict, inputs: list, lat=None, lon=None, local_time=None) -> float:
     """Distance from physics anchors."""
     score = 1.0
@@ -1406,10 +1239,8 @@ def plausibility_score(prediction: dict, inputs: list, lat=None, lon=None, local
     )
     pred_rad = float(prediction.get('radiation', phys_rad))
     diff_rad = abs(pred_rad - phys_rad)
-
     score -= min(0.35, diff_rad / 0.25)
     return float(clamp(score, 0.0, 1.0, 0.0))
-
 def long_term_forecast(inputs, horizon=7, physics_weight=DEFAULT_ML_BLEND_WEIGHT, use_ensemble=False, lat=None, lon=None, local_time=None, extra=None) -> dict[str, Any]:
     results = []
     current = list(inputs)
@@ -1425,9 +1256,7 @@ def long_term_forecast(inputs, horizon=7, physics_weight=DEFAULT_ML_BLEND_WEIGHT
         })
         current = [hybrid['solar'], hybrid['radiation'], hybrid['temperature'], hybrid['moonquakes'], hybrid['micrometeorites'], hybrid['dust']]
     return {'long_term': results}
-
 def estimate_kp_proxy(solar_activity: float, radiation: float) -> float:
-
     try:
         if solar_activity > 15.0:
             return 8.0
@@ -1436,7 +1265,6 @@ def estimate_kp_proxy(solar_activity: float, radiation: float) -> float:
         return float(clamp((solar_activity - 4.0) * 0.5 + 3.0, 0.0, 9.0, 3.0))
     except Exception:
         return 3.0
-
 def hybrid_forecast(inputs, lat=None, lon=None, local_time=None, physics_weight=DEFAULT_ML_BLEND_WEIGHT, use_ensemble=False, extra=None) -> dict[str, Any]:
     refined = refine_prediction(
         inputs, lat=lat, lon=lon, local_time=local_time,
@@ -1451,42 +1279,33 @@ def hybrid_forecast(inputs, lat=None, lon=None, local_time=None, physics_weight=
         'regime': refined.get('regime'),
         'confidence': refined.get('confidence'),
     }
-
 app = Flask(__name__, static_folder='.', static_url_path='')
-
 _STATIC_BLOCKLIST_PREFIXES = ('data/', 'saved_model', 'scripts/', '.venv', '.git', '.devin', '__pycache__')
 _STATIC_BLOCKLIST_SUFFIXES = ('.py', '.env', '.pyc', '.log')
-
 @app.before_request
 def _guard_static_paths():
     p = request.path.lstrip('/')
     if p.startswith(_STATIC_BLOCKLIST_PREFIXES) or p.endswith(_STATIC_BLOCKLIST_SUFFIXES):
         return jsonify({'error': 'not found'}), 404
-
 @app.route('/')
 def index():
     return app.send_static_file('landing.html')
-
 @app.route('/client-token')
 def client_token():
     token = os.getenv('CESIUM_ION_TOKEN', '')
     return jsonify({'token': token})
-
 _EXTENDED_FEATURE_PAYLOAD_KEYS = (
     'solar_wind_speed', 'solar_wind_density', 'imf_bz', 'kp_index',
     'regolith_depth', 'thermal_inertia',
     'hour_of_day', 'day_of_month', 'month_of_year'
 )
-
 def _extra_features_from_payload(payload):
     return {k: payload[k] for k in _EXTENDED_FEATURE_PAYLOAD_KEYS if k in payload}
-
 def _locked_physics_weight(payload):
     requested = payload.get('physics_weight')
     locked = float(DEFAULT_ML_BLEND_WEIGHT)
     overridden = requested is not None and float(requested) != locked
     return locked, overridden
-
 @app.route('/predict', methods=['POST'])
 def predict_endpoint():
     payload = request.get_json(force=True)
@@ -1495,14 +1314,12 @@ def predict_endpoint():
     inputs = payload.get('input') or payload.get('inputs')
     if inputs is None or len(inputs) != 6:
         return jsonify({'error':'`input` must be an array of 6 numeric values'}), 400
-
     lat = payload.get('lat')
     lon = payload.get('lon')
     local_time = payload.get('local_time')
     physics_weight, weight_overridden = _locked_physics_weight(payload)
     use_ensemble = bool(payload.get('use_ensemble', False))
     extra = _extra_features_from_payload(payload)
-
     try:
         fast = physics_estimate(inputs, lat=lat, lon=lon, local_time=local_time)
         refined = refine_prediction(inputs, lat=lat, lon=lon, local_time=local_time, physics_weight=physics_weight, use_ensemble=use_ensemble, extra=extra)
@@ -1523,7 +1340,6 @@ def predict_endpoint():
         return jsonify(response)
     except Exception as e:
         return jsonify({'error': str(e)}), 500
-
 @app.route('/forecast/hybrid', methods=['POST'])
 def hybrid_forecast_endpoint():
     payload = request.get_json(force=True)
@@ -1550,7 +1366,6 @@ def hybrid_forecast_endpoint():
         return jsonify(result)
     except Exception as e:
         return jsonify({'error': str(e)}), 500
-
 @app.route('/forecast/long_term', methods=['POST'])
 def long_term_forecast_endpoint():
     payload = request.get_json(force=True)
@@ -1574,35 +1389,28 @@ def long_term_forecast_endpoint():
         return jsonify(result)
     except Exception as e:
         return jsonify({'error': str(e)}), 500
-
 @app.route('/train/metrics', methods=['GET'])
 def train_metrics_endpoint():
     return jsonify({'last_training_metrics': _LAST_TRAINING_METRICS, 'model_loaded': _MODEL is not None, 'ensemble_count': len(_ENSEMBLE)})
-
 @app.route('/train', methods=['POST'])
 def train_endpoint():
     payload = request.get_json(force=True)
     if not payload:
         return jsonify({'error': 'invalid payload'}), 400
-
     training = payload.get('data')
     csv_path = payload.get('csv_path')
     if training is None and csv_path is None:
         return jsonify({'error': 'provide `data` or `csv_path` to train'}), 400
-
     try:
         allow_same_targets = bool(payload.get('allow_input_targets', False))
         if csv_path:
-
             X_df, Y_df = load_training_csv(csv_path, allow_inputs_as_targets=allow_same_targets)
             Xt = X_df.values
             Yt = Y_df.values
         else:
             arr = np.array(training, dtype=np.float32)
-
             if arr.ndim != 2 or arr.shape[1] < 6:
                 return jsonify({'error': 'training rows must contain at least 6 columns'}), 400
-
             if arr.shape[1] == 6:
                 if not allow_same_targets:
                     return jsonify({'error': 'When training from raw inputs only, set allow_input_targets=true to confirm targets == inputs'}), 400
@@ -1614,21 +1422,17 @@ def train_endpoint():
             else:
                 Xt = arr[:, :6]
                 Yt = arr[:, 6:12] if arr.shape[1] >= 12 else arr[:, :6]
-
         Xt = np.asarray(Xt, dtype=np.float32)
         Yt = np.asarray(Yt, dtype=np.float32)
         n_samples = int(Xt.shape[0])
         if n_samples < 6:
             return jsonify({'error': 'not enough samples to train; need at least 6 rows'}), 400
-
         if Xt.shape[1] != NUM_EXPANDED_FEATURES:
             Xt = np.stack([build_expanded_features(row) for row in Xt], axis=0)
-
         mean = Xt.mean(axis=0)
         std = Xt.std(axis=0)
         std[std==0] = 1.0
         Xt = (Xt - mean) / std
-
         n_features = int(Xt.shape[1])
         min_rows_for_window = SEQUENCE_LENGTH + 10
         use_temporal = n_samples >= min_rows_for_window
@@ -1637,7 +1441,6 @@ def train_endpoint():
         else:
             Xt_windows, Yt_windows = Xt, Yt
         n_fit_samples = int(Xt_windows.shape[0])
-
         X_cal = Y_cal = None
         if n_fit_samples >= 20:
             n_cal = min(max(4, int(round(n_fit_samples * 0.15))), n_fit_samples - 4)
@@ -1649,7 +1452,6 @@ def train_endpoint():
         else:
             X_fit, Y_fit = Xt_windows, Yt_windows
         n_fit = int(X_fit.shape[0])
-
         global _MODEL, _LAST_TRAINING_METRICS, _CALIBRATION
         with _MODEL_LOCK:
             if use_temporal:
@@ -1658,29 +1460,24 @@ def train_endpoint():
                 _MODEL = build_model(input_shape=(n_features,))
             else:
                 _MODEL = build_simple_model()
-
             if n_fit < 20:
                 val_split = 0.0
             else:
                 val_split = float(payload.get('validation_split', 0.15))
-
             epochs = int(payload.get('epochs', 60))
             batch_size = int(payload.get('batch_size', 16))
-
             callbacks = []
             try:
                 es = tf.keras.callbacks.EarlyStopping(monitor='val_loss', patience=12, restore_best_weights=True)
                 callbacks.append(es)
             except Exception:
                 pass
-
             os.makedirs(MODEL_DIR, exist_ok=True)
             try:
                 mc = tf.keras.callbacks.ModelCheckpoint(BEST_MODEL_FILE, save_best_only=True, monitor='val_loss')
                 callbacks.append(mc)
             except Exception:
                 pass
-
             history = None
             try:
                 if val_split > 0.0:
@@ -1689,7 +1486,6 @@ def train_endpoint():
                     history = _MODEL.fit(X_fit, Y_fit, epochs=max(10, min(epochs, 100)), batch_size=max(4, batch_size), shuffle=True, callbacks=callbacks, verbose=1)
             except Exception as e:
                 return jsonify({'error': f'training failed: {str(e)}'}), 500
-
             try:
                 save_keras_model(_MODEL, MODEL_DIR)
             except Exception:
@@ -1697,14 +1493,12 @@ def train_endpoint():
                     _MODEL.save_weights(os.path.join(MODEL_DIR, 'weights.h5'))
                 except Exception:
                     pass
-
             try:
                 np.savez(os.path.join(MODEL_DIR, 'scaler.npz'), mean=mean, std=std)
                 global _SCALER
                 _SCALER = {'mean': mean, 'std': std}
             except Exception:
                 pass
-
             calibration_info = {'fitted': False}
             if X_cal is not None and len(X_cal) > 0:
                 try:
@@ -1716,10 +1510,8 @@ def train_endpoint():
                     calibration_info = {'fitted': True, 'method': calib.get('method'), 'rows': int(len(X_cal))}
                 except Exception as e:
                     calibration_info = {'fitted': False, 'error': str(e)}
-
             if history is not None and hasattr(history, 'history'):
                 _LAST_TRAINING_METRICS = {k: float(v[-1]) for k, v in history.history.items() if len(v) > 0}
-
         return jsonify({
             'status': 'trained',
             'rows': int(n_samples),
@@ -1732,7 +1524,6 @@ def train_endpoint():
         })
     except Exception as e:
         return jsonify({'error': str(e)}), 500
-
 @app.route('/ensemble/train', methods=['POST'])
 @require_api_key
 def ensemble_train_endpoint():
@@ -1756,16 +1547,12 @@ def ensemble_train_endpoint():
             Yt = arr[:, 6:12] if arr.shape[1] >= 12 else arr[:, :6]
         else:
             return jsonify({'error':'provide data or csv_path'}), 400
-
         mean = Xt.mean(axis=0)
         std = Xt.std(axis=0)
         std[std==0] = 1.0
         np.savez(os.path.join(MODEL_DIR, 'scaler.npz'), mean=mean, std=std)
-
         Xs = (Xt - mean) / std
-
         paths = train_ensemble(Xs, Yt, n_models=n_models, epochs=epochs)
-
         global _ENSEMBLE, _SCALER, _LAST_TRAINING_METRICS
         _ENSEMBLE = load_ensemble()
         _SCALER = load_scaler()
@@ -1773,7 +1560,6 @@ def ensemble_train_endpoint():
         return jsonify({'status':'ensemble_trained','models': len(_ENSEMBLE), 'paths': paths, 'metrics': _LAST_TRAINING_METRICS})
     except Exception as e:
         return jsonify({'error': str(e)}), 500
-
 @app.route('/calibrate', methods=['POST'])
 @require_api_key
 def calibrate_endpoint():
@@ -1783,7 +1569,6 @@ def calibrate_endpoint():
     method = payload.get('method', 'platt')
     training = payload.get('data')
     csv_path = payload.get('csv_path')
-
     try:
         if csv_path:
             X_df, Y_df = load_training_csv(csv_path, allow_inputs_as_targets=bool(payload.get('allow_input_targets', False)))
@@ -1800,21 +1585,17 @@ def calibrate_endpoint():
             Yt = arr[:, n_feat:n_feat + 6]
         else:
             return jsonify({'error': 'provide `data` or `csv_path`'}), 400
-
         global _MODEL, _SCALER, _CALIBRATION
         model = _MODEL
         if model is None:
             return jsonify({'error': 'no trained model loaded; train a model before calibrating'}), 400
-
         if _SCALER is not None and _SCALER['mean'].shape[0] == Xt.shape[1]:
             Xs = apply_scaler(Xt, _SCALER)
         else:
             Xs = Xt
-
         input_shape = model.input_shape
         if isinstance(input_shape, list):
             input_shape = input_shape[0]
-
         if len(input_shape) == 3:
             seq_len = input_shape[1] or SEQUENCE_LENGTH
             if Xs.shape[0] < seq_len:
@@ -1824,14 +1605,12 @@ def calibrate_endpoint():
         else:
             raw_preds = model.predict(Xs, verbose=0)
             Y_for_calib = Yt
-
         calib = fit_calibration(raw_preds, Y_for_calib, method=method)
         save_calibration(calib, MODEL_DIR)
         _CALIBRATION = calib
         return jsonify({'status': 'calibrated', 'method': calib.get('method'), 'rows': int(Y_for_calib.shape[0])})
     except Exception as e:
         return jsonify({'error': str(e)}), 500
-
 @app.route('/batch_ingest', methods=['POST'])
 @require_api_key
 def batch_ingest_endpoint():
@@ -1843,7 +1622,6 @@ def batch_ingest_endpoint():
         return jsonify({'status':'ok','files': out})
     except Exception as e:
         return jsonify({'error': str(e)}), 500
-
 @app.route('/fetch_sources', methods=['GET'])
 @require_api_key
 def fetch_sources_endpoint():
@@ -1855,12 +1633,9 @@ def fetch_sources_endpoint():
         return jsonify({'status': 'ok', 'sources': data})
     except Exception as e:
         return jsonify({'error': str(e)}), 500
-
 @app.route('/data', methods=['GET'])
 def data_endpoint():
-
     return jsonify({'real_time': real_time_data, 'historical': historical_data, 'radiation_cache': radiation_cache})
-
 @app.route('/train/schema', methods=['GET'])
 def train_schema_endpoint():
     return jsonify({
@@ -1868,10 +1643,8 @@ def train_schema_endpoint():
         'example': get_schema_example(),
         'description': 'A 12-column CSV with 6 input features and 6 target values. Set allow_input_targets=true if you are training with input==target rows.'
     })
-
 @app.route('/status', methods=['GET'])
 def status_endpoint():
-
     model_input_shape = None
     is_temporal = None
     if _MODEL is not None:
@@ -1899,16 +1672,13 @@ def status_endpoint():
         'train2_blend_weights': get_channel_blend_weights(),
         'capability': load_train2_capability(),
     })
-
 @app.route('/ingest', methods=['POST'])
 @require_api_key
 def ingest_endpoint():
     try:
-
         payload = None
         if request.is_json:
             payload = request.get_json(force=True)
-
         donki = payload.get('donki') if payload else None
         noaa = payload.get('noaa') if payload else None
         diviner = payload.get('diviner') if payload else None
@@ -1916,7 +1686,6 @@ def ingest_endpoint():
         mem3 = payload.get('mem3') if payload else None
         ldex = payload.get('ldex') if payload else None
         crater = payload.get('crater') if payload else None
-
         df = build_training_dataset(donki=donki, noaa=noaa, diviner=diviner, crater=crater, ldex=ldex, apollo=apollo, mem3=mem3)
         out_dir = os.path.join('data', 'ingested')
         os.makedirs(out_dir, exist_ok=True)
@@ -1926,7 +1695,6 @@ def ingest_endpoint():
         return jsonify({'status':'ok','rows': int(df.shape[0]), 'csv': csv_path})
     except Exception as e:
         return jsonify({'error': str(e)}), 500
-
 @app.route('/validate', methods=['POST'])
 @require_api_key
 def validate_endpoint():
@@ -1941,17 +1709,14 @@ def validate_endpoint():
         return jsonify({'valid': True, 'rows': int(X_df.shape[0])})
     except Exception as e:
         return jsonify({'valid': False, 'error': str(e)}), 400
-
 if __name__ == '__main__':
     updater = threading.Thread(target=background_updater, args=(900,), daemon=True)
     updater.start()
-
     ok = init_surrogate(n_samples=384)
     if ok:
         print('Initialized fast linear surrogate predictor (instant warmup).')
     else:
         print('Surrogate initialization failed; physics-only fallback will be used.')
-
     def load_model_background():
         global _MODEL, _ENSEMBLE, _SCALER, _CALIBRATION
         try:
@@ -1981,9 +1746,7 @@ if __name__ == '__main__':
                 print(f"Loaded output calibration pass (method={_CALIBRATION.get('method')})")
         except Exception:
             pass
-
     loader = threading.Thread(target=load_model_background, daemon=True)
     loader.start()
-
     print('Server ready; starting Flask on http://127.0.0.1:5000')
     app.run(debug=False, host='127.0.0.1', port=5000)

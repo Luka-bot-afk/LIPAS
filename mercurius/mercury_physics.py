@@ -1,16 +1,12 @@
 from __future__ import annotations
-
 import math
 import sys
 from datetime import datetime, timezone
 from pathlib import Path
-
 import numpy as np
-
 _ROOT = Path(__file__).resolve().parents[1]
 if str(_ROOT) not in sys.path:
     sys.path.insert(0, str(_ROOT))
-
 from lunar_physics import (
     SIGMA_SB,
     SOLAR_CONSTANT_1AU_W_M2,
@@ -20,7 +16,6 @@ from lunar_physics import (
     normalize_proton_flux,
     physics_solar_activity as _lipas_solar_activity,
 )
-
 MERCURY_A_AU = 0.387098
 MERCURY_E = 0.20563
 MERCURY_PERIHELION_AU = MERCURY_A_AU * (1.0 - MERCURY_E)
@@ -34,11 +29,9 @@ MERCURY_EMISSIVITY = 0.9
 AU_KM = 149597870.7
 M_PROTON_KG = 1.6726219e-27
 SOLAR_ROT_OMEGA = 2.865e-06
-
 _J2000 = datetime(2000, 1, 1, 12, tzinfo=timezone.utc)
 _M0_DEG = 174.796
 _N_DEG_D = 4.092317
-
 _TERRAIN = {
     "smooth_plains": {"albedo": 0.08, "emissivity": 0.9, "thermal_lag_h": 0.7},
     "intercrater": {"albedo": 0.1, "emissivity": 0.91, "thermal_lag_h": 0.65},
@@ -58,16 +51,12 @@ _TERRAIN_ALIAS = {
     "rupes": "tectonic",
     "lobate": "tectonic",
 }
-
-
 def _days_since_j2000(when: datetime | None = None) -> float:
     if not when:
         when = datetime.now(timezone.utc)
     if when.tzinfo is None:
         when = when.replace(tzinfo=timezone.utc)
     return (when - _J2000).total_seconds() / 86400.0
-
-
 def kepler_eccentric_anomaly(M: float, e: float, iters: int = 16) -> float:
     E = float(M)
     for _ in range(iters):
@@ -80,16 +69,12 @@ def kepler_eccentric_anomaly(M: float, e: float, iters: int = 16) -> float:
         if abs(d) < 1e-14:
             return E
     return E
-
-
 def mercury_r_au_kepler(when: datetime | None = None) -> float:
     days = _days_since_j2000(when)
     M = math.radians((_M0_DEG + _N_DEG_D * days) % 360.0)
     E = kepler_eccentric_anomaly(M, MERCURY_E)
     r = MERCURY_A_AU * (1.0 - MERCURY_E * math.cos(E))
     return float(clamp(r, MERCURY_PERIHELION_AU * 0.98, MERCURY_APHELION_AU * 1.02, MERCURY_A_AU))
-
-
 def mercury_r_au(day_of_year: float | None = None, when: datetime | None = None) -> float:
     try:
         from mercurius.data_ingestion import horizons_r_au
@@ -103,19 +88,13 @@ def mercury_r_au(day_of_year: float | None = None, when: datetime | None = None)
         now = datetime.now(timezone.utc)
         when = datetime(now.year, 1, 1, tzinfo=timezone.utc) + timedelta(days=float(day_of_year) - 1.0)
     return mercury_r_au_kepler(when)
-
-
 def solar_constant_mercury(r_au: float) -> float:
     r = max(float(r_au), 0.25)
     return float(SOLAR_CONSTANT_1AU_W_M2 / (r * r))
-
-
 def parker_spiral_angle_rad(r_au: float, v_kms: float = 400.0) -> float:
     r_m = max(float(r_au), 0.2) * AU_KM * 1000.0
     v = max(float(v_kms), 200.0) * 1000.0
     return float(math.atan(SOLAR_ROT_OMEGA * r_m / v))
-
-
 def scale_solar_wind_to_mercury(
     speed_1au: float,
     density_1au: float,
@@ -160,14 +139,10 @@ def scale_solar_wind_to_mercury(
         "spiral_deg": float(math.degrees(phi)),
         "r_au": float(r),
     }
-
-
 def dynamic_pressure_npa(density_cm3: float, speed_kms: float) -> float:
     n = max(float(density_cm3), 0.05)
     v = max(float(speed_kms), 200.0)
     return float(1.6726e-06 * n * v * v)
-
-
 def physics_temperature_mercury(
     lat,
     lon,
@@ -216,8 +191,6 @@ def physics_temperature_mercury(
         temp_k = sunset_k + (floor_k - sunset_k) * (frac ** 0.55)
         temp_c = float(temp_k - 273.15)
     return float(clamp(temp_c, -220.0, 460.0, temp_c))
-
-
 def physics_solar_activity_mercury(
     solar_activity=5.0,
     kp=3.0,
@@ -239,8 +212,6 @@ def physics_solar_activity_mercury(
     flux_scale = 1.0 / max(r_au * r_au, 0.08)
     out = 0.5 * base + 0.5 * base * math.sqrt(min(flux_scale, 12.0))
     return float(clamp(out, 0.0, 160.0, base))
-
-
 def physics_radiation_mercury(
     solar_activity=5.0,
     kp=3.0,
@@ -295,8 +266,6 @@ def physics_radiation_mercury(
         rad *= 1.0 + 0.06 * (abs_lat ** 2)
     rad *= shield
     return float(clamp(rad, 0.008, 30.0, 0.12))
-
-
 def earth_lead_time_hours(r_au: float, solar_wind_speed_kms: float = 400.0) -> dict:
     r_m = max(float(r_au), 0.25)
     v = max(float(solar_wind_speed_kms), 200.0)
@@ -310,8 +279,6 @@ def earth_lead_time_hours(r_au: float, solar_wind_speed_kms: float = 400.0) -> d
         "photon_lead_min": round((1.0 - r_m) * 8.317, 3),
         "note": "1 AU OMNI in-situ is a radial proxy, not a ballistic map of the parcel currently at Mercury. Flares/X-rays (GOES) are near-simultaneous (light).",
     }
-
-
 def mercury_subsolar(when: datetime | None = None) -> dict:
     if not when:
         when = datetime.now(timezone.utc)
@@ -322,15 +289,11 @@ def mercury_subsolar(when: datetime | None = None) -> dict:
     if lon > 180.0:
         lon -= 360.0
     return {"lon": round(float(lon), 3), "lat": 0.0}
-
-
 def local_solar_time_mercury(lon_deg: float, when: datetime | None = None) -> float:
     sub = mercury_subsolar(when)
     rel = (float(lon_deg) - sub["lon"] + 180.0) % 360.0 - 180.0
     lst = 12.0 + rel / 15.0
     return float(lst % 24.0)
-
-
 def physics_estimate_mercury(inputs, lat=0.0, lon=0.0, local_time=12.0, day_of_year=None, extra=None, when=None) -> dict:
     if not extra:
         extra = {}

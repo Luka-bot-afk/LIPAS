@@ -1,5 +1,4 @@
 'use strict';
-
 const CONFIG = {
   NASA_KEY: 'DEMO_KEY',
   UPDATE_INTERVAL: 3600000,
@@ -29,7 +28,6 @@ const CONFIG = {
     NORTHERN_DELTA_AQUA: { peak:[10,7,11,21],  zhr:15,  speed:41 }
   }
 };
-
 let mlModel = null, g3d = null, map2d = null, mainChart = null;
 let currentLocation = null, locations = [], realTimeData = {}, historicalData = {};
 let modelAccuracy = { overall: 0, byHazard: {}, raw: {} };
@@ -44,7 +42,6 @@ let errorLog = [];
 let autoRotating = false;
 let currentView = '2d';
 let currentOverlay = 'none';
-
 function logErr(ctx, err, sev='warn') {
   errorLog.push({ ts: new Date().toISOString(), ctx, msg: err.message||err, sev });
   if (errorLog.length > 100) errorLog.shift();
@@ -62,13 +59,11 @@ function clamp(v, lo, hi, def, ctx) {
   if (typeof v !== 'number' || isNaN(v)) { logErr(ctx,`NaN, using ${def}`); return def; }
   return Math.max(lo, Math.min(hi, v));
 }
-
 const schedule = (fn) => {
   if (typeof setImmediate !== 'undefined') return setImmediate(fn);
   if (typeof window !== 'undefined' && typeof window.setTimeout === 'function') return window.setTimeout(fn, 0);
   return setTimeout(fn, 0);
 };
-
 const LUNAR_MONTH = 29.530588853;
 const getJD = (d=new Date()) => (d.getTime()/86400000) - (d.getTimezoneOffset()/1440) + 2440587.5;
 const getLunarAge = (d=new Date()) => { let p=((getJD(d)-2451550.1)/LUNAR_MONTH)%1; return (p<0?p+1:p)*LUNAR_MONTH; };
@@ -85,24 +80,18 @@ const getLunarPhase = (d=new Date()) => {
   return 'New Moon';
 };
 const phaseIcon = p => ({'New Moon':'🌑','Waxing Crescent':'🌒','First Quarter':'🌓','Waxing Gibbous':'🌔','Full Moon':'🌕','Waning Gibbous':'🌖','Last Quarter':'🌗','Waning Crescent':'🌘'}[p]||'🌑');
-
 function calcTemperature(lat, lon, date=new Date()) {
   const T_ss = 392;
   const T_eq  = 220;
   const AGE   = getLunarAge(date);
   const phase_frac = AGE / LUNAR_MONTH;
-
   const lambda_s = (phase_frac * 360 - 180 + 720) % 360 - 180;
-
   let H = lon - lambda_s;
   while (H >  180) H -= 360;
   while (H < -180) H += 360;
-
   const phi_rad = lat * Math.PI / 180;
   const H_rad = H * Math.PI / 180;
-
   const cos_z = Math.cos(phi_rad) * Math.cos(H_rad);
-
   let T_k;
   if (cos_z > 0) {
     T_k = T_ss * Math.pow(cos_z, 0.25);
@@ -118,7 +107,6 @@ function calcTemperature(lat, lon, date=new Date()) {
     if (Math.abs(lat) > 85) T_k = Math.min(T_k, 95);
     if (Math.abs(lat) > 88) T_k = Math.min(T_k, 50);
   }
-
   const T_c = T_k - 273.15;
   const illum = Math.max(0, Math.round(cos_z * 100));
   return {
@@ -130,13 +118,11 @@ function calcTemperature(lat, lon, date=new Date()) {
     cos_z
   };
 }
-
 function getSolarCyclePhase(date=new Date()) {
   const cycleStart = new Date('2019-12-01').getTime();
   const phase = ((date.getTime() - cycleStart) / (11 * 365.25 * 24 * 3600000)) % 1;
   return Math.sin(phase * 2 * Math.PI);
 }
-
 function calcGCRRadiation(date=new Date()) {
   const cyclePhase = getSolarCyclePhase(date);
   const phi_MV = 550 + cyclePhase * 350;
@@ -144,7 +130,6 @@ function calcGCRRadiation(date=new Date()) {
   const modFactor = 1.0 - 0.35 * ((phi_MV - 200) / 900);
   return Math.max(0.008, gcr_base * modFactor);
 }
-
 function calcHourlyRadiation(radiationData) {
   const preds = [];
   const now = new Date();
@@ -156,9 +141,7 @@ function calcHourlyRadiation(radiationData) {
       baseFlux = clamp(0.052 + avgF * 0.0015, 0.045, 0.25, 0.057, 'baseFlux');
     }
   } catch(e) { logErr('calcHourlyRadiation', e); }
-
   const gcr = calcGCRRadiation(now);
-
   for (let h = 0; h < 24; h++) {
     const ft = new Date(now.getTime() + h * 3600000);
     const hod = ft.getHours();
@@ -172,7 +155,6 @@ function calcHourlyRadiation(radiationData) {
   }
   return preds;
 }
-
 function calc30DayRadiation(radiationData) {
   const preds = [];
   const now = new Date();
@@ -198,7 +180,6 @@ function calc30DayRadiation(radiationData) {
   }
   return preds;
 }
-
 function calcShowerActivity(date=new Date()) {
   const doy = Math.floor((date - new Date(date.getFullYear(),0,0))/86400000);
   let total = 0, active = [];
@@ -219,7 +200,6 @@ function calcShowerActivity(date=new Date()) {
   }
   return { total, active, factor: 1+total };
 }
-
 function calcMeteorFlux(date=new Date(), loc={lat:0,lon:0}) {
   const base = 1.6;
   try {
@@ -242,7 +222,6 @@ function calcMeteorFlux(date=new Date(), loc={lat:0,lon:0}) {
     return flux;
   } catch(e) { logErr('calcMeteorFlux', e); return base; }
 }
-
 async function calcDustActivity(loc={lat:0,lon:0}, date=new Date()) {
   const base = 1.5;
   try {
@@ -274,7 +253,6 @@ async function calcDustActivity(loc={lat:0,lon:0}, date=new Date()) {
     return d;
   } catch(e) { logErr('calcDustActivity', e); return base; }
 }
-
 async function fetchDONKI() {
   try {
     const end   = new Date(), start = new Date(end-60*24*3600000);
@@ -289,7 +267,6 @@ async function fetchDONKI() {
     return { sep:sep||[], flares:flr||[], cme:cme||[], geoStorms:gst||[] };
   } catch(e) { logErr('fetchDONKI',e,'error'); return { sep:[],flares:[],cme:[],geoStorms:[] }; }
 }
-
 async function fetchNOAA() {
   try {
     const [xray,protons,kp,mag] = await Promise.all([
@@ -318,7 +295,6 @@ async function fetchNOAA() {
     return { xray:xray||[], protons:protons||[], kp:kp||[], magnetometer:mag||[] };
   } catch(e) { logErr('fetchNOAA',e,'error'); return { xray:[],protons:[],kp:[],magnetometer:[] }; }
 }
-
 async function fetchHistorical() {
   return {
     diviner:  { equator:{day:390,night:100}, midLat:{day:380,night:95}, polar:{day:220,night:40} },
@@ -328,7 +304,6 @@ async function fetchHistorical() {
     apollo:   { measurements:[{loc:'Hadley Rille',heatFlow:21},{loc:'Taurus-Littrow',heatFlow:16}] }
   };
 }
-
 async function fetchAllData() {
   setLoading('Fetching NASA DONKI data...',25);
   const donki = await fetchDONKI();
@@ -340,7 +315,6 @@ async function fetchAllData() {
   historicalData = hist;
   return { realTimeData, historicalData };
 }
-
 function analyzeSpaceWeather(data) {
   const out = {
     radiation:     { level:'green', value:0.057, confidence:85, variance:0.008 },
@@ -348,9 +322,7 @@ function analyzeSpaceWeather(data) {
     solarActivity: { value:5, illumination:0, confidence:75 }
   };
   const radFactors=[], solFactors=[];
-
   out.radiation.value = (out.radiation.value||0.057) + calcGCRRadiation();
-
   if (data.nasa?.sep?.length>0) {
     const week = data.nasa.sep.filter(e => Date.now()-new Date(e.eventTime).getTime() < 7*864e5);
     if (week.length>0) {
@@ -358,7 +330,6 @@ function analyzeSpaceWeather(data) {
       radFactors.push({ level: si>10?'red':si>5?'yellow':'green', mult:1+si*0.12, conf:82 });
     }
   }
-
   if (data.nasa?.flares?.length>0) {
     const recent = data.nasa.flares.filter(f => Date.now()-new Date(f.peakTime).getTime()<7*864e5);
     const xF=recent.filter(f=>f.classType?.startsWith('X'));
@@ -369,29 +340,24 @@ function analyzeSpaceWeather(data) {
     if (xF.length>0) radFactors.push({ level:'red', mult:1.6+xF.length*.15, conf:86 });
     else if (mF.length>0) radFactors.push({ level:'yellow', mult:1.2+mF.length*.08, conf:83 });
   }
-
   if (data.nasa?.cme?.length>0) {
     const rc = data.nasa.cme.filter(e => Date.now()-new Date(e.activityTime).getTime()<5*864e5);
     if (rc.length>0) solFactors.push({ level:rc.length>3?'red':'yellow', value:8+rc.length*3, conf:78 });
   }
-
   if (data.nasa?.geoStorms?.length>0) {
     const as = data.nasa.geoStorms.filter(s => Date.now()-new Date(s.startTime).getTime()<3*864e5);
     if (as.length>0) { radFactors.push({level:'red',mult:1.5,conf:80}); solFactors.push({level:'red',value:22,conf:81}); }
   }
-
   if (data.noaa?.protons?.length>0) {
     const lp = data.noaa.protons.slice(-10);
     const avgF = lp.reduce((s,p) => s+(p.flux||0),0)/lp.length;
     if (avgF>0.1) radFactors.push({ level:avgF>10?'red':avgF>1?'yellow':'green', mult:1+Math.min(avgF/5,2), conf:88 });
   }
-
   if (data.noaa?.kp?.length>1) {
     const rk = data.noaa.kp.slice(-6).map(x=>parseFloat(x[1])).filter(x=>!isNaN(x));
     const avgKp = rk.length ? rk.reduce((a,b)=>a+b,0)/rk.length : 2;
     solFactors.push({ level:avgKp>6?'red':avgKp>4?'yellow':'green', value:6+avgKp*2.5, conf:85 });
   }
-
   if (data.noaa?.xray?.length>0) {
     const latest = data.noaa.xray.slice(-1)[0];
     const flux = latest ? parseFloat(latest.flux || latest.F) : NaN;
@@ -400,7 +366,6 @@ function analyzeSpaceWeather(data) {
       else if (flux > 1e-5) radFactors.push({ level:'yellow', mult:1.12, conf:85 });
     }
   }
-
   if (radFactors.length>0) {
     const avgM = radFactors.reduce((s,f)=>s+f.mult,0)/radFactors.length;
     out.radiation.value = clamp(0.057*avgM + calcGCRRadiation(), 0.045, 0.28, 0.057, 'rad aggregate');
@@ -419,7 +384,6 @@ function analyzeSpaceWeather(data) {
   }
   return out;
 }
-
 const TRAINING_DATA = [
   [0.8,0.0542,-171.3,14.2,1.152,1.223],[1.0,0.0553,-168.1,15.3,1.177,1.238],[1.5,0.0575,-158.1,17.7,1.219,1.276],
   [2.0,0.0598,-148.2,20.1,1.265,1.314],[2.5,0.0630,-138.1,21.2,1.304,1.352],[3.0,0.0654,-128.1,22.9,1.348,1.390],
@@ -455,7 +419,6 @@ const TRAINING_DATA = [
   [17.5,0.1377,113.2,49.4,2.417,2.587],[0.3,0.0523,-174.8,13.4,1.124,1.184],[14.1,0.1214,126.8,44.7,2.187,2.297],
   [7.7,0.0874,-173.2,33.4,1.657,1.757],[21.3,0.1554,48.2,53.7,2.687,2.787],[11.9,0.1134,-86.3,40.2,2.017,2.117]
 ];
-
 async function buildMLModel() {
   console.log('[LIPAS] Building TensorFlow.js neural network...');
   try {
@@ -500,7 +463,6 @@ async function buildMLModel() {
     return model;
   } catch(e) { logErr('buildMLModel', e, 'critical'); throw e; }
 }
-
 function applyCrossHazardInteractions(pred, loc, date=new Date()) {
   if (!loc) return pred;
   const sw = analyzeSpaceWeather(realTimeData);
@@ -516,7 +478,6 @@ function applyCrossHazardInteractions(pred, loc, date=new Date()) {
   pred.micrometeorites = clamp(pred.micrometeorites * (1 + showerBoost + stormLevel * 0.03), 0.8, 8.0, pred.micrometeorites, 'cross.meteor');
   return pred;
 }
-
 function predictHazards(model, input, loc=null, date=new Date()) {
   if (!model || typeof model.predict !== 'function') {
     const temp = loc ? calcTemperature(loc.lat, loc.lon, date).temp : clamp(input[2], -175, 127, 0, 'pred.temp');
@@ -545,7 +506,6 @@ function predictHazards(model, input, loc=null, date=new Date()) {
   };
   return applyCrossHazardInteractions(result, loc, date);
 }
-
 function validatePred(pred, loc) {
   pred.radiation       = clamp(pred.radiation, 0.052, 0.19, 0.057, 'val.rad');
   pred.dust            = clamp(pred.dust, 1.15, 3.2, 1.5, 'val.dust');
@@ -553,7 +513,6 @@ function validatePred(pred, loc) {
   pred.micrometeorites = clamp(pred.micrometeorites, 1.12, 3.21, 1.6, 'val.meteor');
   return pred;
 }
-
 function predictTimeSeries(model, base, periods, loc) {
   const preds = [];
   const now = new Date();
@@ -597,7 +556,6 @@ function predictTimeSeries(model, base, periods, loc) {
   }
   return preds;
 }
-
 function moonThumbUrl(lat, lon, zoom = 4) {
   const n = 1 << zoom;
   const col = Math.floor(((Number(lon) + 180) / 360) * n);
@@ -607,7 +565,6 @@ function moonThumbUrl(lat, lon, zoom = 4) {
   return `https://trek.nasa.gov/tiles/Moon/EQ/LRO_WAC_Mosaic_Global_303ppd_v02/1.0.0/default/default028mm/${zoom}/${r}/${c}.jpg`;
 }
 window.moonThumbUrl = moonThumbUrl;
-
 function mercuryTilePath(lat, lon, zoom = 5) {
   const n = 1 << zoom;
   const col = Math.floor(((Number(lon) + 180) / 360) * n);
@@ -620,7 +577,6 @@ function mercuryThumbUrl(lat, lon, zoom = 5) {
   return "https://trek.nasa.gov/tiles/" + mercuryTilePath(lat, lon, zoom);
 }
 window.mercuryThumbUrl = mercuryThumbUrl;
-
 function initMercuryLocations() {
   const catalog = [
     { id: 'overview', name: 'Mercury', lat: 0, lon: 0, overview: true, group: 'overview', summary: 'All sites. Wind, heat, radiation, and the magnetic shield.' },
@@ -694,7 +650,6 @@ window.initLocationsMercury = function initLocationsMercury() {
     try { selectLocation(currentLocation); } catch (e) {}
   }
 };
-
 function initLocations() {
   if (document.body?.dataset?.app === 'mercury' || window.LIPAS_MERCURY) {
     return initMercuryLocations();
@@ -836,7 +791,6 @@ function initLocations() {
     };
   });
 }
-
 async function updateLocationData(loc, sw) {
   if (document.body?.dataset?.app === 'mercury' || window.LIPAS_MERCURY) {
     return;
@@ -845,17 +799,14 @@ async function updateLocationData(loc, sw) {
     const now = new Date();
     const td  = calcTemperature(loc.lat, loc.lon, now);
     loc.temperature = td.temp; loc.solar=td.solar; loc.solarOutput=td.solarOutput; loc.illumination=td.illumination; loc.cos_z=td.cos_z;
-
     let rad = sw.radiation.value;
     if (radiationCache.hourly?.length>0) rad = radiationCache.hourly[0].radiation;
     loc.radiation    = clamp(rad, 0.045, 0.25, 0.057, 'loc.rad');
     loc.radiationStr = loc.radiation.toFixed(4);
-
     loc.micrometeorites    = calcMeteorFlux(now, loc);
     loc.micrometeoritesStr = (loc.micrometeorites*1e-15).toExponential(2);
     loc.dust               = await calcDustActivity(loc, now);
     loc.dustStr            = loc.dust.toFixed(3);
-
     const useServer = !!window._preferServerForecast;
     const inp = [
       clamp(sw.solarActivity.value + (useServer ? 0 : (Math.random()-.5)*3), 0,35,5,'inp.sol'),
@@ -867,7 +818,6 @@ async function updateLocationData(loc, sw) {
     ];
     let pred = predictHazards(mlModel, inp, loc, now);
     pred = validatePred(pred, loc);
-
     try {
       const hour = now.getUTCHours() + now.getUTCMinutes() / 60;
       const lst = (hour + loc.lon / 15.0) % 24.0;
@@ -905,11 +855,9 @@ async function updateLocationData(loc, sw) {
         window._lastPrediction = j;
         window._preferServerForecast = true;
       }
-    } catch (_) { /* keep local pred */ }
-
+    } catch (_) {  }
     loc.moonquakes         = Math.round(pred.moonquakes);
     loc.moonquakeMag       = clamp(1.6 + (loc.moonquakes / 28) * 2.2, 1.0, 5.5, 2.5, 'loc.mag');
-
     loc.hazards = {
       radiation:   loc.radiation>0.150?'red':loc.radiation>0.095?'yellow':'green',
       solarStorms: sw.solarStorms.level,
@@ -918,12 +866,10 @@ async function updateLocationData(loc, sw) {
       meteor:      loc.micrometeorites>2.6?'red':loc.micrometeorites>1.95?'yellow':'green',
       temperature: Math.abs(loc.temperature)>160?'yellow':'green'
     };
-
     loc.hazardScore = calcHazardScore(loc);
     loc.status      = loc.hazardScore>70?'red':loc.hazardScore>35?'yellow':'green';
     loc.summary     = genSummary(loc);
     loc.advice      = genActivities(loc);
-
     const phase = getLunarPhase(), age = getLunarAge();
     const illum = Math.round((age/LUNAR_MONTH)*100);
     if (Math.abs(loc.lat)>85) {
@@ -933,7 +879,6 @@ async function updateLocationData(loc, sw) {
       const daysUntil=Math.round(inDay?half-age:LUNAR_MONTH-age);
       loc.cycle = `Lunar cycle: ${half.toFixed(1)} days/phase. In ${inDay?'daylight':'night'}. ${daysUntil}d until ${inDay?'night':'daylight'}. ${phase} (${illum}%).`;
     }
-
     loc.metrics = {
       surfaceTemp:  loc.temperature.toFixed(1)+'°C',
       radiationLvl: loc.radiationStr+' mSv/h',
@@ -943,7 +888,6 @@ async function updateLocationData(loc, sw) {
       quakeMag:     'M'+loc.moonquakeMag.toFixed(2),
       meteorFlux:   loc.micrometeoritesStr+' /m²/s'
     };
-
     if (meteoroidFlux.showerActive) loc.activeShowers = meteoroidFlux.activeShowers;
     return loc;
   } catch(e) {
@@ -952,14 +896,12 @@ async function updateLocationData(loc, sw) {
     return loc;
   }
 }
-
 function calcHazardScore(loc) {
   const W = { radiation:25,solarStorms:20,dust:15,seismic:15,meteor:15,temperature:10 };
   return Math.round(Object.entries(loc.hazards||{}).reduce((s,[k,v])=>{
     const w=W[k]||10; return s+(v==='red'?w:v==='yellow'?w*0.5:0);
   },0));
 }
-
 function genSummary(loc) {
   const msgs = {
     red:[`Critical ${Object.keys(loc.hazards||{}).find(k=>loc.hazards[k]==='red')||'hazard'} alert`,`High risk detected`,`Danger: severe conditions`],
@@ -969,8 +911,6 @@ function genSummary(loc) {
   const list = msgs[loc.status]||msgs.green;
   return list[Math.floor(Math.random()*list.length)];
 }
-
-/** Solar-driver status lines for Mercury sidebar (not lunar dust/quakes). */
 function genMercurySummary(loc) {
   const msgs = {
     green: ['Quiet solar wind', 'Minor solar activity', 'Nominal Hermean solar drivers'],
@@ -980,8 +920,6 @@ function genMercurySummary(loc) {
   const list = msgs[loc.status] || msgs.green;
   return list[Math.floor(Math.random() * list.length)];
 }
-
-/** Score Mercury location status from solar / radiation / kp / storm drivers. */
 function scoreMercuryLocation(loc) {
   const now = window._mercuryNow || {};
   const fc = window._mercuryForecast || window._forecastCache || {};
@@ -992,7 +930,6 @@ function scoreMercuryLocation(loc) {
     const v = Number((arr && arr[hi] != null ? arr[hi] : arr && arr[0]) ?? fallback);
     return Number.isFinite(v) ? v : fallback;
   };
-  // Prefer live forecast / site snapshot over stale init defaults (loc.solar was stuck at 5).
   const solar = Number(
     siteRow?.solar ?? now.prediction?.solar ?? at(fc.solar, null) ?? loc.solar ?? 5
   );
@@ -1005,12 +942,9 @@ function scoreMercuryLocation(loc) {
   const rss = Number(
     siteRow?.standoff_rm ?? now.magnetosphere?.standoff_rm ?? at(fc.standoff_rm, 1.45)
   );
-
   let score = 0;
-  // Mercury solar index is often ~10–40 after flux scaling — calibrate to that.
   if (rad >= 0.2 || solar >= 35 || kp >= 6 || storm >= 2 || flare >= 6 || rss <= 1.1) score = 2;
   else if (rad >= 0.1 || solar >= 14 || kp >= 4 || storm >= 1 || flare >= 3.5 || rss <= 1.25) score = 1;
-
   const status = score >= 2 ? 'red' : score === 1 ? 'yellow' : 'green';
   loc.status = status;
   loc.solar = solar;
@@ -1027,7 +961,6 @@ function scoreMercuryLocation(loc) {
   loc.summary = genMercurySummary(loc);
   return loc;
 }
-
 function genActivities(loc) {
   const score = loc.hazardScore, hz = loc.hazards;
   const acts = [];
@@ -1075,7 +1008,6 @@ function genActivities(loc) {
   }
   return acts;
 }
-
 class LunarGlobe3D {
   constructor(containerId) {
     this.container = document.getElementById(containerId);
@@ -1098,16 +1030,13 @@ class LunarGlobe3D {
     const W = this.container.clientWidth, H = this.container.clientHeight;
     this.scene = new THREE.Scene();
     this.scene.background = new THREE.Color(0x010810);
-
     this.camera = new THREE.PerspectiveCamera(45, W/H, 0.01, 100);
     this.updateCamera();
-
     this.renderer = new THREE.WebGLRenderer({ antialias:true, alpha:false });
     this.renderer.setSize(W, H);
     this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
     this.renderer.shadowMap.enabled = false;
     this.container.appendChild(this.renderer.domElement);
-
     this.sunLight = new THREE.DirectionalLight(0xfff8e0, 1.6);
     this.sunLight.position.set(5, 0.5, 0);
     this.scene.add(this.sunLight);
@@ -1116,14 +1045,12 @@ class LunarGlobe3D {
     const backLight = new THREE.DirectionalLight(0x223366, 0.15);
     backLight.position.set(-5, 0, 0);
     this.scene.add(backLight);
-
     this.createStars();
     this.createMoon();
     this.setupControls();
     this.animate();
     window.addEventListener('resize', ()=>this.onResize());
   }
-
   createStars() {
     const N = 6000;
     const pos = new Float32Array(N*3), col = new Float32Array(N*3);
@@ -1143,7 +1070,6 @@ class LunarGlobe3D {
     this.stars = new THREE.Points(geo, mat);
     this.scene.add(this.stars);
   }
-
   genLunarTexture() {
     const W=2048, H=1024;
     const cv = document.createElement('canvas'); cv.width=W; cv.height=H;
@@ -1190,7 +1116,6 @@ class LunarGlobe3D {
     ctx.putImageData(id,0,0);
     return cv;
   }
-
   createMoon() {
     const texCv = this.genLunarTexture();
     const tex = new THREE.CanvasTexture(texCv);
@@ -1198,7 +1123,6 @@ class LunarGlobe3D {
     const mat = new THREE.MeshPhongMaterial({ map:tex, shininess:4, specular:new THREE.Color(0x0a0a0a) });
     this.moon = new THREE.Mesh(geo, mat);
     this.scene.add(this.moon);
-
     this.overlayCanvas = document.createElement('canvas');
     this.overlayCanvas.width=512; this.overlayCanvas.height=256;
     this.overlayTex = new THREE.CanvasTexture(this.overlayCanvas);
@@ -1207,7 +1131,6 @@ class LunarGlobe3D {
     this.overlayMesh = new THREE.Mesh(ovlGeo, ovlMat);
     this.scene.add(this.overlayMesh);
   }
-
   ll2xyz(lat, lon, r=1.015) {
     const phi   = (90-lat)*Math.PI/180;
     const theta = (lon+180)*Math.PI/180;
@@ -1217,7 +1140,6 @@ class LunarGlobe3D {
        r*Math.sin(phi)*Math.sin(theta)
     );
   }
-
   addMarkers(locs) {
     this.markers.forEach(m => { this.scene.remove(m.ring); this.scene.remove(m.label); });
     this.markers=[];
@@ -1239,7 +1161,6 @@ class LunarGlobe3D {
       this.markers.push({ ring, dot, loc });
     });
   }
-
   updateOverlay(type, loc) {
     this.overlayType = type;
     this.currentLoc  = loc;
@@ -1290,13 +1211,11 @@ class LunarGlobe3D {
     this.overlayTex.needsUpdate=true;
     this.overlayMesh.material.opacity=type==='none'?0:0.68;
   }
-
   updateSunDirection() {
     const phase = getLunarAge()/LUNAR_MONTH;
     const ang   = phase*2*Math.PI;
     this.sunLight.position.set(5*Math.cos(ang), 0.3, 5*Math.sin(ang));
   }
-
   spawnMeteor() {
     const sp = Math.random()*Math.PI*2, pp = Math.random()*Math.PI;
     const r = 3.5;
@@ -1321,9 +1240,7 @@ class LunarGlobe3D {
     head.add(pl);
     this.meteors.push({ head, line, start:start.clone(), end:end.clone(), prog:0, speed:0.015+Math.random()*.025 });
   }
-
   meteorShower(n=12) { for(let i=0;i<n;i++) setTimeout(()=>this.spawnMeteor(), i*300); }
-
   createImpact(pos) {
     const geo=new THREE.SphereGeometry(0.012,8,8);
     const mat=new THREE.MeshBasicMaterial({ color:0xff8800, transparent:true, opacity:1 });
@@ -1337,7 +1254,6 @@ class LunarGlobe3D {
     cr.position.copy(pos.clone().multiplyScalar(1.001));
     this.scene.add(cr);
   }
-
   updateMeteors(dt) {
     const toRemove=[];
     this.meteors.forEach((m,i) => {
@@ -1360,7 +1276,6 @@ class LunarGlobe3D {
       if (imp.age>imp.maxAge) { this.scene.remove(imp.mesh); this.impacts.splice(i,1); }
     });
   }
-
   animate() {
     this.animId = requestAnimationFrame(()=>this.animate());
     const dt = this.clock.getDelta();
@@ -1376,7 +1291,6 @@ class LunarGlobe3D {
     if (this.meteorTimer>this.meteorInterval) { this.spawnMeteor(); this.meteorTimer=0; this.meteorInterval=5000+Math.random()*8000; }
     this.renderer.render(this.scene, this.camera);
   }
-
   updateCamera() {
     const x=this.radius*Math.sin(this.phi)*Math.cos(this.theta);
     const y=this.radius*Math.cos(this.phi);
@@ -1384,7 +1298,6 @@ class LunarGlobe3D {
     this.camera.position.set(x,y,z);
     this.camera.lookAt(0,0,0);
   }
-
   setupControls() {
     const el=this.renderer.domElement;
     el.addEventListener('mousedown', e=>{this.isDrag=true;this.lastX=e.clientX;this.lastY=e.clientY;});
@@ -1418,12 +1331,10 @@ class LunarGlobe3D {
       }
     });
   }
-
   zoomIn()    { this.radius=Math.max(1.5,this.radius-0.4); this.updateCamera(); }
   zoomOut()   { this.radius=Math.min(8,this.radius+0.4);   this.updateCamera(); }
   resetView() { this.phi=Math.PI/4; this.theta=0; this.radius=3.2; this.updateCamera(); }
   setAutoRot(on) { this.autoRot=on; }
-
   onResize() {
     const W=this.container.clientWidth, H=this.container.clientHeight;
     if(W===0||H===0) return;
@@ -1433,7 +1344,6 @@ class LunarGlobe3D {
   }
   destroy() { if(this.animId) cancelAnimationFrame(this.animId); if(this.renderer) this.renderer.dispose(); }
 }
-
 const MAP_STATE = {
   terrainData:null, hazardData:{}, timelapseData:[],
   zoom:1, offsetX:0, offsetY:0, isDrag:false, lastX:0, lastY:0,
@@ -1443,7 +1353,6 @@ const TL_STATE = {
   isPlaying:false, frame:0, totalFrames:24, speed:1, lastTime:0, animId:null
 };
 let map2DCtx = null;
-
 function init2DMap(loc) {
   const canvas = document.getElementById('mapCanvas');
   if (!canvas) {
@@ -1474,7 +1383,6 @@ function init2DMap(loc) {
   setupMap2DControls(canvas);
   initTimelapse();
 }
-
 function generateTerrainData(loc) {
   const W=MAP_STATE.width, H=MAP_STATE.height;
   const name=(loc?.name||'').toLowerCase();
@@ -1508,7 +1416,6 @@ function generateTerrainData(loc) {
   MAP_STATE.terrainData=terrain;
   generateHazardOverlayData(loc,W,H);
 }
-
 function _seededRand(seed){
   let s = seed >>> 0;
   return function(){
@@ -1518,10 +1425,8 @@ function _seededRand(seed){
     return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
   };
 }
-
 window._moonWideHazardGrid = window._moonWideHazardGrid || null;
 window._moonWideHazardGridPromise = null;
-
 async function fetchMoonWideHazardGrid(force){
   if(window._moonWideHazardGrid && !force) return window._moonWideHazardGrid;
   if(window._moonWideHazardGridPromise && !force) return window._moonWideHazardGridPromise;
@@ -1542,7 +1447,6 @@ async function fetchMoonWideHazardGrid(force){
   })();
   return window._moonWideHazardGridPromise;
 }
-
 function _sampleHazardGridField(grid, channel, lat, lon, frameIdx){
   if(!grid?.frames?.length || !grid.lats?.length || !grid.lons?.length) return null;
   const fr = grid.frames[Math.max(0, Math.min(grid.frames.length-1, frameIdx|0))];
@@ -1559,7 +1463,6 @@ function _sampleHazardGridField(grid, channel, lat, lon, frameIdx){
   const v = field[bi]?.[bj];
   return Number.isFinite(v) ? v : null;
 }
-
 function generateHazardOverlayData(loc,W,H){
   const rad=[], dust=[], temp=[];
   const mets=[], quakes=[];
@@ -1591,11 +1494,9 @@ function generateHazardOverlayData(loc,W,H){
   const quakeMag = Number(loc.moonquakeMag) || 2.5;
   const nQuakes = Math.round(clamp(quakeRate/1.8, 4, 40, 16, 'hz.quake.n'));
   for(let i=0;i<nQuakes;i++) quakes.push({x:rnd()*W,y:rnd()*H,magnitude:clamp(quakeMag*(0.7+rnd()*0.6),1.0,5.5,quakeMag,'hz.quake.mag'),radius:12+rnd()*25});
-
   const meteorFlux = Number(gMet!=null?gMet:loc.micrometeorites) || 1.6;
   const nMets = Math.round(clamp(meteorFlux*55, 60, 260, 130, 'hz.met.n'));
   for(let i=0;i<nMets;i++) mets.push({x:rnd()*W,y:rnd()*H,intensity:rnd(),size:2+rnd()*5});
-
   const confPct = Number(loc.confidence_pct ?? loc.confidence?.overall_pct ?? window._lastConfidence?.overall_pct);
   MAP_STATE.overlayConfidence = Number.isFinite(confPct) ? Math.max(0.35, Math.min(1, confPct / 100)) : 0.75;
   MAP_STATE.hazardData={
@@ -1606,7 +1507,6 @@ function generateHazardOverlayData(loc,W,H){
     window.hazardData = Object.assign({}, window.hazardData||{}, MAP_STATE.hazardData);
   }
 }
-
 function generateTimelapseData(){
   const frames=24; TL_STATE.totalFrames=frames; MAP_STATE.timelapseData=[];
   const fc = window._forecastCache;
@@ -1639,7 +1539,6 @@ function generateTimelapseData(){
     MAP_STATE.timelapseData.push(fd);
   }
 }
-
 function renderMap2D(){
   if(!map2DCtx) return;
   if(!MAP_STATE.terrainData && currentLocation) generateTerrainData(currentLocation);
@@ -1700,7 +1599,6 @@ function renderMap2D(){
   const zoomEl = document.getElementById('mapZoomLevel');
   if (zoomEl) zoomEl.textContent = `${Math.round(MAP_STATE.zoom*100)}%`;
 }
-
 function drawContours2D(ctx,cw,ch,W,H,minE,maxE){
   for(let lv=1;lv<10;lv++){
     const elev=minE+lv*(maxE-minE)/10;
@@ -1765,7 +1663,6 @@ function drawOverlay2D(ctx,cw,ch,W,H,ovl,fd){
     ctx.globalAlpha=1;
   });
 }
-
 function setupMap2DControls(canvas){
   canvas.addEventListener('mousedown',e=>{MAP_STATE.isDrag=true;MAP_STATE.lastX=e.clientX;MAP_STATE.lastY=e.clientY;});
   canvas.addEventListener('mousemove',e=>{
@@ -1799,7 +1696,6 @@ function setupMap2DControls(canvas){
     MAP_STATE.zoom=newZ; renderMap2D();
   },{passive:false});
 }
-
 function updateMapLegend(){
   const el=document.getElementById('mapLegend') || document.querySelector('.map-legend');
   if(!el) return;
@@ -1817,7 +1713,6 @@ function updateMapLegend(){
   };
   el.innerHTML=legends[ovl]||legends.none;
 }
-
 function initTimelapse(){
   const track=document.getElementById('tl-track');
   if(track) track.addEventListener('click',e=>{
@@ -1857,15 +1752,12 @@ function updateTlDisplay(){
     try { window.applyTimelapseFrame(TL_STATE.frame, TL_STATE.totalFrames); } catch (e) {}
   }
 }
-
 let mainChartInst = null;
-
 function buildChart(metric, time, type) {
   const canvas = document.getElementById('main-chart');
   if (!canvas) return;
   if (mainChartInst) { mainChartInst.destroy(); mainChartInst=null; }
   if (!currentLocation) return;
-
   const periods = time==='24h'?24:time==='7d'?7:30;
   const labels  = time==='24h' ? Array.from({length:24},(_,i)=>`${i}:00`) :
                   time==='7d'  ? ['D1','D2','D3','D4','D5','D6','D7'] :
@@ -1873,7 +1765,6 @@ function buildChart(metric, time, type) {
   const sw = analyzeSpaceWeather(realTimeData);
   const base=[sw.solarActivity.value,currentLocation.radiation||.057,currentLocation.temperature||0,currentLocation.moonquakes||28,currentLocation.micrometeorites||1.6,currentLocation.dust||1.5];
   const preds = time==='30d'&&forecastPredictions.length===30 ? forecastPredictions : time==='24h'&&hourlyPredictions.length===24 ? hourlyPredictions : predictTimeSeries(mlModel,base,periods,currentLocation);
-
   const COLORS={radiation:'#ff3b30',solar:'#ffd60a',dust:'#a0522d',temperature:'#00d4ff',micrometeorites:'#bf5af2',moonquakes:'#ff9f0a'};
   const factors = currentGraphFactors.length>0?currentGraphFactors:['radiation'];
   const datasets = factors.map(f=>({
@@ -1883,7 +1774,6 @@ function buildChart(metric, time, type) {
     backgroundColor:(COLORS[f]||'#fff')+'40',
     fill:type!=='radar',tension:.4,borderWidth:2,pointRadius:type==='line'?3:0,pointHoverRadius:6
   }));
-
   const opts={
     responsive:true,maintainAspectRatio:false,
     interaction:{mode:'index',intersect:false},
@@ -1901,7 +1791,6 @@ function buildChart(metric, time, type) {
   const el=document.getElementById('graph-acc');
   if(el) el.textContent=`Accuracy: ${avgAcc.toFixed(2)}%`;
 }
-
 function renderLocations() {
   const list = document.getElementById('location-list');
   if (!list) { console.warn('[LIPAS] renderLocations: #location-list not found'); return; }
@@ -1981,7 +1870,6 @@ function renderLocations() {
   });
   if (sidebar) sidebar.scrollTop = prevScroll;
 }
-
 function selectLocation(loc) {
   currentLocation=loc;
   renderLocations();
@@ -2002,7 +1890,6 @@ function selectLocation(loc) {
     try { window.onLipasLocationSelected(idx >= 0 ? idx : 0, loc); } catch (e) { console.warn('onLipasLocationSelected', e); }
   }
 }
-
 function selectLocationByIndex(i) {
   if (!locations || locations.length===0) {
     locations = initLocations();
@@ -2012,7 +1899,6 @@ function selectLocationByIndex(i) {
   if (loc) selectLocation(loc);
 }
 window.selectLocationByIndex = selectLocationByIndex;
-
 function updateMainPanel() {
   if (!currentLocation) return;
   const loc = currentLocation;
@@ -2023,23 +1909,19 @@ function updateMainPanel() {
   const accEl = document.getElementById('generalAccuracy');
   const mapCont = document.getElementById('mapContainer');
   const mapCanvas = document.getElementById('mapCanvas');
-
   if (nameEl) nameEl.textContent = loc.name;
   if (cycleEl) {
     if (document.body?.dataset?.app === 'mercury' || window.LIPAS_MERCURY) {
-      /* mercury_lipas.js owns cycleInfo */
     } else {
       cycleEl.textContent = `${getLunarPhase()} · ${loc.illumination}% illumination`;
     }
   }
   document.title = `L.I.P.A.S. - ${loc.name}`;
-
   if (!(document.body?.dataset?.app === 'mercury' || window.LIPAS_MERCURY)) {
     if (mapCont) mapCont.style.display = 'block';
     if (mapCanvas && !map2DCtx) init2DMap(currentLocation);
     if (mapCanvas && typeof renderMap2D === 'function') try { renderMap2D(); } catch(e) {}
   }
-
   const serverOwnsForecast = !!(window._preferServerForecast || window._forecastCache);
   if (!serverOwnsForecast) {
     try {
@@ -2065,7 +1947,6 @@ function updateMainPanel() {
     buildChart(currentGraphFactors[0]||'radiation', currentGraphTime, currentGraphType);
   } catch (e) { console.log('buildChart skipped:', e.message); }
 }
-
 function updateWarnings() {
   if(!currentLocation) return;
   const loc=currentLocation;
@@ -2091,7 +1972,6 @@ function updateWarnings() {
     return `<div class="warning-box"><div class="warning-header" style="color:${col}">${LABELS[k]||k}</div><div class="warning-desc">${DESCS[k]?.[lv]||''}</div><div class="warning-accuracy">Conf <strong>${conf}%</strong> · scalar wash</div></div>`;
   }).join('');
 }
-
 function updateHourlyStrip() {
   if (!currentLocation) return;
   const sw = analyzeSpaceWeather(realTimeData);
@@ -2106,7 +1986,6 @@ function updateHourlyStrip() {
   hourlyPredictions = predictTimeSeries(mlModel, base, 24, currentLocation);
   renderHourlyPanel(currentBotMetric);
 }
-
 function renderHourlyPanel(metric) {
   if(!hourlyPredictions.length) return;
   const COLORS={dust:'#a0522d',sunlight:'#ffd60a',radiation:'#ff3b30',temperature:'#00d4ff',moonquakes:'#ff9f0a',micrometeorites:'#bf5af2'};
@@ -2149,7 +2028,6 @@ function renderHourlyPanel(metric) {
     });
   }
 }
-
 function updateForecast() {
   if (!currentLocation) return;
   const now = new Date();
@@ -2182,7 +2060,6 @@ function updateForecast() {
     return `<div class="forecast-day"><span class="day-name">Day ${i+1}</span><span class="hazard-dot" style="color:${dc}">${dot}</span><span class="separator">|</span><div class="forecast-values"><span class="forecast-value" style="color:${COLS.rad}">${pred.radiation.toFixed(3)}</span><span class="separator">|</span><span class="forecast-value" style="color:${COLS.sol}">${sol}%</span><span class="separator">|</span><span class="forecast-value" style="color:${COLS.dus}">${pred.dust.toFixed(2)}</span><span class="separator">|</span><span class="forecast-value" style="color:${COLS.tem}">${pred.temperature.toFixed(0)}°</span><span class="separator">|</span><span class="forecast-value" style="color:${COLS.mic}">${(pred.micrometeorites*1e-15).toExponential(1)}</span><span class="separator">|</span><span class="forecast-value" style="color:${COLS.moo}">${pred.moonquakes.toFixed(0)}</span></div></div>`;
   }).join('');
 }
-
 function updateMetrics() {
   if(!currentLocation) return;
   const loc=currentLocation;
@@ -2203,14 +2080,13 @@ function updateMetrics() {
   const ag=document.getElementById('acc-grid');
   if(ag) ag.innerHTML=Object.entries(modelAccuracy.byHazard).map(([k,v])=>`<div class="mc"><div class="mc-l">${k}</div><div class="mc-v">${v.toFixed(2)}%</div></div>`).join('');
 }
-
 function updateAdvice() {
   if(!currentLocation) return;
   if (typeof window.renderSuggestedActivities === 'function' && typeof window._forecastCache !== 'undefined') {
     try {
       window.renderSuggestedActivities(window._forecastCache, null, currentLocation);
       return;
-    } catch (e) { /* fall through */ }
+    } catch (e) {  }
   }
   const list=document.getElementById('adviceList') || document.getElementById('advice-list');
   if(!list) return;
@@ -2229,7 +2105,6 @@ function updateAdvice() {
     });
   });
 }
-
 function updateCrewInfo() {
   const shield=document.getElementById('shield-info');
   const health=document.getElementById('health-info');
@@ -2247,14 +2122,12 @@ function updateCrewInfo() {
     <strong style="color:var(--t1)">Mitigation:</strong> Anti-oxidant supplements, scheduling EVAs during low-SPE periods<br>
     <strong style="color:var(--t1)">Emergency:</strong> Potassium iodide (thyroid protection), granulocyte-CSF (bone marrow)`;
 }
-
 function updateMetricButtons() {
   const cont=document.getElementById('metric-buttons');
   if(!cont) return;
   const metrics=[{k:'radiation',l:'Radiation'},{k:'sunlight',l:'Solar'},{k:'temperature',l:'Temp'},{k:'dust',l:'Dust'},{k:'moonquakes',l:'Seismic'},{k:'micrometeorites',l:'Meteors'}];
   cont.innerHTML=metrics.map(m=>`<button class="metric-btn${m.k===currentMetric?' active':''}" onclick="setRpMetric('${m.k}',this)">${m.l}</button>`).join('');
 }
-
 const MOON_FACTS=[
   "If you yelled on the Moon, nobody would hear you - there's basically zero air to carry sound.",
   "Moon dust is so sharp and clingy it once nearly wrecked Apollo seals and zippers. Think glitter from hell.",
@@ -2277,7 +2150,6 @@ const MOON_FACTS=[
   "Footprints on the Moon can last millions of years - no wind, no rain, just eternal tourist photos.",
   "Far-side radio silence is so perfect astronomers drool over putting telescopes where Earth never shouts.",
 ];
-
 let _moonFactRotatorStarted = false;
 function startMoonFactRotator() {
   const el = document.getElementById('dynamicFact');
@@ -2298,7 +2170,6 @@ function startMoonFactRotator() {
   setInterval(() => { i++; show(i); }, 9000);
 }
 window.startMoonFactRotator = startMoonFactRotator;
-
 function genAlert() {
   if(!currentLocation) return 'Awaiting location selection…';
   const sw=analyzeSpaceWeather(realTimeData);
@@ -2320,7 +2191,6 @@ function genAlert() {
   ];
   return alerts[alertIndex%alerts.length]+` (${t})`;
 }
-
 function tickAlert() {
   const el=document.getElementById('rp-alert');
   if(!el) return;
@@ -2352,7 +2222,6 @@ function updateClock() {
   const t=`${String(now.getUTCHours()).padStart(2,'0')}:${String(now.getUTCMinutes()).padStart(2,'0')}:${String(now.getUTCSeconds()).padStart(2,'0')} UTC`;
   const el=document.getElementById('tb-clock'); if(el) el.textContent=t;
 }
-
 function calcEVAWindow() {
   if(!currentLocation) return;
   const dur=parseInt(document.getElementById('eva-dur')?.value)||4;
@@ -2380,7 +2249,6 @@ function calcEVAWindow() {
   const el=document.getElementById('eva-result');
   if(el) el.textContent=res||'No optimal windows found for this duration.';
 }
-
 function calcImpactProb() {
   if(!currentLocation) return;
   const area=parseFloat(document.getElementById('impact-area')?.value)||100;
@@ -2393,7 +2261,6 @@ function calcImpactProb() {
   const el=document.getElementById('impact-result');
   if(el) el.textContent=`Surface Area: ${area} m²\nEffective Flux: ${effectiveFlux.toExponential(3)} /m²/s${meteoroidFlux.showerActive?`\nShower Enhancement: ×${showerF.toFixed(2)}`:''}\n\nImpact Probability:\n  1 Hour:   ${(perHour*100).toFixed(4)}%\n  1 Day:    ${(perDay*100).toFixed(3)}%\n  30 Days:  ${(per30*100).toFixed(2)}%\n\nExpected impacts/year: ${(effectiveFlux*area*31557600).toFixed(3)}`;
 }
-
 function calcCrewDose() {
   if(!currentLocation) return;
   const days=parseInt(document.getElementById('miss-days')?.value)||30;
@@ -2414,7 +2281,6 @@ function calcCrewDose() {
   const el=document.getElementById('dose-result');
   if(el) el.textContent=`Mission: ${days} days · ${evaH}h EVA/day\n\nDose Breakdown:\n  EVA dose:     ${(evaRad*evaH*days).toFixed(2)} mSv\n  Habitat dose: ${(interiorRad*habitatH*days).toFixed(2)} mSv\n  GCR baseline: ${gcr30.toFixed(2)} mSv\n  SPE estimate: ${spe30.toFixed(2)} mSv\n\nTotal dose: ${total.toFixed(2)} mSv\nRisk level: ${risk}\n\nNASA career limits:\n  Male (600 mSv):   ${pctM}% used\n  Female (400 mSv): ${pctF}% used`;
 }
-
 function switchTab(name, el) {
   document.querySelectorAll('.rp-sec').forEach(s=>s.classList.remove('active'));
   document.querySelectorAll('.rp-tab').forEach(t=>t.classList.remove('active'));
@@ -2461,7 +2327,6 @@ function toggleDd(id) {
   document.getElementById(id)?.classList.toggle('show');
 }
 document.addEventListener('click', e=>{ if(!e.target.closest('.custom-dropdown')) document.querySelectorAll('.dropdown-content').forEach(c=>c.classList.remove('show')); });
-
 async function addCustomLocation() {
   const lat=parseFloat(document.getElementById('c-lat')?.value);
   const lon=parseFloat(document.getElementById('c-lon')?.value);
@@ -2475,7 +2340,6 @@ async function addCustomLocation() {
   if(g3d) g3d.addMarkers(locations);
   selectLocation(newLoc);
 }
-
 function setRpMetric(m,btn) {
   currentMetric=m;
   document.querySelectorAll('.metric-btn').forEach(b=>b.classList.remove('active'));
@@ -2488,7 +2352,6 @@ function setBotMetric(m,btn) {
   if(btn) btn.classList.add('active');
   renderHourlyPanel(m);
 }
-
 function setGraphMetric(m,btn) {
   document.querySelectorAll('#dd-factors-content .dropdown-checkbox').forEach(c=>{ if(c.value===m) c.checked=!c.checked; });
   currentGraphFactors=Array.from(document.querySelectorAll('#dd-factors-content input:checked')).map(c=>c.value);
@@ -2504,13 +2367,11 @@ function setGraphType(t,btn) {
   document.querySelectorAll('#dd-type-content input').forEach(c=>c.value===t?c.checked=true:null);
   if(currentLocation) buildChart(currentGraphFactors[0]||'radiation',currentGraphTime,t);
 }
-
 document.addEventListener('change', e=>{
   if(e.target.closest('#dd-factors-content')) { currentGraphFactors=Array.from(document.querySelectorAll('#dd-factors-content input:checked')).map(c=>c.value); if(currentLocation) buildChart(currentGraphFactors[0]||'radiation',currentGraphTime,currentGraphType); }
   if(e.target.closest('#dd-time-content')&&e.target.name==='g-time') { currentGraphTime=e.target.value; if(currentLocation) buildChart(currentGraphFactors[0]||'radiation',e.target.value,currentGraphType); }
   if(e.target.closest('#dd-type-content')&&e.target.name==='g-type') { currentGraphType=e.target.value; if(currentLocation) buildChart(currentGraphFactors[0]||'radiation',currentGraphTime,e.target.value); }
 });
-
 function updateLocationColors() {
   const mercury = !!(document.body?.dataset?.app === 'mercury' || window.LIPAS_MERCURY);
   locations.forEach(loc=>{
@@ -2540,7 +2401,6 @@ function updateLocationColors() {
   });
 }
 window.updateLocationColors = updateLocationColors;
-
 function setLoading(msg, pct) {
   const loadingIndicator = document.getElementById('loadingIndicator');
   const loadingText = loadingIndicator?.querySelector('.loading-text');
@@ -2549,7 +2409,6 @@ function setLoading(msg, pct) {
   if (acc) { acc.textContent = msg; return; }
   console.log('[LIPAS] ' + msg);
 }
-
 function _pdfCanvasDataURL(id, maxW) {
   const el = document.getElementById(id);
   if (!el || typeof el.toDataURL !== 'function') return null;
@@ -2563,7 +2422,6 @@ function _pdfCanvasDataURL(id, maxW) {
     return null;
   }
 }
-
 function _pdfAddImage(doc, img, pw, m, y) {
   if (!img) return y;
   const usable = pw - 2 * m;
@@ -2577,7 +2435,6 @@ function _pdfAddImage(doc, img, pw, m, y) {
   doc.addImage(img.url, 'PNG', m, y, mmW, mmH);
   return y + mmH + 6;
 }
-
 function _pdfForecastRows() {
   if (Array.isArray(forecastPredictions) && forecastPredictions.length) return forecastPredictions;
   const fc = window._forecastCache;
@@ -2596,7 +2453,6 @@ function _pdfForecastRows() {
   }
   return rows;
 }
-
 async function downloadPDF() {
   if (document.body?.dataset?.app === 'mercury' || window.LIPAS_MERCURY) {
     if (typeof window.mercuryDownloadPDF === 'function') {
@@ -2614,13 +2470,11 @@ async function downloadPDF() {
     alert('PDF library is still loading - wait a second and try again.');
     return;
   }
-
   try {
     if (typeof window.renderGraph === 'function') await window.renderGraph();
     else if (typeof renderGraph === 'function') await renderGraph();
   } catch (e) { console.warn('[LIPAS] renderGraph before PDF', e); }
   await new Promise((r) => setTimeout(r, 180));
-
   const { jsPDF } = window.jspdf;
   const doc = new jsPDF('p', 'mm', 'a4');
   const PW = doc.internal.pageSize.width;
@@ -2653,7 +2507,6 @@ async function downloadPDF() {
       doc.text(`Page ${i}/${n} · ${new Date().toISOString()} · NASA DONKI · NOAA SWPC · LRO/Diviner · LADEE/LDEX`, PW / 2, PH - 6, { align: 'center' });
     }
   };
-
   doc.setFillColor(11, 14, 19);
   doc.rect(0, 0, PW, 42, 'F');
   doc.setTextColor(110, 182, 255);
@@ -2668,7 +2521,6 @@ async function downloadPDF() {
   doc.setTextColor(143, 163, 184);
   doc.text('Hybrid ML · Diviner thermal physics · SWPC / DONKI space weather', M, 34);
   y = 52;
-
   doc.setFontSize(10);
   doc.setTextColor(30, 30, 40);
   const lat = Number(loc.lat), lon = Number(loc.lon);
@@ -2682,7 +2534,6 @@ async function downloadPDF() {
   ];
   lines.forEach((t) => { doc.text(t, M, y); y += 6; });
   y += 4;
-
   section('CURRENT CONDITIONS');
   doc.setFontSize(9);
   const m = loc.metrics || {};
@@ -2706,7 +2557,6 @@ async function downloadPDF() {
     y += 5.5;
   });
   y += 4;
-
   section('HAZARD ASSESSMENT');
   doc.setFontSize(9);
   const hz = loc.hazards || {};
@@ -2721,14 +2571,12 @@ async function downloadPDF() {
   });
   if (!Object.keys(hz).length) { doc.setTextColor(100, 110, 120); doc.text('No hazard channels flagged for this site.', M, y); y += 6; }
   y += 4;
-
   doc.addPage(); y = M;
   section('HAZARD GRAPH');
   doc.setFontSize(8);
   doc.setTextColor(90, 100, 115);
   doc.text('Captured from the live dashboard chart (selected hazards · current horizon).', M, y); y += 6;
   y = _pdfAddImage(doc, _pdfCanvasDataURL('graphCanvas'), PW, M, y);
-
   const solarImg = _pdfCanvasDataURL('solarMapCanvas');
   const partImg = _pdfCanvasDataURL('particleMapCanvas');
   if (solarImg || partImg) {
@@ -2742,7 +2590,6 @@ async function downloadPDF() {
       y = _pdfAddImage(doc, partImg, PW, M, y);
     }
   }
-
   doc.addPage(); y = M;
   section('FORECAST SERIES');
   const forecast = _pdfForecastRows();
@@ -2777,7 +2624,6 @@ async function downloadPDF() {
       y += 4.8;
     });
   }
-
   doc.addPage(); y = M;
   section('RECOMMENDED ACTIVITIES');
   doc.setFontSize(9);
@@ -2793,7 +2639,6 @@ async function downloadPDF() {
     });
   }
   y += 4;
-
   section('MODEL & DATA SOURCES');
   doc.setFontSize(9);
   doc.text(`Overall accuracy: ${(modelAccuracy?.overall || 0).toFixed(2)}%`, M, y); y += 6;
@@ -2810,39 +2655,30 @@ async function downloadPDF() {
     'Apollo PSE - moonquake catalog',
     'NASA MEM-3 - micrometeorite flux',
   ].forEach((s) => { check(6); doc.text(`• ${s}`, M, y); y += 5; });
-
   footer();
   const safeName = String(loc.name || 'site').replace(/[^\w\-]+/g, '_');
   doc.save(`LIPAS_Report_${safeName}_${Date.now()}.pdf`);
 }
 window.downloadPDF = downloadPDF;
-
 async function initialize() {
   console.log('[LIPAS v2.0] Starting initialization…');
-  
   const sidebar = document.getElementById('sidebar');
   if(sidebar) { sidebar.classList.remove('loading'); sidebar.style.display = 'block'; }
-  
   try {
     setLoading('Initializing interface…',10);
-    
     locations = initLocations();
     currentLocation = locations[0];
-
     try { updateMetricButtons(); } catch(e) { console.log('updateMetricButtons skipped:', e.message); }
     try { renderLocations(); } catch(e) { console.log('renderLocations skipped:', e.message); }
     try { selectLocation(currentLocation); } catch(e) { console.log('selectLocation skipped:', e.message); }
     if (currentLocation) document.title = `L.I.P.A.S. - ${currentLocation.name}`;
     try { init2DMap(currentLocation); } catch(e) { console.log('init2DMap skipped:', e.message); }
-    
     try {
       tickFact();
     } catch(e) { console.log('tickFact skipped:', e.message); }
-    
     try {
       updateTicker();
     } catch(e) { console.log('updateTicker skipped:', e.message); }
-    
     try {
       const phase=getLunarPhase(), age=getLunarAge();
       if (!(document.body?.dataset?.app === 'mercury' || window.LIPAS_MERCURY)) {
@@ -2852,7 +2688,6 @@ async function initialize() {
         if(pa) pa.textContent=`Day ${age.toFixed(1)}`;
       }
     } catch(e) { console.log('Lunar phase update skipped:', e.message); }
-    
     setLoading('Ready.',100);
     const mainContent = document.getElementById('mainContent');
     if(sidebar) sidebar.classList.remove('loading');
@@ -2860,9 +2695,7 @@ async function initialize() {
       mainContent.style.display = 'block';
       mainContent.style.opacity = '1';
     }
-
     console.log('[LIPAS v2.0] UI Ready (splash shown)');
-    
     schedule(async () => {
       if (window.__LIPAS_ENABLE_TFJS_TOY) {
         try {
@@ -2875,28 +2708,23 @@ async function initialize() {
         mlModel = null;
       }
     });
-    
     schedule(async () => {
       try {
         console.log('[LIPAS] Fetching space weather data…');
         await fetchAllData();
         console.log('[LIPAS] Space weather data fetched');
-        
         const sw = analyzeSpaceWeather(realTimeData);
         console.log('[LIPAS] Analyzing hazards…');
-        
         for (const loc of locations) {
           if (loc !== locations[0] && loc !== currentLocation) continue;
           try { await updateLocationData(loc, sw); }
           catch(e) { logErr(`loc:${loc.name}`,e,'warn'); }
         }
         try { updateLocationColors(); } catch(e) {}
-        
         try { if(currentLocation) updateMainPanel(); } catch(e) {}
         console.log('[LIPAS] Hazard predictions updated');
       } catch(e) { logErr('background data',e,'warn'); }
     });
-    
     schedule(() => {
       try {
         console.log('[LIPAS] Building 3D globe…');
@@ -2908,7 +2736,6 @@ async function initialize() {
         console.log('[LIPAS] 3D globe ready');
       } catch(e) { logErr('globe',e,'warn'); }
     });
-    
     setInterval(tickAlert,  CONFIG.ALERT_INTERVAL);
     setInterval(tickFact,   CONFIG.FACT_INTERVAL);
     setInterval(updateClock,1000);
@@ -2931,16 +2758,13 @@ async function initialize() {
         console.log('[LIPAS] Refresh complete.');
       } catch(e) { logErr('hourly refresh',e,'error'); }
     }, CONFIG.UPDATE_INTERVAL);
-
     console.log(`[LIPAS v2.0] ✓ Ready - ML Accuracy: ${modelAccuracy.overall.toFixed(2)}%`);
     console.log(`[LIPAS] GCR radiation: ${calcGCRRadiation().toFixed(4)} mSv/h`);
     console.log(`[LIPAS] Locations: ${locations.length} · Meteor showers tracked: ${Object.keys(CONFIG.METEOR_SHOWERS).length}`);
-
   } catch(e) {
     logErr('initialize',e,'critical');
     const ld=document.getElementById('loadingIndicator') || document.getElementById('loading');
     if(ld) { const m=ld.querySelector('.loading-text'); if(m) m.textContent='ERROR: Initialization failed. Please refresh. Check console.'; }
   }
 }
-
 window.addEventListener('DOMContentLoaded', initialize);

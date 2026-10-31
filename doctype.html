@@ -10,14 +10,12 @@
     <link rel="stylesheet" href="styles/theme.css">
     <link rel="stylesheet" href="styles/main.css">
     <link rel="stylesheet" href="styles/mercury.css">
-    
     <style>
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
         }
-        
         html, body {
             max-width: 100vw;
             overflow-x: hidden;
@@ -35,8 +33,6 @@
             line-height: 1.6;
         }
         body > .topnav { flex-shrink: 0; width: 100%; max-width: 100vw; }
-        
-        /* Loading Screen - Mission Planner chrome */
         .loading-screen {
             position: fixed; inset: 0; z-index: 9999;
             display: flex; flex-direction: column; align-items: center; justify-content: center;
@@ -59,7 +55,6 @@
             font-size: 11px; color: var(--steel, #6eb6ff);
             font-weight: 600; letter-spacing: 0.18em; text-transform: uppercase;
         }
-        
         .container {
             display: flex;
             width: 100%;
@@ -70,7 +65,6 @@
             height: auto;
             overflow: hidden;
         }
-        
         .sidebar {
             width: 320px;
             min-width: 240px;
@@ -85,12 +79,10 @@
             border-right: 1px solid rgba(140, 170, 200, 0.14);
             touch-action: pan-y;
         }
-
         .sidebar.resizing,
         .sidebar.dragging {
             transition: none;
         }
-
         .sidebar-drag-zone {
             position: absolute;
             top: 0;
@@ -102,7 +94,6 @@
             cursor: grab;
             display: none;
         }
-
         .sidebar-resize-handle {
             position: absolute;
             top: 0;
@@ -113,7 +104,6 @@
             z-index: 3;
             touch-action: none;
         }
-
         .sidebar-resize-handle::after {
             content: "";
             position: absolute;
@@ -125,7 +115,6 @@
             border-radius: 2px;
             background: rgba(110, 182, 255, 0.35);
         }
-
         .sidebar-overlay {
             display: none;
             position: fixed;
@@ -133,11 +122,9 @@
             background: rgba(0, 0, 0, 0.45);
             z-index: 40;
         }
-
         .sidebar-overlay.visible {
             display: block;
         }
-
         .sidebar-open-tab {
             display: none;
             position: fixed;
@@ -160,21 +147,17 @@
             border-radius: 0 8px 8px 0;
             cursor: pointer;
         }
-
         .sidebar-open-tab.visible {
             display: block;
         }
-        
         .sidebar.loading {
             opacity: 0;
             pointer-events: none;
             transform: translateX(-100%);
         }
-        
         .sidebar.hidden {
             opacity: 0.98;
         }
-        
         .title-box {
             background: rgba(0, 122, 255, 0.1);
             backdrop-filter: blur(15px);
@@ -188,11 +171,9 @@
             justify-content: center;
             border: 1px solid rgba(0, 122, 255, 0.2);
         }
-        
         .title-box h2 {
             font-size: 24px;
         }
-        
         .search-bar {
             width: 100%;
             padding: 11px 12px;
@@ -210,20 +191,17 @@
             outline: none;
             transition: border-color 0.15s, box-shadow 0.15s;
         }
-        
         .search-bar:hover,
         .search-bar:focus {
             border-color: rgba(110, 182, 255, 0.45);
             box-shadow: 0 0 0 3px rgba(110, 182, 255, 0.1);
             background: linear-gradient(165deg, rgba(28, 37, 51, 0.98), rgba(18, 24, 33, 1));
         }
-        
         .location-list {
             list-style: none;
             padding: 0;
             min-height: 70vh;
         }
-        
         .location-item {
             display: flex;
             align-items: stretch;
@@ -247,18 +225,15 @@
             top: 0; left: 0; right: 0; height: 1px;
             background: linear-gradient(90deg, transparent, rgba(110, 182, 255, 0.28), transparent);
         }
-        
         .location-item:hover {
             background: linear-gradient(165deg, rgba(32, 44, 60, 0.98), rgba(20, 28, 38, 1));
             border-color: rgba(110, 182, 255, 0.35);
         }
-        
         .location-item.active {
             border-color: rgba(110, 182, 255, 0.55);
             border-left-color: var(--steel, #6eb6ff);
             background: linear-gradient(165deg, rgba(36, 52, 72, 0.98), rgba(22, 30, 42, 1));
         }
-        
         .li-image {
             width: 88px;
             min-width: 88px;
@@ -283,7 +258,6 @@
         .li-summary {
             min-height: 2.6em;
         }
-        /* Moon overview - compact professional card, no thumbnail */
         .location-item.pinned {
             gap: 0;
             padding: 14px 16px;
@@ -321,7 +295,6 @@
             color: var(--steel, #6eb6ff);
             opacity: 0.9;
         }
-        
         .li-info {
             flex: 1;
             display: flex;
@@ -330,14 +303,12 @@
             gap: 8px;
             min-width: 0;
         }
-        
         .li-hdr {
             display: flex;
             align-items: center;
             justify-content: space-between;
             gap: 10px;
         }
-        
         .li-dot {
             width: 12px;
             height: 12px;
@@ -345,28 +316,23 @@
             flex-shrink: 0;
             box-shadow: 0 0 8px rgba(10, 122, 255, 0.3);
         }
-        
         .li-dot.green { background: #30d158; }
         .li-dot.yellow { background: #ffd60a; }
         .li-dot.red { background: #ff453a; }
-        
         .li-name {
             font-size: 16px;
             font-weight: 700;
             color: #e9f4ff;
         }
-        
         .li-coords {
             font-size: 12px;
             color: #aab8d6;
         }
-        
         .li-summary {
             font-size: 13px;
             color: #d3e5ff;
             line-height: 1.4;
         }
-        
         .location-item.general {
             padding: 30px;
             font-size: 1.3em;
@@ -374,16 +340,13 @@
             background: linear-gradient(135deg, rgba(0, 122, 255, 0.2) 0%, rgba(0, 50, 150, 0.15) 100%);
             border: 2px solid #007aff;
         }
-        
-        .location-item.general .location-name { 
-            color: #007aff; 
+        .location-item.general .location-name {
+            color: #007aff;
         }
-        
         .location-summary {
             font-size: 14px;
             color: #aaaaaa;
         }
-        
         .main-panel {
             flex: 1;
             min-width: 0;
@@ -399,26 +362,22 @@
             max-width: 100%;
             overflow-x: hidden;
         }
-        
         .location-header {
             text-align: center;
             font-size: 36px;
             font-weight: bold;
             margin-bottom: 15px;
         }
-        
         .cycle-info {
             text-align: center;
             font-size: 18px;
             margin-bottom: 15px;
         }
-        
         .current-conditions {
             text-align: center;
             font-size: 18px;
             margin-bottom: 15px;
         }
-        
         .dynamic-alert {
             text-align: center;
             font-size: 16px;
@@ -426,14 +385,12 @@
             color: #007aff;
             transition: opacity 0.5s;
         }
-        
         .general-accuracy {
             text-align: center;
             font-size: 14px;
             color: #aaaaaa;
             margin-bottom: 20px;
         }
-        
         .terrain-image {
             width: 100%;
             max-height: 300px;
@@ -441,14 +398,12 @@
             border-radius: 16px;
             margin-bottom: 30px;
         }
-        
         .view-toggle-container {
             display: flex;
             justify-content: center;
             gap: 0;
             margin-bottom: 15px;
         }
-        
         .view-toggle-btn {
             padding: 10px 30px;
             font-size: 16px;
@@ -458,30 +413,24 @@
             transition: all 0.3s ease;
             font-family: 'Poppins', sans-serif;
         }
-        
         .view-toggle-btn:first-child {
             border-radius: 12px 0 0 12px;
         }
-        
         .view-toggle-btn:last-child {
             border-radius: 0 12px 12px 0;
         }
-        
         .view-toggle-btn.active {
             background-color: #007aff;
             color: #ffffff;
         }
-        
         .view-toggle-btn:not(.active) {
             background-color: #555555;
             color: #aaaaaa;
         }
-        
         .view-toggle-btn:not(.active):hover {
             background-color: #666666;
             color: #ffffff;
         }
-        
         .map-container {
             width: 100%;
             border-radius: 0;
@@ -500,8 +449,6 @@
             z-index: 2;
             pointer-events: none;
         }
-        
-        /* Topo Map */
         .moon-map-container {
             width: 100%;
             height: 520px;
@@ -511,7 +458,6 @@
             border-radius: 0;
             border-top: 1px solid rgba(140, 170, 200, 0.1);
         }
-
         #moonMapCanvas,
         #moonCesiumEmbed {
             position: absolute;
@@ -529,7 +475,6 @@
             display: none;
             background: #0b0e13;
         }
-
         .moon-map-controls {
             position: absolute;
             top: 12px;
@@ -539,7 +484,6 @@
             gap: 6px;
             z-index: 10;
         }
-
         .moon-map-btn {
             width: 34px;
             height: 34px;
@@ -555,13 +499,11 @@
             font-weight: 700;
             transition: border-color 0.15s, background 0.15s;
         }
-
         .moon-map-btn:hover {
             background: rgba(110, 182, 255, 0.18);
             border-color: rgba(110, 182, 255, 0.5);
             color: #fff;
         }
-
         .moon-map-info {
             position: absolute;
             bottom: 44px;
@@ -576,7 +518,6 @@
             font-family: var(--font-ui, "IBM Plex Sans", monospace);
             letter-spacing: 0.3px;
         }
-
         .moon-map-legend {
             position: absolute;
             top: 12px;
@@ -590,20 +531,17 @@
             z-index: 10;
             min-width: 90px;
         }
-
         .legend-item {
             display: flex;
             align-items: center;
             gap: 8px;
             margin: 5px 0;
         }
-
         .legend-color {
             width: 12px;
             height: 12px;
             border-radius: 4px;
         }
-
         .topo-source-badge {
             position: absolute;
             bottom: 12px;
@@ -618,7 +556,6 @@
             z-index: 10;
             font-family: var(--font-ui, "IBM Plex Sans", monospace);
         }
-        
         .map-header {
             display: flex;
             justify-content: space-between;
@@ -627,7 +564,6 @@
             background: rgba(11, 14, 19, 0.45);
             border-bottom: 1px solid rgba(140, 170, 200, 0.14);
         }
-        
         .map-title {
             font-family: var(--font-display, Syne, sans-serif);
             font-size: 18px;
@@ -635,13 +571,11 @@
             letter-spacing: -0.02em;
             color: var(--text, #e6eef8);
         }
-        
         .map-controls-top {
             display: flex;
             gap: 15px;
             align-items: center;
         }
-        
         .map-zoom-controls {
             display: flex;
             gap: 5px;
@@ -650,7 +584,6 @@
             border-radius: 0;
             border: 1px solid rgba(140, 170, 200, 0.14);
         }
-        
         .map-control-btn {
             width: 32px;
             height: 32px;
@@ -667,22 +600,18 @@
             transition: border-color 0.15s, background 0.15s;
             position: relative;
         }
-        
         .map-control-btn:hover {
             background: rgba(110, 182, 255, 0.18);
             border-color: rgba(110, 182, 255, 0.45);
             color: #ffffff;
         }
-        
         .map-control-btn:active {
             transform: translateY(0);
         }
-        
         .map-control-btn svg {
             stroke-linecap: round;
             stroke-linejoin: round;
         }
-        
         .hazard-overlay-control {
             display: flex;
             align-items: center;
@@ -744,12 +673,10 @@
             background-size: 16px;
             transition: all 0.2s ease;
         }
-        
         .hazard-overlay-control select:hover {
             background: rgba(0, 122, 255, 0.15);
             border-color: #0099ff;
         }
-        
         .hazard-overlay-control select option {
             background-color: #1a1a1a;
             color: #ffffff;
@@ -820,8 +747,6 @@
             background: rgba(110, 182, 255, 0.06);
             transform: translateX(2px);
         }
-
-        /* EVA now strip (site only) */
         .eva-now-strip {
             display: none;
             margin: 14px 0 18px;
@@ -894,13 +819,10 @@
             transition: transform 0.2s, box-shadow 0.2s;
         }
         .eva-plan-btn:hover { transform: translateY(-1px); box-shadow: 0 8px 20px rgba(47, 111, 173, 0.35); }
-
-        /* Overview global panels */
         .overview-only { display: none; }
         .body-overview .overview-only { display: block; }
         .site-only-panel { display: block; }
         .body-overview .site-only-panel { display: none !important; }
-
         .ov-panel {
             margin: 0 0 22px;
             padding: 16px 18px;
@@ -923,7 +845,6 @@
             font-size: 18px; font-weight: 800; letter-spacing: -0.02em; margin-bottom: 4px;
         }
         .ov-sub { font-size: 12px; color: var(--muted, #8fa3b8); margin-bottom: 14px; line-height: 1.4; }
-
         .term-belt {
             position: relative; height: 42px; border-radius: 999px; overflow: hidden;
             background: linear-gradient(90deg, #0a1018 0%, #1a2433 42%, #f0e6c8 50%, #1a2433 58%, #0a1018 100%);
@@ -967,7 +888,6 @@
         }
         .term-chip.sun { border-color: rgba(224, 177, 74, 0.35); }
         .term-chip.shadow { border-color: rgba(90, 120, 160, 0.35); }
-
         .nearfar-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
         .nf-col {
             position: relative;
@@ -1045,8 +965,6 @@
             from { transform: rotate(0deg); }
             to { transform: rotate(360deg); }
         }
-
-        /* Particle & storm drivers - richer cards */
         #particle section {
             position: relative;
             padding: 16px 18px 18px;
@@ -1102,7 +1020,6 @@
         #particleGrid .ops-card.caution .driver-bar > i { background: linear-gradient(90deg, #a67c2a, #e0b14a); }
         #particleGrid .ops-card.nogo .driver-bar > i { background: linear-gradient(90deg, #a33a3a, #e25b5b); }
         #particleGrid .ops-card.go .driver-bar > i { background: linear-gradient(90deg, #2a8a5e, #3ecf8e); }
-
         .advice-head {
             display: flex; align-items: center; justify-content: space-between; gap: 12px;
             margin-bottom: 12px; flex-wrap: wrap;
@@ -1134,7 +1051,6 @@
             from { transform: rotate(0deg); }
             to { transform: rotate(360deg); }
         }
-
         .ops-card.link-card {
             animation: lipasRise 0.5s cubic-bezier(0.22, 1, 0.36, 1) both;
         }
@@ -1146,7 +1062,6 @@
         .ops-grid .ops-card:nth-child(6) { animation-delay: 0.2s; }
         .ops-grid .ops-card:nth-child(7) { animation-delay: 0.24s; }
         .ops-grid .ops-card:nth-child(8) { animation-delay: 0.28s; }
-
         @keyframes lipasRise {
             from { opacity: 0; transform: translateY(10px); }
             to { opacity: 1; transform: none; }
@@ -1163,7 +1078,6 @@
             0%, 100% { box-shadow: 0 0 10px rgba(110, 182, 255, 0.55); }
             50% { box-shadow: 0 0 18px rgba(110, 182, 255, 0.95); }
         }
-
         .driver-visuals {
             display: grid;
             grid-template-columns: 1fr 1fr;
@@ -1195,12 +1109,10 @@
             color: rgba(200, 220, 240, 0.55);
             pointer-events: none;
         }
-        
         .map-canvas-wrapper {
             position: relative;
             background: #000000;
         }
-        
         #mapCanvas {
             width: 100%;
             height: auto;
@@ -1209,11 +1121,9 @@
             cursor: grab;
             background: radial-gradient(circle at 50% 50%, #0a0a0a, #000000);
         }
-        
         #mapCanvas:active {
             cursor: grabbing;
         }
-        
         .map-legend {
             position: absolute;
             top: 20px;
@@ -1228,7 +1138,6 @@
             box-shadow: 0 4px 16px rgba(0, 0, 0, 0.5);
             z-index: 10;
         }
-        
         .map-legend-title {
             font-weight: 700;
             margin-bottom: 10px;
@@ -1237,14 +1146,12 @@
             text-transform: uppercase;
             letter-spacing: 0.5px;
         }
-        
         .map-legend-item {
             display: flex;
             align-items: center;
             margin: 6px 0;
             font-size: 11px;
         }
-        
         .map-legend-color {
             width: 24px;
             height: 14px;
@@ -1253,7 +1160,6 @@
             border: 1px solid rgba(255, 255, 255, 0.2);
             flex-shrink: 0;
         }
-        
         .map-info-overlay {
             position: absolute;
             bottom: 20px;
@@ -1267,39 +1173,32 @@
             box-shadow: 0 4px 16px rgba(0, 0, 0, 0.5);
             z-index: 10;
         }
-        
         .map-info-item {
             display: flex;
             justify-content: space-between;
             margin: 4px 0;
             gap: 20px;
         }
-        
         .map-info-label {
             color: #aaaaaa;
             font-weight: 500;
         }
-        
         .map-info-item span:last-child {
             color: #ffffff;
             font-weight: 600;
             font-family: 'Courier New', monospace;
         }
-        
-        /* Timelapse Controls */
         .timelapse-container {
             background: linear-gradient(180deg, #0a0a0a 0%, #1a1a1a 100%);
             padding: 15px 20px;
             border-top: 2px solid #007aff;
         }
-        
         .timelapse-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
             margin-bottom: 12px;
         }
-        
         .timelapse-title {
             font-size: 14px;
             font-weight: 600;
@@ -1307,13 +1206,11 @@
             text-transform: uppercase;
             letter-spacing: 0.5px;
         }
-        
         .timelapse-controls {
             display: flex;
             gap: 8px;
             align-items: center;
         }
-        
         .timelapse-btn {
             width: 28px;
             height: 28px;
@@ -1328,18 +1225,15 @@
             transition: all 0.2s ease;
             font-size: 14px;
         }
-        
         .timelapse-btn:hover {
             background: linear-gradient(135deg, #007aff, #0056b3);
             color: #ffffff;
             transform: scale(1.05);
         }
-        
         .timelapse-btn.active {
             background: #007aff;
             color: #ffffff;
         }
-        
         .timelapse-speed {
             padding: 4px 24px 4px 8px;
             background: linear-gradient(135deg, #1a1a1a, #2a2a2a);
@@ -1355,11 +1249,9 @@
             background-position: right 4px center;
             background-size: 12px;
         }
-        
         .timelapse-bar-container {
             margin: 10px 0;
         }
-        
         .timelapse-bar {
             position: relative;
             width: 100%;
@@ -1370,7 +1262,6 @@
             border: 1px solid #007aff;
             overflow: visible;
         }
-        
         .timelapse-progress {
             position: absolute;
             top: 0;
@@ -1381,7 +1272,6 @@
             transition: width 0.1s linear;
             pointer-events: none;
         }
-        
         .timelapse-handle {
             position: absolute;
             top: 50%;
@@ -1396,16 +1286,13 @@
             transition: transform 0.1s ease;
             z-index: 2;
         }
-        
         .timelapse-handle:hover {
             transform: translate(-50%, -50%) scale(1.2);
             box-shadow: 0 4px 12px rgba(0, 122, 255, 0.8);
         }
-        
         .timelapse-handle:active {
             cursor: grabbing;
         }
-        
         .timelapse-markers {
             position: absolute;
             top: 0;
@@ -1414,7 +1301,6 @@
             height: 100%;
             pointer-events: none;
         }
-        
         .timelapse-marker {
             position: absolute;
             top: 0;
@@ -1422,7 +1308,6 @@
             height: 100%;
             background: rgba(255, 255, 255, 0.2);
         }
-        
         .timelapse-info {
             display: flex;
             justify-content: space-between;
@@ -1430,16 +1315,13 @@
             font-size: 11px;
             color: #aaaaaa;
         }
-        
         .timelapse-info span {
             font-family: 'Courier New', monospace;
         }
-        
         #timelapseCurrentTime {
             color: #007aff;
             font-weight: 600;
         }
-        
         .fact-section {
             margin-bottom: 30px;
             background: linear-gradient(165deg, rgba(28, 37, 51, 0.94), rgba(18, 24, 33, 0.97));
@@ -1454,7 +1336,6 @@
             top: 0; left: 0; right: 0; height: 1px;
             background: linear-gradient(90deg, transparent, rgba(110, 182, 255, 0.35), transparent);
         }
-        
         .fact-title {
             font-family: var(--font-display, Syne, sans-serif);
             text-align: left;
@@ -1464,7 +1345,6 @@
             margin-bottom: 10px;
             color: var(--text, #e6eef8);
         }
-        
         .dynamic-fact {
             text-align: left;
             font-size: 15px;
@@ -1472,7 +1352,6 @@
             line-height: 1.55;
             transition: opacity 0.5s;
         }
-        
         .slider-section {
             margin-bottom: 30px;
             background: linear-gradient(165deg, rgba(28, 37, 51, 0.94), rgba(18, 24, 33, 0.97));
@@ -1484,7 +1363,6 @@
             content: ""; position: absolute; top: 0; left: 0; right: 0; height: 1px;
             background: linear-gradient(90deg, transparent, rgba(110, 182, 255, 0.35), transparent);
         }
-        
         .slider-title {
             font-family: var(--font-display, Syne, sans-serif);
             text-align: left;
@@ -1498,14 +1376,12 @@
             color: var(--muted, #8fa3b8);
             margin-bottom: 14px;
         }
-        
         .metric-buttons {
             display: grid;
             grid-template-columns: repeat(9, minmax(0, 1fr));
             gap: 6px;
             margin-bottom: 16px;
         }
-        
         .metric-button {
             min-width: 0;
             width: 100%;
@@ -1525,13 +1401,11 @@
             overflow: hidden;
             text-overflow: ellipsis;
         }
-        
         .metric-button.active {
             background: var(--steel, #6eb6ff);
             border-color: var(--steel, #6eb6ff);
             color: #0b0e13;
         }
-        
         .metric-button:hover:not(.active) {
             color: var(--text, #e6eef8);
             border-color: var(--steel-dim, #3d7ab8);
@@ -1550,7 +1424,6 @@
             background: var(--steel, #6eb6ff); border-color: var(--steel, #6eb6ff);
             color: #0b0e13; font-weight: 600;
         }
-        
         .hour-slider-container {
             overflow-x: auto;
             white-space: nowrap;
@@ -1559,11 +1432,9 @@
             background: #121821;
             min-height: 120px;
         }
-        
         .hour-items {
             display: inline-flex;
         }
-        
         .hour-item {
             text-align: center;
             margin: 0 8px;
@@ -1581,21 +1452,18 @@
             border-color: rgba(110, 182, 255, 0.35);
             background: rgba(110, 182, 255, 0.06);
         }
-        
         .hour-label {
             font-size: 11px;
             color: var(--dim, #5c7088);
             margin-bottom: 8px;
             letter-spacing: 0.04em;
         }
-        
         .hour-value {
             font-size: 18px;
             display: flex;
             flex-direction: column;
             align-items: center;
         }
-        
         .value-number {
             font-size: 22px;
             font-weight: 700;
@@ -1603,44 +1471,37 @@
             font-variant-numeric: tabular-nums;
             color: var(--steel, #6eb6ff);
         }
-        
         .value-unit {
             font-size: 11px;
             line-height: 1.2;
             color: var(--muted, #8fa3b8);
         }
-        
         .accuracy-text {
             text-align: center;
             font-size: 12px;
             color: #aaaaaa;
             margin-top: 10px;
         }
-        
         .risk-legend {
             display: flex;
             justify-content: center;
             margin-bottom: 20px;
             margin-top: 0;
         }
-        
         .legend-item {
             display: flex;
             align-items: center;
             margin: 0 20px;
         }
-        
         .legend-color {
             width: 20px;
             height: 20px;
             border-radius: 50%;
             margin-right: 10px;
         }
-        
         .green { background-color: #00ff00; }
         .yellow { background-color: #ffff00; }
         .red { background-color: #ff0000; }
-        
         .warnings-title {
             font-family: var(--font-display, Syne, sans-serif);
             text-align: left;
@@ -1649,7 +1510,6 @@
             letter-spacing: -0.02em;
             margin-bottom: 48px;
         }
-        
         .warnings-container {
             display: grid;
             grid-template-columns: repeat(3, 1fr);
@@ -1657,7 +1517,6 @@
             margin-bottom: 24px;
             max-width: 920px;
         }
-        
         .warning-box {
             background: #121821;
             padding: 10px 12px 10px;
@@ -1671,7 +1530,6 @@
         .warning-box.go { border-left-color: var(--go, #3ecf8e); }
         .warning-box.caution { border-left-color: var(--caution, #e0b14a); }
         .warning-box.nogo { border-left-color: var(--nogo, #e25b5b); }
-        
         .warning-header {
             font-size: 10px;
             font-weight: 600;
@@ -1680,7 +1538,6 @@
             color: var(--dim, #5c7088);
             margin-bottom: 8px;
         }
-        
         .warning-desc {
             font-size: 13px;
             font-weight: 600;
@@ -1691,14 +1548,12 @@
         .warning-box.go .warning-desc { color: var(--go, #3ecf8e); }
         .warning-box.caution .warning-desc { color: var(--caution, #e0b14a); }
         .warning-box.nogo .warning-desc { color: var(--nogo, #e25b5b); }
-        
         .warning-accuracy {
             font-size: 12px;
             color: var(--muted, #8fa3b8);
             margin-top: 8px;
             line-height: 1.35;
         }
-        
         .forecast-title {
             font-family: var(--font-display, Syne, sans-serif);
             text-align: left;
@@ -1707,7 +1562,6 @@
             letter-spacing: -0.02em;
             margin-bottom: 6px;
         }
-        
         .forecast-header {
             font-size: 13px;
             color: var(--muted, #8fa3b8);
@@ -1716,7 +1570,6 @@
             padding-bottom: 10px;
             border-bottom: 1px solid rgba(140, 170, 200, 0.14);
         }
-        
         .forecast-container {
             background: linear-gradient(165deg, rgba(28, 37, 51, 0.94), rgba(18, 24, 33, 0.97));
             padding: 12px 16px;
@@ -1725,7 +1578,6 @@
             max-height: 340px;
             overflow-y: auto;
         }
-        
         .forecast-day {
             display: flex;
             align-items: flex-start;
@@ -1756,18 +1608,15 @@
             background: rgba(110, 182, 255, 0.12);
             color: var(--steel, #6eb6ff);
         }
-        
         .forecast-day:last-child {
             border-bottom: none;
         }
-        
         .day-name {
             font-size: 13px;
             font-weight: 700;
             color: var(--text, #e6eef8);
             flex: 0 0 72px;
         }
-        
         .hazard-dot {
             width: 8px; height: 8px; border-radius: 50%;
             flex-shrink: 0;
@@ -1775,12 +1624,10 @@
         }
         .hazard-dot.caution { background: var(--caution, #e0b14a); }
         .hazard-dot.nogo { background: var(--nogo, #e25b5b); }
-        
         .separator {
             color: #aaaaaa;
             margin: 0 15px;
         }
-        
         .forecast-values {
             display: flex;
             flex: 1;
@@ -1788,7 +1635,6 @@
             flex-wrap: wrap;
             gap: 6px;
         }
-        
         .forecast-day .day-conf { color: var(--dim, #5c7088); font-weight: 600; font-size: 11px; }
         .forecast-value em.fv-conf {
             display: block; font-style: normal; font-size: 10px; color: var(--dim, #5c7088);
@@ -1800,7 +1646,6 @@
             font-size: 13px;
             margin-top: 2px;
         }
-        
         .advice-box {
             background: linear-gradient(165deg, rgba(28, 37, 51, 0.94), rgba(18, 24, 33, 0.97));
             padding: 16px 18px;
@@ -1808,7 +1653,6 @@
             border: 1px solid rgba(140, 170, 200, 0.14);
             text-align: left;
         }
-        
         .advice-title {
             font-family: var(--font-display, Syne, sans-serif);
             text-align: left;
@@ -1817,7 +1661,6 @@
             letter-spacing: -0.02em;
             margin-bottom: 12px;
         }
-        
         .advice-list {
             list-style: none;
             padding-left: 0;
@@ -1826,7 +1669,6 @@
             flex-direction: column;
             gap: 8px;
         }
-        
         .advice-item {
             font-size: 13px;
             line-height: 1.45;
@@ -1865,7 +1707,6 @@
             text-transform: uppercase;
             color: var(--steel, #6eb6ff);
         }
-
         .hour-range-row {
             display: flex;
             flex-wrap: wrap;
@@ -1902,7 +1743,6 @@
             border-color: rgba(110, 182, 255, 0.55);
             background: rgba(110, 182, 255, 0.1);
         }
-
         .solar-section {
             margin-bottom: 30px;
             background: linear-gradient(165deg, rgba(28, 37, 51, 0.94), rgba(18, 24, 33, 0.97));
@@ -2013,14 +1853,12 @@
             color: var(--text, #e6eef8);
             font-weight: 600;
         }
-        
         .graph-section {
             margin-bottom: 30px;
             background: linear-gradient(165deg, rgba(28, 37, 51, 0.94), rgba(18, 24, 33, 0.97));
             padding: 20px;
             border: 1px solid rgba(140, 170, 200, 0.14);
         }
-        
         .graph-title {
             font-family: var(--font-display, Syne, sans-serif);
             text-align: left;
@@ -2035,21 +1873,18 @@
         .norm-hint {
             font-size: 11px; color: var(--dim, #5c7088); margin-top: 8px;
         }
-        
         .graph-controls {
             display: flex;
             justify-content: center;
             gap: 10px;
             margin-bottom: 20px;
         }
-        
         .custom-dropdown {
             position: relative;
             width: 200px;
             z-index: 5;
         }
         .custom-dropdown.open { z-index: 40; }
-        
         .dropdown-trigger {
             padding: 10px 15px;
             background: linear-gradient(135deg, #1a2f5a 0%, #0f1b3c 100%);
@@ -2064,18 +1899,15 @@
             transition: all 0.3s ease;
             user-select: none;
         }
-        
         .dropdown-trigger:hover {
             background: linear-gradient(135deg, #2a3f6a 0%, #1a2b4c 100%);
             border-color: rgba(0, 122, 255, 0.6);
         }
-        
         .dropdown-arrow {
             margin-left: 5px;
             transition: transform 0.3s ease;
         }
         .custom-dropdown.open .dropdown-arrow { transform: rotate(180deg); }
-        
         .dropdown-content {
             display: none;
             position: absolute;
@@ -2091,11 +1923,9 @@
             overflow-y: auto;
             box-shadow: 0 14px 36px rgba(0, 0, 0, 0.55);
         }
-        
         .dropdown-content.show {
             display: block;
         }
-        
         .dropdown-item {
             display: flex;
             align-items: center;
@@ -2104,31 +1934,26 @@
             border-radius: 8px;
             transition: background 0.2s ease;
         }
-        
         .dropdown-item:hover {
             background: rgba(0, 122, 255, 0.15);
         }
-        
         .dropdown-checkbox {
             margin-right: 10px;
             accent-color: #007aff;
             width: 16px;
             height: 16px;
         }
-        
         .graph-canvas-container {
             overflow-x: auto;
             max-width: 100%;
             height: 400px;
         }
-        
         .graph-accuracy {
             text-align: center;
             font-size: 12px;
             color: #aaaaaa;
             margin-top: 10px;
         }
-        
         .graph-controls {
             display: flex;
             align-items: center;
@@ -2139,20 +1964,17 @@
             background: rgba(0, 122, 255, 0.05);
             border: 1px solid rgba(0, 122, 255, 0.15);
         }
-        
         .graph-controls label {
             color: #eaf4ff;
             font-size: 14px;
             font-weight: 500;
         }
-        
         .graph-controls input[type="checkbox"] {
             width: 18px;
             height: 18px;
             cursor: pointer;
             accent-color: #007aff;
         }
-        
         .metrics-title {
             font-family: var(--font-display, Syne, sans-serif);
             text-align: left;
@@ -2161,14 +1983,12 @@
             letter-spacing: -0.02em;
             margin-bottom: 14px;
         }
-        
         .metrics-panel {
             display: grid;
             grid-template-columns: repeat(4, minmax(0, 1fr));
             gap: 12px;
             margin-bottom: 24px;
         }
-        
         .metric-box {
             background: linear-gradient(165deg, rgba(28, 37, 51, 0.95), #121821);
             padding: 18px 16px 16px;
@@ -2187,7 +2007,6 @@
         .metric-box.caution { border-top-color: var(--caution, #e0b14a); }
         .metric-box.nogo { border-top-color: var(--nogo, #e25b5b); }
         .metric-accuracy { font-size: 11px; color: var(--muted, #8fa3b8); margin-top: 4px; }
-
         .channel-slider-row {
             display: flex;
             align-items: center;
@@ -2219,7 +2038,6 @@
             text-align: right;
             font-variant-numeric: tabular-nums;
         }
-
         .ops-section {
             margin-bottom: 30px;
             background: linear-gradient(165deg, rgba(28, 37, 51, 0.94), rgba(18, 24, 33, 0.97));
@@ -2294,7 +2112,6 @@
             color: var(--steel, #6eb6ff);
             font-weight: 700;
         }
-        
         .metric-label {
             font-size: 11px;
             letter-spacing: 0.12em;
@@ -2303,7 +2120,6 @@
             font-weight: 600;
             margin-bottom: 10px;
         }
-        
         .metric-value {
             font-size: 28px;
             font-weight: 800;
@@ -2311,7 +2127,6 @@
             font-variant-numeric: tabular-nums;
             line-height: 1.15;
         }
-        
         .metric-accuracy {
             font-size: 12px;
             color: var(--muted, #8fa3b8);
@@ -2331,7 +2146,6 @@
             .warnings-container { grid-template-columns: 1fr; }
             .metric-buttons, .metrics-panel { grid-template-columns: repeat(2, minmax(0, 1fr)); }
         }
-        
         .pdf-box {
             background: linear-gradient(165deg, rgba(28, 37, 51, 0.94), rgba(18, 24, 33, 0.97));
             padding: 18px 20px;
@@ -2348,7 +2162,6 @@
             top: 0; left: 0; right: 0; height: 1px;
             background: linear-gradient(90deg, transparent, rgba(110, 182, 255, 0.35), transparent);
         }
-        
         .pdf-title {
             font-family: var(--font-display, Syne, sans-serif);
             text-align: left;
@@ -2374,7 +2187,6 @@
         .pdf-box button:hover {
             background: rgba(110, 182, 255, 0.24) !important;
         }
-        
         .disclaimer-box {
             background: linear-gradient(165deg, rgba(28, 37, 51, 0.94), rgba(18, 24, 33, 0.97));
             padding: 18px 20px;
@@ -2391,7 +2203,6 @@
             top: 0; left: 0; right: 0; height: 1px;
             background: linear-gradient(90deg, transparent, rgba(110, 182, 255, 0.35), transparent);
         }
-        
         .disclaimer-title {
             font-family: var(--font-display, Syne, sans-serif);
             text-align: left;
@@ -2401,13 +2212,11 @@
             margin-bottom: 10px;
             color: var(--text, #e6eef8);
         }
-        
         .disclaimer-text {
             font-size: 14px;
             color: var(--muted, #8fa3b8);
             line-height: 1.55;
         }
-        
         .hamburger {
             display: none;
             position: absolute;
@@ -2417,19 +2226,16 @@
             cursor: pointer;
             z-index: 10;
         }
-        
         .footer {
             text-align: center;
             font-size: 12px;
             margin-top: 20px;
             color: #aaaaaa;
         }
-        
         .footer a {
             color: #007aff;
             text-decoration: none;
         }
-        
         .modal {
             display: none;
             position: fixed;
@@ -2442,7 +2248,6 @@
             justify-content: center;
             align-items: center;
         }
-        
         .modal-content {
             background-color: #1a1a1a;
             padding: 20px;
@@ -2452,7 +2257,6 @@
             position: relative;
             text-align: center;
         }
-        
         .close {
             position: absolute;
             top: 10px;
@@ -2461,19 +2265,15 @@
             cursor: pointer;
             color: #ffffff;
         }
-        
         .modal-title {
             font-size: 36px;
             margin-bottom: 20px;
             color: #007aff;
         }
-        
         .modal-desc {
             font-size: 18px;
             margin-bottom: 20px;
         }
-
-        /* Evolution popup - single-hazard time series from hour / day / metric clicks */
         .evo-modal {
             display: none;
             position: fixed;
@@ -2534,7 +2334,6 @@
             margin-top: 10px; font-size: 11px; color: var(--dim, #5c7088);
             font-variant-numeric: tabular-nums;
         }
-        
         .loading-indicator {
             position: fixed;
             top: 0;
@@ -2549,11 +2348,9 @@
             z-index: 9999;
             gap: 30px;
         }
-        
         .loading-content {
             text-align: center;
         }
-        
         .loading-title {
             font-size: 52px;
             font-weight: 700;
@@ -2562,7 +2359,6 @@
             margin-bottom: 10px;
             text-shadow: 0 0 20px rgba(0, 122, 255, 0.5);
         }
-        
         .loading-subtitle {
             font-size: 16px;
             color: #88ccff;
@@ -2570,13 +2366,11 @@
             letter-spacing: 0.5px;
             margin-bottom: 40px;
         }
-        
         .loading-dots {
             display: flex;
             gap: 12px;
             justify-content: center;
         }
-        
         .dot {
             width: 10px;
             height: 10px;
@@ -2585,15 +2379,12 @@
             animation: pulse 1.5s ease-in-out infinite;
             box-shadow: 0 0 10px rgba(0, 122, 255, 0.6);
         }
-        
         .dot:nth-child(2) {
             animation-delay: 0.2s;
         }
-        
         .dot:nth-child(3) {
             animation-delay: 0.4s;
         }
-        
         @keyframes pulse {
             0% {
                 opacity: 0.4;
@@ -2608,19 +2399,16 @@
                 transform: scale(0.8);
             }
         }
-        
         .loading-text {
             font-size: 14px;
             color: #aaccdd;
             margin-top: 20px;
             font-weight: 300;
         }
-        
         #mainContent {
             opacity: 1;
             transition: opacity 0.5s ease;
         }
-        
         @media (max-width: 768px) {
             .sidebar {
                 position: fixed;
@@ -2660,21 +2448,17 @@
     </style>
 </head>
 <body data-app="lipas" class="lipas-mode">
-    
     <div class="loading-screen" id="loadingScreen">
         <div class="load-label">Loading the Moon</div>
     </div>
-    
     <div id="lipas-topnav" data-active="dashboard"></div>
     <div class="sidebar-overlay" id="sidebarOverlay"></div>
     <button type="button" class="sidebar-open-tab" id="sidebarOpenTab" aria-label="Open site list">Sites</button>
-
     <div class="container">
         <div id="globalLoading" class="loading-indicator" style="display:none;">
             <div class="loading-content">
                 <div class="loading-title">LIPAS</div>
                 <div class="loading-subtitle">Loading data and maps…</div>
-                <div class="loading-dots"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div>
                 <div class="loading-text">If this is taking long check your network connection.</div>
             </div>
         </div>
@@ -2683,12 +2467,10 @@
             <div class="sidebar-resize-handle" id="sidebarResizeHandle" aria-label="Resize sidebar"></div>
             <input type="text" class="search-bar" id="loc-search" placeholder="Search locations or input coordinates…" oninput="renderLocations()">
             <ul class="location-list" id="location-list">
-                <!-- Lunar sites injected by initLocations / backend.js -->
             </ul>
         </div>
         <div class="main-panel" id="mainPanel">
             <div id="mainContent" style="display:block;">
-                
                 <div id="placeholders" style="display:none;">
                     <input id="loc-search" type="text" value="" />
                     <div id="tl-track"></div>
@@ -2733,7 +2515,6 @@
                 <div class="current-conditions" id="currentConditions">Information is loading…</div>
                 <div class="dynamic-alert" id="dynamicAlert">Loading data…</div>
                 <div class="general-accuracy" id="generalAccuracy">General predictions accuracy: --</div>
-
                 <div class="slider-section" id="slider-section">
                     <div class="slider-title">Next 24 Hours</div>
                     <div class="slider-sub">Pick a channel, click an hour. Numbers from the live forecast.</div>
@@ -2743,8 +2524,6 @@
                     </div>
                     <div class="accuracy-text" id="accuracyText"></div>
                 </div>
-
-
                 <div class="eva-now-strip" id="evaNowStrip" aria-live="polite">
                     <div class="eva-dial">
                         <div class="eva-dial-inner">
@@ -2759,8 +2538,6 @@
                     </div>
                     <a class="eva-plan-btn" id="evaPlanBtn" href="mission_planning.html">Open Mission Planner</a>
                 </div>
-                
-                
                 <div class="map-container" id="mapContainer" style="display: block;">
                     <div class="map-header">
                         <div class="map-title" id="mapTitle">Mercury magnetosphere</div>
@@ -2776,7 +2553,6 @@
                     <div class="ops-grid" id="illuminationGrid"></div>
                     <div class="rank-grid" id="overviewRankGrid" style="display:none;"></div>
                 </div>
-
                 <div class="ops-section overview-only ov-panel" id="terminator-section">
                     <div class="ov-title">Day / night belt</div>
                     <div class="ov-sub">Where day meets night right now. Sites in sun vs shadow.</div>
@@ -2795,13 +2571,11 @@
                         </div>
                     </div>
                 </div>
-
                 <div class="ops-section overview-only ov-panel" id="nearfar-section">
                     <div class="ov-title">Near side vs far side</div>
                     <div class="ov-sub">Near side sees Earth. Far side needs a relay.</div>
                     <div class="nearfar-grid" id="nearFarGrid"></div>
                 </div>
-
                 <div class="solar-section" id="solar-section">
                     <div class="solar-title">Solar activity</div>
                     <div class="solar-sub" id="solarSectionSub">Storm level and disk view. Active regions on the left chart.</div>
@@ -2823,13 +2597,11 @@
                     </div>
                     <div class="solar-storm-banner" id="solarStormBanner"><strong>Solar quiet.</strong> No major flare or CME drivers indicated for the current site.</div>
                 </div>
-
                 <div class="ops-section" id="particle-section">
                     <div class="ops-title">Particle &amp; storm drivers</div>
                     <div class="ops-sub" id="particleSectionSub">SEP, protons, CME, Kp. Click a card for 24 h trend.</div>
                     <div class="ops-grid" id="particleGrid"></div>
                 </div>
-
                 <div class="warnings-title">Hazard board</div>
                 <div class="risk-legend">
                     <div class="legend-item">
@@ -3029,7 +2801,6 @@
             if (mapTitle) mapTitle.textContent = 'Topographic Map - ' + (loc && loc.name ? loc.name : '');
         }
         let realDataAvailable = false;
-
         function scalarAt(v, index = 0) {
             if (v == null) return null;
             if (Array.isArray(v)) {
@@ -3041,7 +2812,6 @@
             const n = Number(v);
             return Number.isFinite(n) ? n : null;
         }
-
         function formatOverviewLine({ radiation, temperature, dust, unitRadiation = 'mSv/h', unitTemp = '°C', unitDust = 'index' }) {
             const parts = [];
             const rad = scalarAt(radiation);
@@ -3052,17 +2822,13 @@
             if (d != null) parts.push(`Dust: ${d.toFixed(2)} ${unitDust}`);
             return parts.length ? parts.join(' | ') : 'Information is loading…';
         }
-
         function setCurrentConditions(text) {
             const el = document.getElementById('currentConditions');
             if (el) el.textContent = text;
         }
-
-        /** Don't let legacy env/mock loaders stomp the site-specific overview. */
         function shouldSkipLegacyOverviewUpdate() {
             return !!(window._forecastCache && window._topoLocIdx != null);
         }
-        
         function checkForRealData() {
             fetch('/api/real-data-status')
                 .then(response => response.json())
@@ -3092,7 +2858,6 @@
                 })
                 .catch(() => {});
         }
-        
         function loadRealData() {
             fetch('/api/environmental-data')
                 .then(response => response.json())
@@ -3104,8 +2869,6 @@
                     console.warn('Environmental data unavailable:', error);
                 });
         }
-        
-
         function updateDashboardWithRealData(data) {
             if (!shouldSkipLegacyOverviewUpdate()) {
                 setCurrentConditions(formatOverviewLine({
@@ -3115,12 +2878,10 @@
                     unitDust: 'mg/m³',
                 }));
             }
-            
             const modelNote = data.model_loaded ? 'ML+physics model' : 'physics-only estimate (model not loaded)';
             if (typeof data.accuracy === 'number') window._modelSkillPct = data.accuracy;
-            document.getElementById('generalAccuracy').textContent = 
+            document.getElementById('generalAccuracy').textContent =
                 `Test-set skill vs. persistence baseline: ${data.accuracy}% (${modelNote})`;
-
             if (typeof data.accuracy === 'number' && window.modelAccuracy) {
                 const real = data.accuracy;
                 window.modelAccuracy.overall = real;
@@ -3132,12 +2893,10 @@
                 window.modelAccuracy.isReal = true;
             }
             window._preferServerForecast = true;
-            
-            document.getElementById('dynamicAlert').textContent = 
+            document.getElementById('dynamicAlert').textContent =
                 data.model_loaded
                     ? 'Live trained LSTM model connection active - real-time hazard forecast streaming'
                     : 'Live physics-based estimate active - trained model weights unavailable';
-
             if (Array.isArray(data.radiation_series) && data.radiation_series.length) {
                 const realSeries = {
                     time: data.time,
@@ -3153,7 +2912,6 @@
                 setTimeout(() => renderGraph(), 100);
             }
         }
-        
         window.addEventListener('load', () => {
             const loadingScreen = document.getElementById('loadingScreen');
             if (loadingScreen) {
@@ -3166,18 +2924,14 @@
                 loadRealData();
             }
         });
-        
         window.addEventListener('resize', () => { TOPO.resize(); });
-        
         function showModal(title, html) {
             const modal = document.getElementById('welcomeModal');
             modal.querySelector('.modal-title').innerText = title;
             modal.querySelector('.modal-desc').innerHTML = html;
             modal.style.display = 'flex';
         }
-
         function closeModal(){ document.getElementById('welcomeModal').style.display='none'; }
-
         async function initCesiumFromServer(){
             try{
                 const resp = await fetch('/client-token');
@@ -3204,16 +2958,13 @@
                 document.body.appendChild(s);
             }catch(e){ console.warn('Failed to get client token', e); document.getElementById('cesiumContainer').style.display='none'; document.getElementById('mapCanvas').style.display='block'; }
         }
-
         function showLoading(){ document.getElementById('globalLoading').style.display='flex'; document.getElementById('mainContent').style.opacity=0.2; }
         function hideLoading(){ document.getElementById('globalLoading').style.display='none'; document.getElementById('mainContent').style.opacity=1; }
-
         function setActiveLocationItem(idx){
             document.querySelectorAll('.location-item').forEach((el,i)=>{
                 el.classList.toggle('active', i===idx);
             });
         }
-
         const LOCS = [
             {name:'The Moon', lat:0, lon:0, summary:'Global lunar conditions'},
             {name:'Shackleton Crater', lat:-89.68, lon:166.15, summary:'Permanently shadowed polar crater'},
@@ -3229,7 +2980,6 @@
             {name:'South Pole-Aitken Basin', lat:-53.0, lon:158.0, summary:'Very large far-side basin'},
         ];
         window.LOCS = LOCS;
-
         function coerceSeries(arr, n, fillFn) {
             const out = [];
             for (let i = 0; i < n; i++) {
@@ -3238,7 +2988,6 @@
             }
             return out;
         }
-
         function completeForecastPayload(raw, hours = 48, locHint) {
             const n = Math.max(24, Number(hours) || 48, (raw.time && raw.time.length) || 0);
             const time = Array.from({ length: n }, (_, i) => (raw.time && raw.time[i] != null ? raw.time[i] : i));
@@ -3289,7 +3038,6 @@
             if (out.confidence) window._lastConfidence = out.confidence;
             return out;
         }
-
         async function fetchForecast(lat, lon, hours=48){
             if (window.LIPAS_MERCURY && typeof window.fetchMercuryForecast === 'function') {
                 return window.fetchMercuryForecast(lat, lon, hours);
@@ -3321,7 +3069,7 @@
                             earth_link: j.real_time?.earth_link, plausibility_now: j.plausibility,
                         }, hours, { lat, lon });
                     }
-                }catch(e){ /* ignore and fallback */ }
+                }catch(e){  }
                 const resp = await fetch(`/api/forecast?lat=${lat}&lon=${lon}&hours=${hours}`);
                 if(!resp.ok) throw new Error('bad');
                 return completeForecastPayload(await resp.json(), hours, { lat, lon });
@@ -3343,7 +3091,6 @@
                 }, hours, { lat: la, lon: lo });
             }
         }
-
         function toggleDropdown(id) {
             const content = document.getElementById(id);
             if (!content) return;
@@ -3360,7 +3107,6 @@
             syncDropdownLabels();
         }
         window.toggleDropdown = toggleDropdown;
-
         function syncDropdownLabels() {
             const factorCount = document.querySelectorAll('#factorsContent input[type=checkbox]:checked').length;
             const factorTrig = document.querySelector('#factorsDropdown .dropdown-trigger');
@@ -3373,11 +3119,9 @@
             if (gTrig) gTrig.innerHTML = `Type · ${gVal}<span class="dropdown-arrow">▼</span>`;
         }
         window.syncDropdownLabels = syncDropdownLabels;
-
         let graphChart = null;
         let evoChart = null;
         let _evoState = { mode: '24h', key: 'radiation', keys: [], highlightHour: null, dayIndex: null };
-
         function seriesForEvoKey(data, key) {
             if (!data) return [];
             if (key === 'thermalStress') {
@@ -3388,17 +3132,14 @@
             }
             return data[key] || [];
         }
-
         function evoLabelForKey(key) {
             if (key === 'thermalStress') return 'Thermal stress';
             return HAZARD_META[key]?.label || key;
         }
-
         function evoUnitForKey(key) {
             if (key === 'thermalStress') return 'idx';
             return HAZARD_META[key]?.unit || '';
         }
-
         function closeEvolutionPopup() {
             const modal = document.getElementById('evoModal');
             if (modal) {
@@ -3408,7 +3149,6 @@
             if (evoChart) { evoChart.destroy(); evoChart = null; }
         }
         window.closeEvolutionPopup = closeEvolutionPopup;
-
         function paintEvolutionChart() {
             const data = _forecastCache;
             const key = _evoState.key;
@@ -3420,7 +3160,6 @@
             let labels = [];
             let values = [];
             let pointRadius = [];
-
             if (mode === 'multiday') {
                 const len = (data?.time || series).length || 0;
                 const wantDays = (_forecastDays === 'all' || _forecastDays > 20) ? 30 : Math.max(1, Number(_forecastDays) || 7);
@@ -3440,7 +3179,6 @@
                     pointRadius.push(_evoState.highlightHour === i ? 5 : 2.5);
                 }
             }
-
             const unit = evoUnitForKey(key);
             const label = evoLabelForKey(key);
             const finite = values.filter(Number.isFinite);
@@ -3456,7 +3194,6 @@
                     max != null ? `max ${fmt(max)}` : null,
                 ].filter(Boolean).join(' · ');
             }
-
             if (evoChart) { evoChart.destroy(); evoChart = null; }
             evoChart = new Chart(canvas.getContext('2d'), {
                 type: 'line',
@@ -3507,14 +3244,12 @@
                 },
             });
         }
-
         function openEvolutionPopup(opts) {
             const modal = document.getElementById('evoModal');
             const title = document.getElementById('evoTitle');
             const sub = document.getElementById('evoSub');
             const chips = document.getElementById('evoChips');
             if (!modal || !_forecastCache) return;
-
             _evoState = {
                 mode: opts.mode || '24h',
                 key: opts.key || 'radiation',
@@ -3522,7 +3257,6 @@
                 highlightHour: opts.highlightHour != null ? opts.highlightHour : null,
                 dayIndex: opts.dayIndex != null ? opts.dayIndex : null,
             };
-
             if (title) {
                 if (_evoState.mode === 'multiday') title.textContent = `Multi-day · ${evoLabelForKey(_evoState.key)}`;
                 else if (_evoState.mode === 'drivers') title.textContent = `Particle & storm · ${evoLabelForKey(_evoState.key)}`;
@@ -3543,7 +3277,6 @@
                         : 'Full 24-hour evolution of the selected channel.';
                 }
             }
-
             if (chips) {
                 const showChips = _evoState.keys.length > 1;
                 chips.hidden = !showChips;
@@ -3570,7 +3303,6 @@
                     });
                 }
             }
-
             modal.classList.add('open');
             modal.setAttribute('aria-hidden', 'false');
             paintEvolutionChart();
@@ -3595,7 +3327,6 @@
                 });
             });
         }
-
         function channelConfidencePct(key, data, prediction) {
             const conf = prediction?.confidence || data?.confidence || window._lastConfidence || null;
             const per = conf?.per_channel_pct || null;
@@ -3638,7 +3369,6 @@
             return Math.round(Math.max(42, Math.min(96, p0 * 100)));
         }
         window.channelConfidencePct = channelConfidencePct;
-
         function pearsonCorrelation(a, b){
             const n = Math.min(a.length,b.length);
             if(n===0) return 0;
@@ -3650,7 +3380,6 @@
             const den = Math.sqrt(denA*denB);
             return den===0?0:(num/den);
         }
-
         const HAZARD_META = {
             radiation:       { label: 'Radiation', unit: 'mSv/h', low: 0.12, high: 0.25, origin: 'mercury' },
             solar:           { label: 'Solar', unit: 'index', low: 20, high: 40, origin: 'mercury' },
@@ -3676,14 +3405,12 @@
         let _forecastDays = 7;
         let _timelapse = { hour: 0, playing: false, speed: 1, raf: null, last: 0 };
         window._timelapseHour = 0;
-
         function riskLevel(key, value) {
             const m = HAZARD_META[key];
             const v = Number(value);
             if (!m || !Number.isFinite(v)) return 'go';
             if (m.low == null) {
                 if (key === 'temperature') {
-                    // Mercury physics returns °C (nightside ≈ −173 °C is normal, not a fault).
                     const merc = document.body?.dataset?.app === 'mercury' || window.LIPAS_MERCURY;
                     if (merc) {
                         if (v > 400 || v < -205) return 'nogo';
@@ -3705,7 +3432,6 @@
                     return 'go';
                 }
                 if (key === 'dst') {
-                    // More negative Dst = stronger storm
                     if (v <= -100) return 'nogo';
                     if (v <= -50) return 'caution';
                     return 'go';
@@ -3728,7 +3454,6 @@
             if (v >= m.low) return 'caution';
             return 'go';
         }
-
         function fmtHazard(key, value) {
             const num = Number(value);
             if (value == null || Number.isNaN(num)) return '-';
@@ -3737,7 +3462,6 @@
             if (key === 'storm' || key === 'kp') return num.toFixed(1);
             return num.toFixed(1);
         }
-
         function setActiveHourMetric(key) {
             if (!HAZARD_META[key]) return;
             _activeHourMetric = key;
@@ -3755,7 +3479,6 @@
                 setActiveHazardOverlays(cur.length ? cur : [mapKeys[key]]);
             }
         }
-
         function buildMetricButtons() {
             const host = document.getElementById('metricButtons');
             if (!host) return;
@@ -3771,7 +3494,6 @@
                 host.appendChild(btn);
             });
         }
-
         function renderHourStrip(data) {
             const hourItems = document.getElementById('hourItems');
             const acc = document.getElementById('accuracyText');
@@ -3810,7 +3532,6 @@
                 acc.textContent = `${meta.label} · next ${n}h · avg ${fmtHazard(key, avg)} ${meta.unit}`;
             }
         }
-
         function getActiveHazardOverlays() {
             const boxes = document.querySelectorAll('.hazard-overlay-cb:checked');
             const keys = Array.from(boxes).map((el) => el.value).filter(Boolean);
@@ -3819,7 +3540,6 @@
             return keys;
         }
         window.getActiveHazardOverlays = getActiveHazardOverlays;
-
         function pushHazardsToCesiumEmbed() {
             const embed = document.getElementById('moonCesiumEmbed');
             const meta = window.hazardData && window.hazardData._meta ? window.hazardData._meta : null;
@@ -3838,7 +3558,6 @@
             } catch (e) {}
         }
         window.pushHazardsToCesiumEmbed = pushHazardsToCesiumEmbed;
-
         function setActiveHazardOverlays(keys) {
             const set = new Set(Array.isArray(keys) ? keys : [keys]);
             document.querySelectorAll('.hazard-overlay-cb').forEach((el) => {
@@ -3849,7 +3568,6 @@
             pushHazardsToCesiumEmbed();
         }
         window.setActiveHazardOverlays = setActiveHazardOverlays;
-
         function renderWarnings(data, prediction) {
             const w = document.getElementById('warningsContainer');
             if (!w) return;
@@ -3912,9 +3630,9 @@
                     : `Elevated dust lofting risk near ${site} - index ${fmtHazard('dust', v)}.`,
                 temperature: (v) => {
                     const n = Number(v);
-                    if (n > 300) return `Elevated thermal load from sunlit surface - ${fmtHazard('temperature', v)} K.`;
-                    if (n < 120) return `Elevated cold stress in shadow - ${fmtHazard('temperature', v)} K.`;
-                    return `Thermal band workable - ${fmtHazard('temperature', v)} K.`;
+                    if (n > 80) return `Elevated thermal load from sunlit surface - ${fmtHazard('temperature', v)} °C.`;
+                    if (n < -80) return `Cold surface in shadow - ${fmtHazard('temperature', v)} °C.`;
+                    return `Thermal band workable - ${fmtHazard('temperature', v)} °C.`;
                 },
                 micrometeorites: (v, lvl) => lvl === 'go'
                     ? `Micrometeoroid flux nominal (${fmtHazard('micrometeorites', v)} /m²·d).`
@@ -3928,10 +3646,9 @@
                 const lvl = riskLevel(key, v);
                 const score = lvl === 'nogo' ? 3 : lvl === 'caution' ? 2 : 0;
                 return { key, v, lvl, score };
-            }).filter((r) => r.score > 0) // only boxes that are needed
+            }).filter((r) => r.score > 0)
               .sort((a, b) => b.score - a.score)
               .slice(0, 6);
-
             if (!ranked.length) {
                 const box = document.createElement('div');
                 box.className = 'warning-box go';
@@ -3950,7 +3667,6 @@
                 w.appendChild(box);
             });
         }
-
         function buildOverviewHazardCards(data, prediction) {
             const est = prediction && (prediction.refined_estimate || prediction.fast_estimate);
             const rad = Number(est?.radiation ?? data?.radiation?.[0] ?? 0.06);
@@ -3975,7 +3691,6 @@
             }
             return cards.slice(0, 6);
         }
-
         function renderSuggestedActivities(data, prediction, loc) {
             const list = document.getElementById('adviceList');
             if (!list) return;
@@ -3988,7 +3703,6 @@
             const quakes = Number(est ? est.moonquakes : (data?.moonquakes?.[0] ?? 1.2));
             const site = loc?.name || 'this site';
             const items = [];
-
             const radLvl = riskLevel('radiation', rad);
             if (radLvl === 'go') {
                 items.push({ lvl: 'go', title: 'EVA ok', text: `Radiation normal at ${site} (${fmtHazard('radiation', rad)} µSv/h).` });
@@ -3997,33 +3711,27 @@
             } else {
                 items.push({ lvl: 'nogo', title: 'Hold EVA (radiation)', text: `Dose too high at ${site}. Wait for calmer numbers.` });
             }
-
             if (riskLevel('solar', solar) !== 'go') {
                 items.push({ lvl: riskLevel('solar', solar), title: 'Watch the Sun', text: `Solar index ${fmtHazard('solar', solar)}. Check mission planner before a long EVA.` });
             } else {
                 items.push({ lvl: 'go', title: 'Solar quiet', text: 'No big flare signal right now.' });
             }
-
-            if (temp > 300 || temp < 120) {
-                items.push({ lvl: 'caution', title: 'Thermal pacing', text: `Surface temp ~${fmtHazard('temperature', temp)} K. Stage radiator checks and limit suit thermal load between waypoints.` });
+            if (temp > 80 || temp < -80) {
+                items.push({ lvl: 'caution', title: 'Thermal pacing', text: `Surface temp ~${fmtHazard('temperature', temp)} °C. Stage radiator checks and limit suit thermal load between waypoints.` });
             } else {
-                items.push({ lvl: 'go', title: 'Thermal band OK', text: `Temperature ~${fmtHazard('temperature', temp)} K is workable for rover traverse and habitat logistics.` });
+                items.push({ lvl: 'go', title: 'Thermal band OK', text: `Temperature ~${fmtHazard('temperature', temp)} °C is workable for rover traverse and habitat logistics.` });
             }
-
             if (riskLevel('dust', dust) !== 'go') {
                 items.push({ lvl: riskLevel('dust', dust), title: 'Dust mitigation', text: `Dust index ${fmtHazard('dust', dust)}. Prefer sealed sample transfers; wipe seals before repress.` });
             }
-
             if (riskLevel('micrometeorites', mets) !== 'go') {
                 items.push({ lvl: riskLevel('micrometeorites', mets), title: 'Hardened posture', text: `Micrometeoroid flux elevated (${fmtHazard('micrometeorites', mets)} /m²·d). Keep long EVA under canopy/rover cover when possible.` });
             }
-
             if (riskLevel('moonquakes', quakes) === 'go') {
                 items.push({ lvl: 'go', title: 'Seismic background', text: `Quake channel quiet (${fmtHazard('moonquakes', quakes)} M eq.). Precision instrument deploy is low risk.` });
             } else {
                 items.push({ lvl: riskLevel('moonquakes', quakes), title: 'Seismic caution', text: `Elevated seismic activity. Postpone delicate alignment work and re-check habitat mounts.` });
             }
-
             items.push({
                 lvl: 'go',
                 title: 'Next step',
@@ -4031,7 +3739,6 @@
                 text: `Open Mission Planner with ${site} coordinates to compute a full GO / CAUTION / NO-GO EVA window and PDF report.`,
                 cta: 'Open Mission Planner →'
             });
-
             list.innerHTML = items.map((it) => {
                 const action = it.action || (it.lvl === 'nogo' ? 'shelter' : it.title.toLowerCase().includes('eva') ? 'eva' : 'focus');
                 const cta = it.cta || (action === 'planner' ? 'Open Mission Planner →' : action === 'eva' ? 'Scrub EVA window →' : 'Highlight on map →');
@@ -4044,7 +3751,6 @@
             });
         }
         window.renderSuggestedActivities = renderSuggestedActivities;
-
         function highlightHazardOnMap(channel) {
             const mapKeys = {
                 radiation: 'radiation', solar: 'solar', dust: 'dust', temperature: 'temperature',
@@ -4076,7 +3782,6 @@
             }
         }
         window.highlightHazardOnMap = highlightHazardOnMap;
-
         function applySuggestion(el) {
             if (!el) return;
             const action = el.dataset.action || 'focus';
@@ -4094,7 +3799,6 @@
             else if (/seismic|quake/i.test(title)) channel = 'moonquakes';
             else if (/meteor|micromet/i.test(title)) channel = 'micrometeorites';
             else if (/radiation|eva|shelter|dose/i.test(title)) channel = 'radiation';
-
             if (action === 'eva' || action === 'shelter' || action === 'focus') {
                 highlightHazardOnMap(channel);
                 if (action === 'eva' || action === 'shelter') {
@@ -4116,7 +3820,6 @@
             highlightHazardOnMap(channel);
         }
         window.applySuggestion = applySuggestion;
-
         function renderForecastList(data) {
             const fc = document.getElementById('forecastContainer');
             if (!fc || !data) return;
@@ -4190,7 +3893,6 @@
                 fc.appendChild(el);
             }
         }
-
         async function ensureForecastHorizon(days) {
             const loc = LOCS[window._topoLocIdx || 0] || LOCS[0];
             const hours = days >= 30 ? 720 : days >= 14 ? 336 : 168;
@@ -4200,10 +3902,8 @@
             renderForecastList(data);
             return data;
         }
-
         async function renderGraph(){
             const checked = Array.from(document.querySelectorAll('#factorsContent input[type=checkbox]:checked')).map(i=>i.value);
-            
             let data;
             if (_forecastCache) {
                 data = _forecastCache;
@@ -4211,7 +3911,6 @@
                 const loc = LOCS[window._topoLocIdx||0]||LOCS[0];
                 data = await fetchForecast(loc.lat, loc.lon, 48);
             }
-
             const horizon = document.querySelector('input[name=time]:checked')?.value || '24h';
             const points = horizon === '30d' ? 48 : horizon === '7d' ? 42 : 24;
             const labels = (data.time || []).slice(0, points).map(i => `T+${i}h`);
@@ -4294,7 +3993,6 @@
             document.getElementById('graphAccuracy').textContent = `Plotting ${checked.length} hazard(s) · ${horizon} · ${normalize ? 'normalized' : 'native scale'}`;
         }
         window.renderGraph = renderGraph;
-
         function buildHazardField(baseIntensity, seed, opts = {}) {
             let s = Math.abs(Math.round(seed * 9973)) >>> 0 || 1;
             const rand = () => { s = (Math.imul(s, 1664525) + 1013904223) >>> 0; return s / 4294967296; };
@@ -4330,7 +4028,6 @@
             }));
             return { field, fw: FW, fh: FH, intensity: intens, blobs };
         }
-
         async function ensureMoonWideHazardGrid() {
             if (window._moonWideHazardGrid?.frames?.length) return window._moonWideHazardGrid;
             if (typeof fetchMoonWideHazardGrid === 'function') {
@@ -4344,7 +4041,6 @@
             } catch (e) { return null; }
         }
         ensureMoonWideHazardGrid();
-
         function updateHazardDataFromPrediction(idx, loc, data, prediction, hourIndex) {
             const h = Math.max(0, Math.min(47, hourIndex | 0));
             const est = (prediction && (prediction.refined_estimate || prediction.fast_estimate || prediction.prediction)) || null;
@@ -4379,7 +4075,6 @@
             const mets   = sampleGrid('micrometeorites', seriesAt('micrometeorites', 1.6));
             const solar  = sampleGrid('solar', seriesAt('solar', 2.2));
             const seedBase = (loc.lat || 0) * 1000 + (loc.lon || 0) * 100 + idx * 7 + h * 17;
-
             const pack = (key, intens, opts) => {
                 const built = buildHazardField(intens, seedBase + key.length * 13, opts);
                 const arr = built.blobs.slice();
@@ -4391,14 +4086,12 @@
                 arr.hour = h;
                 return arr;
             };
-
             const radI  = Math.min(1, rad / 0.16);
             const dustI = Math.min(1, dust / 3.2);
             const tempI = Math.min(1, 0.35 + Math.abs(temp + 40) / 180);
             const quakeI= Math.min(1, quakes / 45);
             const metI  = Math.min(1, mets / 4);
             const solI  = Math.min(1, solar / 20);
-
             window.hazardData = {
                 radiation:       pack('radiation', radI,  { fullFill: true, peaks: 4 + Math.round(radI * 4) }),
                 micrometeorites: pack('micrometeorites', metI, { fullFill: false, peaks: 5 + Math.round(metI * 6) }),
@@ -4428,7 +4121,6 @@
             pushHazardsToCesiumEmbed();
             if (!grid) ensureMoonWideHazardGrid();
         }
-
         function setTimelapseUI(hour, total) {
             const pct = (hour / Math.max(1, total - 1 || 23)) * 100;
             const progress = document.getElementById('timelapseProgress');
@@ -4446,7 +4138,6 @@
                 pauseIcon.style.display = _timelapse.playing ? '' : 'none';
             }
         }
-
         function applyTimelapseFrame(hour, totalFrames) {
             const total = totalFrames || 24;
             _timelapse.hour = ((hour % total) + total) % total;
@@ -4468,14 +4159,12 @@
             if (typeof TL_STATE !== 'undefined') TL_STATE.frame = _timelapse.hour;
         }
         window.applyTimelapseFrame = applyTimelapseFrame;
-
         window._refreshMercurySolarPanel = function() {
             if (!window.LIPAS_MERCURY || !_forecastCache) return;
             const loc = (typeof LOCS !== 'undefined' && LOCS[window._topoLocIdx || 0]) || {};
             renderSolarActivityPanel(_forecastCache, window._lastPrediction, loc);
             renderHourStrip(_forecastCache);
         };
-
         function toggleTimelapsePlay() {
             _timelapse.playing = !_timelapse.playing;
             const speedEl = document.getElementById('timelapseSpeed');
@@ -4517,7 +4206,6 @@
         window.toggleTimelapsePlay = toggleTimelapsePlay;
         window.resetTimelapse = resetTimelapse;
         window.updateTimelapseSpeed = updateTimelapseSpeed;
-
         function initTimelapseScrubber() {
             const bar = document.getElementById('timelapseBar');
             if (!bar || bar.dataset.bound) return;
@@ -4543,7 +4231,6 @@
                 }
             }
         }
-
         function renderSolarActivityPanel(data, prediction, loc) {
             const hi = window.LIPAS_MERCURY ? (Number(window._timelapseHour ?? 0) || 0) : 0;
             const solar = Number(data?.solar?.[hi] ?? data?.solar?.[0] ?? prediction?.refined_estimate?.solar ?? 2.2);
@@ -4570,7 +4257,7 @@
                     }
                     const km = document.getElementById('solarKpMeta');
                     if (km) km.textContent = `Activity ${sw.solarActivity?.value?.toFixed?.(1) ?? '-'} · conf ${sw.solarStorms?.confidence ?? '-'}%`;
-                } catch (e) { /* offline ok */ }
+                } catch (e) {  }
             } else {
                 if (window.LIPAS_MERCURY) {
                     storm = (Number.isFinite(kpVal) && kpVal >= 7) || solar >= 55 ? 'red'
@@ -4630,7 +4317,6 @@
             drawParticleMap(data, solI, storm);
             startDriverVizLoop(solI, storm, data);
         }
-
         let _driverVizRaf = null;
         let _driverVizState = { solar: 2.2, storm: 'green', data: null, lastDraw: 0 };
         function startDriverVizLoop(solarIndex, storm, data) {
@@ -4646,7 +4332,6 @@
             };
             _driverVizRaf = requestAnimationFrame(tick);
         }
-
         function drawParticleMap(data, solarIndex, storm, nowMs) {
             if (window.LIPAS_MERCURY && typeof window.drawMercuryParticles === 'function') {
                 window.drawMercuryParticles(nowMs, data);
@@ -4727,7 +4412,6 @@
             ctx.font = '600 10px Outfit, system-ui, sans-serif';
             ctx.fillText(`Conf ${conf}% · Sun toward site`, 22, 86);
         }
-
         function drawSolarMap(solarIndex, storm, nowMs) {
             const canvas = document.getElementById('solarMapCanvas');
             if (!canvas) return;
@@ -4869,7 +4553,6 @@
                 ctx.font = '600 9px Outfit, system-ui, sans-serif';
                 ctx.fillText(name, bx, H - 24);
             });
-
             canvas._solarRegions = regions;
             if (!canvas.dataset.bound) {
                 canvas.dataset.bound = '1';
@@ -4888,7 +4571,6 @@
                 });
             }
         }
-
         async function updateInfoForLocation(idx){
             try{
                 showLoading();
@@ -4933,7 +4615,6 @@
                 if (typeof window.startMoonFactRotator === 'function' && !window.LIPAS_MERCURY) window.startMoonFactRotator();
                 if (prediction?.confidence) window._lastConfidence = prediction.confidence;
                 if (window.LIPAS_MERCURY) {
-                    /* mercury_lipas.js owns status copy */
                 } else if(prediction && prediction.refined_estimate){
                     const hybrid = prediction.refined_estimate;
                     const confPct = prediction.confidence_pct
@@ -5000,7 +4681,6 @@
                 }
             }finally{ hideLoading(); }
         }
-
         function renderExpandedMetrics(data, prediction, loc, currentRadiation, currentTemp, currentDust) {
             const mp = document.getElementById('metricsPanel');
             if (!mp) return;
@@ -5070,7 +4750,6 @@
                 mp.appendChild(box);
             });
         }
-
         function siteIlluminationNow(lat, lon) {
             if (typeof calcTemperature === 'function') {
                 try { return calcTemperature(lat, lon, new Date()); } catch (_) {}
@@ -5084,16 +4763,13 @@
             const cos_z = Math.cos(Number(lat) * Math.PI / 180) * Math.cos(H * Math.PI / 180);
             return { cos_z, illumination: Math.max(0, Math.round(cos_z * 100)), solar: cos_z > 0 ? 'Day' : 'Night' };
         }
-
         function isFarSideLon(lon) {
             const a = Math.abs(((Number(lon) + 180) % 360 + 360) % 360 - 180);
             return a > 90;
         }
-
         function isPolarLat(lat) {
             return Math.abs(Number(lat)) >= 80;
         }
-
         function psrAccessHint(name, lat) {
             const n = (name || '').toLowerCase();
             if (/shackleton|shoemarker|haworth|faustini|de gerlache|sverdrup|amundsen|scott|zeeman|nobile|malapert/.test(n)) {
@@ -5104,7 +4780,6 @@
             if (Math.abs(lat) >= 80) return { level: 'Low-Med', meta: 'High latitude · seasonal shadow pockets' };
             return { level: '-', meta: 'Not a polar PSR target' };
         }
-
         function scoreEvaNow(data, prediction, loc) {
             const est = prediction && (prediction.refined_estimate || prediction.fast_estimate);
             const rad = Number(est?.radiation ?? data?.radiation?.[0] ?? 0.06);
@@ -5134,7 +4809,6 @@
             const label = status === 'go' ? 'GO' : status === 'caution' ? 'CAUTION' : 'NO-GO';
             return { status, label, score, reasons: reasons.slice(0, 3), site: loc?.name || 'Site' };
         }
-
         function renderEvaNowStrip(data, prediction, loc, idx) {
             const strip = document.getElementById('evaNowStrip');
             if (!strip) return;
@@ -5178,7 +4852,6 @@
                 btn.textContent = 'Open Mission Planner';
             }
         }
-
         function renderTerminatorOverview() {
             const sunHost = document.getElementById('termSunChips');
             const shHost = document.getElementById('termShadowChips');
@@ -5220,7 +4893,6 @@
             sunHost.onclick = jump;
             shHost.onclick = jump;
         }
-
         function renderNearFarOverview() {
             const host = document.getElementById('nearFarGrid');
             if (!host) return;
@@ -5253,7 +4925,6 @@
                 selectLocationByIndex(Number(btn.dataset.idx));
             };
         }
-
         function earthLinkCard(loc) {
             const far = isFarSideLon(loc?.lon);
             if (far) {
@@ -5275,7 +4946,6 @@
                 lvl: 'go',
             };
         }
-
         function renderExtendedOpsPanels(data, prediction, loc) {
             const illumHost = document.getElementById('illuminationGrid');
             const partHost = document.getElementById('particleGrid');
@@ -5295,7 +4965,6 @@
             } else {
                 document.body.classList.toggle('body-overview', isOverview);
             }
-
             const card = (host, items, evoOpts) => {
                 if (!host) return;
                 const isParticle = host.id === 'particleGrid';
@@ -5330,7 +4999,6 @@
                     });
                 }
             };
-
             const particleItems = [
                 { key: 'sep', raw: data.sep?.[0], label: 'SEP flux', value: fmtHazard('sep', data.sep?.[0]), meta: 'Energetic particles' },
                 { key: 'protons', raw: data.protons?.[0], label: 'Protons', value: fmtHazard('protons', data.protons?.[0]), meta: 'GOES / hybrid' },
@@ -5338,7 +5006,6 @@
                 { key: 'kp', raw: data.kp?.[0], label: 'Kp index', value: fmtHazard('kp', data.kp?.[0]), meta: 'Geomagnetic' },
             ];
             card(partHost, particleItems, { mode: 'drivers', keys: particleItems.map((p) => p.key) });
-
             if (solarSub) {
                 solarSub.textContent = window.LIPAS_MERCURY
                     ? 'Storm level, solar disk, and particle flux at Mercury from 1 AU drivers.'
@@ -5346,11 +5013,9 @@
                     ? 'Whole Moon storm and particle drivers.'
                     : 'Storm level and disk view.');
             }
-
             if (window.LIPAS_MERCURY) {
                 return;
             }
-
             if (isOverview) {
                 if (illumHost) illumHost.style.display = 'none';
                 if (rankHost) rankHost.style.display = 'grid';
@@ -5361,17 +5026,14 @@
                 renderNearFarOverview();
                 return;
             }
-
             if (illumHost) illumHost.style.display = '';
             if (rankHost) { rankHost.style.display = 'none'; rankHost.innerHTML = ''; }
-
             const illum = data.illumination?.[0] ?? loc?.illumination ?? siteIlluminationNow(loc.lat, loc.lon).illumination;
             const solOut = data.solarOutput?.[0] ?? loc?.solarOutput ?? illum;
             const cosz = data.cos_z?.[0] ?? loc?.cos_z ?? siteIlluminationNow(loc.lat, loc.lon).cos_z;
             const temp = data.temperature?.[0] ?? 200;
             const link = earthLinkCard(loc);
             const polar = isPolarLat(loc?.lat);
-
             if (polar) {
                 const psr = psrAccessHint(loc?.name, loc?.lat);
                 if (illumTitle) illumTitle.textContent = 'Polar power & shadow';
@@ -5400,7 +5062,6 @@
                 ], { mode: 'metrics', keys: ['illumination', 'solarOutput', 'cos_z', 'temperature', 'evaRisk', 'comms'] });
             }
         }
-
         function renderOverviewRankings(host, data, prediction) {
             if (!host) return;
             const rad = Number(prediction?.refined_estimate?.radiation ?? data?.radiation?.[0] ?? 0.06);
@@ -5415,7 +5076,6 @@
                 const score = thermal + dustPen + radPen + solarPen;
                 return { name: loc.name, score, lat: loc.lat, lon: loc.lon, idx: i + 1 };
             }).sort((a, b) => a.score - b.score);
-
             const best = scored.slice(0, 5);
             const worst = scored.slice(-5).reverse();
             const row = (r, kind) => {
@@ -5431,7 +5091,6 @@
                 el.addEventListener('click', () => selectLocationByIndex(Number(el.dataset.idx)));
             });
         }
-
         const LOC_TYPES = [
             'overview','crater','overview','crater','mare','highland','mare','mare',
             'highland','crater','highland','crater','basin','crater','mare','mare',
@@ -5439,7 +5098,6 @@
             'crater','crater','crater','crater','crater','crater','crater','crater',
             'crater','ridge','highland','peak','ridge'
         ];
-
         function selectLocationByIndex(idx) {
             const i = parseInt(idx, 10) || 0;
             if (typeof locations !== 'undefined' && Array.isArray(locations) && locations.length > i && typeof selectLocation === 'function') {
@@ -5448,7 +5106,6 @@
             }
             updateInfoForLocation(i);
         }
-
         let _lipasLocBridgeBusy = false;
         window.onLipasLocationSelected = function(idx, loc) {
             if (_lipasLocBridgeBusy) return;
@@ -5459,7 +5116,6 @@
             initTopoMap(i, { name: loc?.name || LOCS[i]?.name, lat: loc?.lat ?? LOCS[i]?.lat, lon: loc?.lon ?? LOCS[i]?.lon });
             Promise.resolve(updateInfoForLocation(i)).finally(() => { _lipasLocBridgeBusy = false; });
         };
-
         function renderLocations() {
             const list = document.getElementById('location-list');
             const q = (document.getElementById('loc-search')?.value || '').toLowerCase().trim();
@@ -5483,7 +5139,6 @@
             });
         }
         window.renderLocations = renderLocations;
-
         function patchSidebarImages() {
             if (document.body?.dataset?.app === 'mercury' || window.LIPAS_MERCURY) return;
             const thumbFn = (typeof moonThumbUrl === 'function')
@@ -5506,7 +5161,6 @@
                 img.style.backgroundImage = `url('${url}')`;
             });
         }
-
         document.addEventListener('DOMContentLoaded', ()=>{
             buildMetricButtons();
             initTimelapseScrubber();
@@ -5575,7 +5229,6 @@
                     TOPO.init(moonCanvas);
                 }
             }
-
             setTimeout(() => {
                 const params = new URLSearchParams(location.search);
                 const qLat = parseFloat(params.get('lat'));
@@ -5602,7 +5255,6 @@
                     updateInfoForLocation(idx);
                 }
             }, 50);
-
             if (location.hash) {
                 setTimeout(() => {
                     const el = document.querySelector(location.hash);
@@ -5611,7 +5263,6 @@
             }
         });
     </script>
-    
     <script src="topo_map.js" defer></script>
     <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.14.0" defer></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0" defer></script>
@@ -5621,6 +5272,6 @@
     <script src="js/lipas-api.js"></script>
     <script src="backend.js" defer></script>
     <script src="js/sidebar.js?v=2" defer></script>
-    <script src="js/navbar.js?v=26" defer></script>
+    <script src="js/navbar.js?v=30" defer></script>
 </body>
 </html>

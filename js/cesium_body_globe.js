@@ -1,6 +1,5 @@
 (function (global) {
   "use strict";
-
   const MOON_R = 1737400;
   const BODY_HAZARDS = {
     mercury: [
@@ -44,7 +43,6 @@
     Flare: "showFlares",
     ActiveRegion: "showSunspots",
   };
-
   const MERCURY_FALLBACK_SITES = [
     { name: "Equatorial reference", lat: 0, lon: 0, summary: "0°N 0°E control site", id: "equator" },
     { name: "Hokusai", lat: 58, lon: 17, summary: "Bright rayed crater", id: "hokusai" },
@@ -59,21 +57,17 @@
     { name: "Prokofiev (N pole)", lat: 85.8, lon: 62.9, summary: "Radar-bright polar crater", id: "prokofiev" },
     { name: "Chao Meng-Fu (S pole)", lat: -87.3, lon: -132.4, summary: "South-polar ice candidate", id: "chao" },
   ];
-
   function api(path) {
     return typeof global.lipasApiUrl === "function" ? global.lipasApiUrl(path) : path;
   }
-
   function hideLoading() {
     document.getElementById("loadingScreen")?.classList.add("hidden");
   }
-
   function num(v, d) {
     const n = Number(v);
     if (!Number.isFinite(n)) return "—";
     return n.toFixed(d);
   }
-
   function wrapLon(lon) {
     let x = Number(lon);
     if (!Number.isFinite(x)) return 0;
@@ -81,7 +75,6 @@
     while (x < -180) x += 360;
     return x;
   }
-
   function loadImage(url) {
     return new Promise((resolve, reject) => {
       const img = new Image();
@@ -91,7 +84,6 @@
       img.src = url;
     });
   }
-
   function detectDiskRadius(data, w, h) {
     const cx = (w - 1) / 2;
     const cy = (h - 1) / 2;
@@ -108,7 +100,6 @@
       return Math.min(a, b);
     }
   }
-
   function diskToEquirect(img, outW, outH) {
     const src = document.createElement("canvas");
     src.width = img.width;
@@ -121,7 +112,6 @@
     const cx = (sw - 1) / 2;
     const cy = (sh - 1) / 2;
     const rDisk = detectDiskRadius(srcData.data, sw, sh);
-
     let meanR = 0, meanG = 0, meanB = 0, nMean = 0;
     for (let i = 0; i < srcData.data.length; i += 16) {
       const lum = srcData.data[i] + srcData.data[i + 1] + srcData.data[i + 2];
@@ -140,7 +130,6 @@
       meanG = 140;
       meanB = 40;
     }
-
     const out = document.createElement("canvas");
     out.width = outW;
     out.height = outH;
@@ -148,14 +137,12 @@
     const dst = octx.createImageData(outW, outH);
     const d = dst.data;
     const s = srcData.data;
-
     function sample(u, v) {
       const x = Math.max(0, Math.min(sw - 1, u));
       const y = Math.max(0, Math.min(sh - 1, v));
       const i = (Math.floor(y) * sw + Math.floor(x)) * 4;
       return [s[i], s[i + 1], s[i + 2]];
     }
-
     for (let y = 0; y < outH; y++) {
       const lat = Math.PI / 2 - (y / Math.max(1, outH - 1)) * Math.PI;
       const cosLat = Math.cos(lat);
@@ -188,7 +175,6 @@
     octx.putImageData(dst, 0, 0);
     return out;
   }
-
   function normalizeSite(raw, body) {
     if (!raw) return null;
     const lat = Number(raw.lat ?? raw.latitude);
@@ -231,7 +217,6 @@
       extra: raw,
     };
   }
-
   function peaksForType(sites, cfg) {
     const key = cfg.siteKey;
     const vals = sites.map((s) => Number(s[key])).filter(Number.isFinite);
@@ -250,7 +235,6 @@
       })
       .sort((a, b) => b.intensity - a.intensity);
   }
-
   async function fetchSites(cfg) {
     const url = cfg.sitesUrl ? api(cfg.sitesUrl) : "";
     if (!url) return cfg.fallbackSites.slice();
@@ -268,7 +252,6 @@
       return cfg.fallbackSites.slice();
     }
   }
-
   function absApi(path) {
     const p = api(path);
     if (p.startsWith("http://") || p.startsWith("https://")) return p;
@@ -278,7 +261,6 @@
       return p;
     }
   }
-
   function trekProvider(url, ellipsoid, maxLevel, credit) {
     return new Cesium.UrlTemplateImageryProvider({
       url: absApi(url),
@@ -290,7 +272,6 @@
       credit: credit || "",
     });
   }
-
   function attachTrekImagery(globe, ellipsoid, cfg) {
     const color = globe.imageryLayers.addImageryProvider(
       trekProvider(cfg.imageryUrl, ellipsoid, cfg.maxLevel || 6, cfg.imageryCredit || "")
@@ -310,7 +291,6 @@
     }
     return { color, shade, detail: null };
   }
-
   async function attachSolarImagery(globe, ellipsoid, cfg) {
     const tileUrl = "/api/solar/tiles/{z}/{y}/{x}.jpg";
     try {
@@ -358,7 +338,6 @@
     );
     return { color: layer, shade: null };
   }
-
   function styleSpaceScene(viewer, cfg) {
     const scene = viewer.scene;
     scene.backgroundColor = Cesium.Color.fromCssColorString(cfg.body === "sun" ? "#050200" : "#03050a");
@@ -371,7 +350,6 @@
       scene.globe.enableLighting = false;
     }
   }
-
   function applySubsolarLight(viewer, ellipsoid, subLon, subLat, on) {
     const globe = viewer.scene.globe;
     if (!on) {
@@ -389,22 +367,18 @@
       color: Cesium.Color.fromCssColorString("#fff4e0"),
     });
   }
-
   function hazardsFor(body) {
     return BODY_HAZARDS[body] || BODY_HAZARDS.mercury;
   }
-
   function initMobileOptions(viewer) {
     const openBtn = document.getElementById("globeOptionsOpen");
     const closeBtn = document.getElementById("globeOptionsClose");
     const mq = window.matchMedia("(max-width: 720px)");
-
     function resizeGlobe() {
       try {
         if (viewer && !viewer.isDestroyed()) viewer.resize();
       } catch (e) {}
     }
-
     function setOptionsOpen(open) {
       if (document.body.classList.contains("embed-mode")) {
         document.body.classList.remove("globe-options-open");
@@ -413,7 +387,6 @@
       document.body.classList.toggle("globe-options-open", open);
       setTimeout(resizeGlobe, 80);
     }
-
     openBtn?.addEventListener("click", () => setOptionsOpen(true));
     closeBtn?.addEventListener("click", () => setOptionsOpen(false));
     mq.addEventListener("change", () => {
@@ -421,7 +394,6 @@
       resizeGlobe();
     });
   }
-
   async function start(userCfg) {
     const cfg = Object.assign(
       {
@@ -443,14 +415,11 @@
       },
       userCfg || {}
     );
-
     const q = new URLSearchParams(location.search);
     if (q.get("embed") === "1") document.body.classList.add("embed-mode");
     global.__LIPAS_CESIUM_VIEW = q.get("view") || "3d";
-
     try {
       if (typeof Cesium === "undefined") throw new Error("Cesium library failed to load");
-
       let token = "";
       try {
         const resp = await fetch("/client-token", { cache: "no-store" });
@@ -462,21 +431,18 @@
         console.warn("CESIUM_ION_TOKEN unavailable; continuing with public imagery.", tokenErr);
       }
       if (token) Cesium.Ion.defaultAccessToken = token;
-
       const ellipsoid = new Cesium.Ellipsoid(cfg.radiusMeters, cfg.radiusMeters, cfg.radiusMeters);
       try {
         if (Cesium.Ellipsoid) Cesium.Ellipsoid.default = ellipsoid;
       } catch (ellErr) {
         console.warn("Could not set default ellipsoid", ellErr);
       }
-
       const bodyGlobe = new Cesium.Globe(ellipsoid);
       bodyGlobe.terrainProvider = new Cesium.EllipsoidTerrainProvider({ ellipsoid });
       bodyGlobe.baseColor = Cesium.Color.fromCssColorString(cfg.baseColor);
       bodyGlobe.show = true;
       bodyGlobe.enableLighting = false;
       bodyGlobe.depthTestAgainstTerrain = false;
-
       const viewer = new Cesium.Viewer("cesiumContainer", {
         globe: bodyGlobe,
         baseLayer: false,
@@ -499,7 +465,6 @@
       sscc.minimumZoomDistance = cfg.radiusMeters * 0.08;
       sscc.maximumZoomDistance = cfg.radiusMeters * 12;
       global.viewer = viewer;
-
       let baseLayers = { color: null, shade: null };
       const photo = cfg.body === "sun" ? "assets/ui/sun.jpg" : cfg.body === "mercury" ? "assets/ui/mercury.jpg" : "";
       async function addPhoto(url) {
@@ -522,7 +487,6 @@
         console.warn("Base imagery layer failed to attach. Keeping the surface photo.", imageryErr);
       }
       const baseCount = bodyGlobe.imageryLayers ? bodyGlobe.imageryLayers.length : 1;
-
       const WORLD_RECT = Cesium.Rectangle.fromDegrees(-180, -90, 180, 90);
       const HAZARD_TYPES = hazardsFor(cfg.body);
       const hazardLayers = Object.create(null);
@@ -530,7 +494,6 @@
       let hazardMeta = {};
       let clock = { subsolar: { lon: 0, lat: 0 }, planets: [], hour: 0, carrington_deg_per_hour: 13.2 / 24 };
       let forecastSeries = null;
-
       function currentSeverity(spec) {
         const h = Number(clock.hour) || 0;
         const series = forecastSeries;
@@ -551,7 +514,6 @@
         if (spec.type === "Storm") return pick("kp", 7, 0.2);
         return spec.base;
       }
-
       function buildHazardProvider(type, sev) {
         const spec = HAZARD_TYPES.find((h) => h.type === type) || { type, siteKey: "solar", mode: "dayside" };
         const grid = window.LipasHazardGrid;
@@ -663,7 +625,6 @@
           tileHeight: canvas.height,
         });
       }
-
       function refreshAllHazardLayers(meta) {
         if (meta) hazardMeta = { ...hazardMeta, ...meta };
         Object.keys(hazardLayers).forEach((type) => {
@@ -680,7 +641,6 @@
           bodyGlobe.imageryLayers.remove(old, true);
         });
       }
-
       HAZARD_TYPES.forEach((spec, i) => {
         const idx = baseCount + i;
         const layer = bodyGlobe.imageryLayers.addImageryProvider(buildHazardProvider(spec.type, spec.base), idx);
@@ -690,21 +650,18 @@
         hazardLayers[spec.type] = { layer, severity: spec.base, on, idx };
       });
       global.__LIPAS_HAZARD_LAYERS = hazardLayers;
-
       function setHazardTypeVisible(type, visible) {
         const h = hazardLayers[type];
         if (!h) return;
         h.on = !!visible;
         h.layer.show = h.on;
       }
-
       function syncVisibilityFromCheckboxes() {
         HAZARD_TYPES.forEach((spec) => {
           setHazardTypeVisible(spec.type, !!document.getElementById(spec.checkboxId)?.checked);
         });
       }
       syncVisibilityFromCheckboxes();
-
       function applyActiveHazardLayers(keys) {
         const list = Array.isArray(keys) ? keys : [];
         if (!list.length) {
@@ -720,18 +677,15 @@
         });
       }
       global.applyActiveHazardLayers = applyActiveHazardLayers;
-
       global.syncCesiumHazards = function (hd) {
         if (!hd || !hd._meta) return;
         hazardMeta = { ...hd._meta };
         refreshAllHazardLayers(hazardMeta);
       };
-
       try {
         const raw = localStorage.getItem("lipas_hazard_meta");
         if (raw) global.syncCesiumHazards({ _meta: JSON.parse(raw) });
       } catch (e) {}
-
       const _hazPulseT0 = performance.now();
       viewer.clock.onTick.addEventListener(() => {
         const t = (performance.now() - _hazPulseT0) / 1000;
@@ -745,7 +699,6 @@
           h.layer.alpha = base + amp * Math.sin(t * (0.2 + i * 0.035) + i * 1.3);
         }
       });
-
       window.addEventListener("message", (ev) => {
         const msg = ev.data;
         if (!msg || msg.type !== "lipas_hazards") return;
@@ -757,18 +710,15 @@
         if (Array.isArray(msg.active)) applyActiveHazardLayers(msg.active);
         else syncVisibilityFromCheckboxes();
       });
-
       const markerH = Math.max(8000, cfg.radiusMeters * (25000 / MOON_R));
       const markerColor = Cesium.Color.fromCssColorString(cfg.markerColor || "#e07a3d");
       const siteEntities = [];
       const planetEntities = [];
-
       function driftedSiteLon(site) {
         if (cfg.body !== "sun") return site.lon;
         const drift = Number(clock.carrington_deg_per_hour) || 13.2 / 24;
         return wrapLon(site.lon - drift * (Number(clock.hour) || 0));
       }
-
       function rebuildSiteEntities(list) {
         siteEntities.splice(0).forEach((s) => viewer.entities.remove(s.entity));
         list.forEach((site, i) => {
@@ -828,7 +778,6 @@
           siteEntities.push({ entity: ent, site, layerOn: true });
         });
       }
-
       function rebuildPlanetEntities(planets) {
         planetEntities.splice(0).forEach((row) => viewer.entities.remove(row.entity));
         if (cfg.body !== "sun" || !Array.isArray(planets)) return;
@@ -862,7 +811,6 @@
           planetEntities.push({ entity: ent, planet: p, layerOn: true });
         });
       }
-
       function setLocationsVisible(on) {
         siteEntities.forEach((s) => {
           s.layerOn = !!on;
@@ -873,7 +821,6 @@
           if (!on) s.entity.show = false;
         });
       }
-
       const _scratchPos = new Cesium.Cartesian3();
       const _scratchNormal = new Cesium.Cartesian3();
       const _scratchCam = new Cesium.Cartesian3();
@@ -885,7 +832,6 @@
         Cesium.Cartesian3.normalize(toCam, toCam);
         return Cesium.Cartesian3.dot(normal, toCam) > 0.1;
       }
-
       viewer.clock.onTick.addEventListener(() => {
         siteEntities.forEach((s) => {
           if (!s.layerOn) {
@@ -902,11 +848,9 @@
           s.entity.show = isFacingCamera(s.planet.lat || 0, s.planet.lon);
         });
       });
-
       document.getElementById("showLocations")?.addEventListener("change", (e) => {
         setLocationsVisible(e.target.checked);
       });
-
       const hoverCard = document.getElementById("locHoverCard");
       const hoverName = document.getElementById("locHoverName");
       const hoverCoords = document.getElementById("locHoverCoords");
@@ -918,7 +862,6 @@
       const dashBtn = document.getElementById("locDashBtn");
       const closeBtn = document.getElementById("locCloseBtn");
       let pinnedSite = null;
-
       function siteBrief(site) {
         const hazards = [];
         const rad = Number(site.radiation);
@@ -957,7 +900,6 @@
           link: "Hermean",
         };
       }
-
       function fillLocCard(site, { pinned } = { pinned: false }) {
         if (!hoverCard || !site) return;
         const brief = siteBrief(site);
@@ -992,14 +934,12 @@
           hoverCard.style.top = "";
         }
       }
-
       function clearPinnedCard() {
         pinnedSite = null;
         hoverCard?.classList.remove("pinned", "show");
       }
       closeBtn?.addEventListener("click", clearPinnedCard);
-
-      const flyAlt = cfg.radiusMeters * (3200000 / MOON_R);
+      const flyAlt = cfg.radiusMeters * 4.6;
       function flyToSite(site, altitude) {
         const lon = driftedSiteLon(site);
         viewer.camera.flyTo({
@@ -1010,7 +950,6 @@
           if (s.entity.label) s.entity.label.show = s.site.name === site.name;
         });
       }
-
       const handler = new Cesium.ScreenSpaceEventHandler(viewer.scene.canvas);
       handler.setInputAction((movement) => {
         if (pinnedSite) return;
@@ -1039,7 +978,6 @@
           document.body.style.cursor = "";
         }
       }, Cesium.ScreenSpaceEventType.MOUSE_MOVE);
-
       handler.setInputAction((click) => {
         const picked = viewer.scene.pick(click.position);
         const ent = picked && picked.id;
@@ -1057,7 +995,6 @@
           fillLocCard(site, { pinned: true });
         }
       }, Cesium.ScreenSpaceEventType.LEFT_CLICK);
-
       const searchInput = document.getElementById("locSearchInput");
       const searchResults = document.getElementById("locSearchResults");
       function selectSiteFromSearch(site) {
@@ -1125,7 +1062,6 @@
       document.addEventListener("click", (e) => {
         if (!e.target.closest(".loc-search-panel")) searchResults?.classList.remove("show");
       });
-
       let autoRotateEnabled = false;
       let userInteracting = false;
       let lastAutoRotateTs = performance.now();
@@ -1150,7 +1086,6 @@
         autoRotateEnabled = e.target.checked;
         lastAutoRotateTs = performance.now();
       });
-
       document.getElementById("showTerrain")?.addEventListener("change", (e) => {
         if (baseLayers.shade) {
           const imageryOn = !!document.getElementById("showImagery")?.checked;
@@ -1185,10 +1120,24 @@
       ["showRadiation", "showMicrometeorites", "showDust", "showMoonquakes", "showTemperature", "showSolar", "showSep", "showCme", "showStorm", "showSunspots", "showFlares"].forEach((id) => {
         document.getElementById(id)?.addEventListener("change", syncVisibilityFromCheckboxes);
       });
-
+      document.querySelectorAll("#legendPanel [data-hazard]").forEach((btn) => {
+        const box = document.getElementById(btn.getAttribute("data-hazard"));
+        const paint = () => {
+          const on = box ? !!box.checked : btn.getAttribute("aria-pressed") === "true";
+          btn.classList.toggle("is-off", !on);
+          btn.setAttribute("aria-pressed", on ? "true" : "false");
+        };
+        paint();
+        btn.addEventListener("click", () => {
+          if (!box) return;
+          box.checked = !box.checked;
+          box.dispatchEvent(new Event("change", { bubbles: true }));
+          paint();
+        });
+        box?.addEventListener("change", paint);
+      });
       rebuildSiteEntities(sites);
       setLocationsVisible(!!document.getElementById("showLocations")?.checked);
-
       if (cfg.body === "sun") {
         const glowR = cfg.radiusMeters * 1.04;
         viewer.entities.add({
@@ -1200,7 +1149,6 @@
           },
         });
       }
-
       async function applyHour(hour) {
         clock.hour = Number(hour) || 0;
         try {
@@ -1228,13 +1176,10 @@
         }
         timebar.setMeta(bits.join(" · "));
       }
-
       const timebar = window.LipasGlobeTimebar
         ? window.LipasGlobeTimebar.bind({ onChange: applyHour })
         : { getHour: () => 0, setMeta() {} };
-
       applyHour(timebar.getHour());
-
       if (cfg.body === "mercury") {
         fetch(api("/api/mercury/forecast?site=equator&hours=25"))
           .then((r) => (r.ok ? r.json() : null))
@@ -1243,29 +1188,26 @@
           })
           .catch(() => {});
       }
-
       const initialView = (global.__LIPAS_CESIUM_VIEW || "3d").toLowerCase();
       const viewSelect = document.getElementById("viewMode");
       if (viewSelect && (initialView === "columbus" || initialView === "2d")) {
         viewSelect.value = initialView;
         viewSelect.dispatchEvent(new Event("change"));
       }
-
       const isEmbed = document.body.classList.contains("embed-mode");
       if (viewer.scene.mode === Cesium.SceneMode.SCENE2D) {
         viewer.camera.flyTo({ destination: WORLD_RECT, duration: isEmbed ? 0.5 : 1.5 });
       } else {
         viewer.camera.flyTo({
-          destination: Cesium.Cartesian3.fromDegrees(0, 0, isEmbed ? flyAlt * 1.4 : flyAlt, ellipsoid),
+          destination: Cesium.Cartesian3.fromDegrees(18, 22, isEmbed ? flyAlt * 1.15 : flyAlt, ellipsoid),
           duration: isEmbed ? 0.5 : 2.0,
         });
       }
-
       (function addBodyTraffic() {
         if (cfg.body !== "mercury" && cfg.body !== "sun") return;
         const traffic = cfg.body === "mercury"
           ? [
-              { name: "BepiColombo", altKm: 3600, inc: 32, period: 140, phase: 0.4, node: 55, note: "ESA/JAXA spacecraft at Mercury. Orbit drawn so the full ring stays in frame." },
+              { name: "BepiColombo", altKm: cfg.radiusMeters / 1000 * 0.7, inc: 16, period: 140, phase: 0.4, node: 18, note: "ESA/JAXA spacecraft at Mercury. Distance is pulled in so the orbit reads as a ring around the planet." },
               { name: "MESSENGER", surface: true, lat: 54.4, lon: -149.9, note: "NASA impact site, 30 April 2015, northern volcanic plains." },
             ]
           : [
@@ -1275,24 +1217,29 @@
         const t0 = Date.now();
         traffic.forEach((c) => {
           if (!c.surface) {
-            const ring = [];
             const inc = c.inc * Math.PI / 180;
-            for (let i = 0; i <= 90; i++) {
-              const ang = (i / 90) * Math.PI * 2;
+            const segs = [[]];
+            let prevLon = null;
+            for (let i = 0; i <= 120; i++) {
+              const ang = (i / 120) * Math.PI * 2;
               const lat = Math.asin(Math.sin(inc) * Math.sin(ang)) * 180 / Math.PI;
-              const lon = Math.atan2(Math.sin(ang) * Math.cos(inc), Math.cos(ang)) * 180 / Math.PI + (c.node || 0);
-              ring.push(Cesium.Cartesian3.fromDegrees(lon, lat, c.altKm * 1000, ellipsoid));
+              let lon = Math.atan2(Math.sin(ang) * Math.cos(inc), Math.cos(ang)) * 180 / Math.PI + (c.node || 0);
+              while (lon > 180) lon -= 360;
+              while (lon < -180) lon += 360;
+              if (prevLon != null && Math.abs(lon - prevLon) > 180) segs.push([]);
+              segs[segs.length - 1].push(Cesium.Cartesian3.fromDegrees(lon, lat, c.altKm * 1000, ellipsoid));
+              prevLon = lon;
             }
             const orbitColor = Cesium.Color.fromCssColorString(cfg.body === "sun" ? "#ffe08a" : "#f0a03c");
-            viewer.entities.add({
+            segs.filter((s) => s.length > 2).forEach((positions) => viewer.entities.add({
               polyline: {
-                positions: ring,
+                positions,
                 width: 6,
                 arcType: Cesium.ArcType.NONE,
                 material: new Cesium.PolylineGlowMaterialProperty({ glowPower: 0.16, color: orbitColor }),
                 depthFailMaterial: orbitColor.withAlpha(0.45),
               },
-            });
+            }));
           }
           viewer.entities.add({
             name: c.name,
@@ -1325,7 +1272,6 @@
           });
         });
       })();
-
       fetchSites(cfg).then((live) => {
         if (!live.length) return;
         sites = live;
@@ -1333,13 +1279,11 @@
         setLocationsVisible(!!document.getElementById("showLocations")?.checked);
         refreshAllHazardLayers(hazardMeta);
       });
-
       try {
         if (window.parent && window.parent !== window) {
           window.parent.postMessage({ type: "lipas_cesium_ready" }, "*");
         }
       } catch (e) {}
-
       initMobileOptions(viewer);
       console.info(
         "[LIPAS] Cesium",
@@ -1364,8 +1308,6 @@
       setTimeout(hideLoading, 400);
     }
   }
-
   setTimeout(hideLoading, 12000);
-
   global.LipasCesiumGlobe = { start };
 })(typeof window !== "undefined" ? window : globalThis);

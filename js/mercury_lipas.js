@@ -1,14 +1,11 @@
 (function () {
   "use strict";
-
   window.LIPAS_MERCURY = true;
-
   const api = (p) => (typeof window.lipasApiUrl === "function" ? window.lipasApiUrl(p) : p);
   const lightOn = () => document.documentElement.dataset.theme === "light";
   const themePlot = () => (lightOn() ? "#f6f1e8" : "#07090c");
   const themeInk = () => (lightOn() ? "#1a1916" : "#e6eef8");
   const themeMuted = () => (lightOn() ? "#5c564c" : "#8fa3b8");
-
   const SITES = [
     {
       id: "overview",
@@ -132,19 +129,16 @@
       group: "sites",
     },
   ];
-
   let magCut = "b";
   let magZoom = 1;
   let colorMode = "thermal";
   let activeChartKey = null;
-
   let siteId = "equator";
   let hour = 0;
   let state = null;
   let forecast = null;
   let sitesNow = null;
   let hourTimer = null;
-
   const CUT_TITLES = {
     b: "Magnetic field",
     xz: "Side view",
@@ -154,7 +148,6 @@
     density: "Plasma",
     clock: "IMF",
   };
-
   const METRIC_CHARTS = [
     { key: "solar", title: "Solar activity — 24 h", canvas: "cvSolar", w: 720, h: 200 },
     { key: "radiation", title: "Radiation — 24 h", canvas: "cvRad", w: 720, h: 200 },
@@ -164,20 +157,16 @@
     { key: "pressure", title: "Wind vs field pressure", canvas: "cvP", w: 560, h: 200 },
     { key: "sites", title: "Radiation by site", canvas: "cvSites", w: 560, h: 220 },
   ];
-
   function $(id) {
     return document.getElementById(id);
   }
-
   function fmt(v, d) {
     if (v == null || !Number.isFinite(Number(v))) return "—";
     return Number(v).toFixed(d);
   }
-
   function isOverviewLoc(loc) {
     return !!(loc && (loc.overview || loc.id === "overview" || loc.siteId === "overview" || /overview/i.test(loc.name || "")));
   }
-
   function matchSite(lat, lon, loc) {
     if (isOverviewLoc(loc)) return SITES.find((s) => s.id === "overview") || SITES[0];
     let best = SITES.find((s) => !s.overview) || SITES[0];
@@ -192,7 +181,6 @@
     }
     return best;
   }
-
   function syncLocs() {
     const arr = window.LOCS || [];
     arr.length = 0;
@@ -210,7 +198,6 @@
     );
     window.LOCS = arr;
   }
-
   window.fetchMercuryForecast = async function fetchMercuryForecast(lat, lon, hours = 24) {
     const locHint = (window.LOCS || [])[window._topoLocIdx | 0] || { lat, lon };
     const site = matchSite(Number(lat) || 0, Number(lon) || 0, locHint);
@@ -269,7 +256,6 @@
       const disk = await fetch(api("/api/solar/disk?max=40"));
       if (disk.ok) window._solarDisk = await disk.json();
     } catch (_) {}
-
     const n = (raw.time && raw.time.length) || h;
     const out = {
       time: raw.time || Array.from({ length: n }, (_, i) => i),
@@ -319,7 +305,6 @@
     };
     return out;
   };
-
   window.serverPredict = async function serverPredictMercury() {
     const now = window._mercuryNow;
     if (!now || !now.prediction) return null;
@@ -346,7 +331,6 @@
       source: now.source || "mercury_physics",
     };
   };
-
   function schematicMag(rss) {
     const R = Math.max(1.15, Number(rss) || 1.42);
     const nx = 56;
@@ -420,7 +404,6 @@
       })),
     };
   }
-
   async function loadState(h) {
     const hourN = Number(h) || 0;
     try {
@@ -475,7 +458,6 @@
     window._mercuryNow = state;
     return state;
   }
-
   async function loadSites() {
     try {
       const r = await fetch(api("/api/mercury/sites"));
@@ -490,7 +472,6 @@
       }
     } catch (_) {}
   }
-
   function relocateMagPanel(hero) {
     if (!hero) return;
     const slider = $("slider-section");
@@ -508,12 +489,10 @@
       loc.parentNode.insertBefore(hero, loc.nextSibling);
     }
   }
-
   function placeHelioAfterHero(hero, helio) {
     if (!hero || !helio || !hero.parentNode) return;
     hero.parentNode.insertBefore(helio, hero.nextSibling);
   }
-
   function injectMagShell() {
     let hero = $("mercMagHero");
     let helio = $("mercHelioPanel");
@@ -527,12 +506,9 @@
       try { hero.remove(); } catch (_) {}
       hero = null;
     }
-
     const map = $("mapContainer");
     if (!map) return;
-
     map.dataset.mercuryMag = "5";
-
     hero = document.createElement("div");
     hero.className = "merc-mag-hero";
     hero.id = "mercMagHero";
@@ -600,7 +576,6 @@
           <span id="timelapseDuration">24 Hours</span>
         </div>
       </div>`;
-
     helio = document.createElement("div");
     helio.className = "merc-helio-panel";
     helio.id = "mercHelioPanel";
@@ -610,16 +585,13 @@
         <p class="merc-helio-sub" id="mercHelioSub">Where Mercury sits relative to Earth</p>
       </div>
       <canvas id="cvHelio" width="720" height="280"></canvas>`;
-
     map.innerHTML = '<div class="map-header merc-map-minimal"><div class="map-title" id="mapTitle"></div></div>';
     map.parentNode.insertBefore(hero, map);
     map.parentNode.insertBefore(helio, map);
     relocateMagPanel(hero);
     placeHelioAfterHero(hero, helio);
-
     bindMagControls();
   }
-
   function bindMagControls() {
     const tabs = $("mercCutTabs");
     if (tabs && !tabs.dataset.bound) {
@@ -634,7 +606,6 @@
         drawCombinedCut();
       });
     }
-
     const colors = $("mercColorModes");
     if (colors && !colors.dataset.bound) {
       colors.dataset.bound = "1";
@@ -646,7 +617,6 @@
         drawCombinedCut();
       });
     }
-
     const zoom = $("mercZoomBtns");
     if (zoom && !zoom.dataset.bound) {
       zoom.dataset.bound = "1";
@@ -659,7 +629,6 @@
         drawCombinedCut();
       });
     }
-
     const slider = $("mercMagHour");
     if (slider && !slider.dataset.bound) {
       slider.dataset.bound = "1";
@@ -676,7 +645,6 @@
     }
     syncMagSlider();
   }
-
   function syncMagSlider() {
     const slider = $("mercMagHour");
     const val = $("mercMagHourVal");
@@ -701,7 +669,6 @@
       meta.textContent = `Shield ${fmt(m.standoff_rm, 2)} RM · wind ${fmt(phys.p_dyn_npa, 1)} nPa · Bz ${fmt(state.wind_mercury?.imf_bz, 1)} nT · flare ${flare}`;
     }
   }
-
   function prepMagCanvas() {
     const cv = $("cvMag");
     if (!cv) return null;
@@ -721,7 +688,6 @@
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     ctx.fillStyle = themePlot();
     ctx.fillRect(0, 0, cssW, cssH);
-
     if (magZoom !== 1) {
       ctx.translate(cssW / 2, cssH / 2);
       ctx.scale(magZoom, magZoom);
@@ -729,7 +695,6 @@
     }
     return { cv, ctx, W: cssW, H: cssH, dpr };
   }
-
   function drawAxisTicks(ctx, W, H, g, yKey) {
     const pad = 8;
     const ymin = g[yKey === "y" ? "y_min" : "z_min"];
@@ -752,7 +717,6 @@
     ctx.fillText("X (R_M)", W - 52, H - 16);
     ctx.fillText(yKey === "y" ? "Y" : "Z", 4, 14);
   }
-
   function xyFromGrid(W, H, x, z, g, yKey) {
     const ymin = g[yKey === "y" ? "y_min" : "z_min"];
     const ymax = g[yKey === "y" ? "y_max" : "z_max"];
@@ -760,7 +724,6 @@
     const py = (1 - (z - ymin) / (ymax - ymin)) * H;
     return [px, py];
   }
-
   function drawRegionGrid(prep, grid, colors, mag, yKey) {
     const { ctx, W, H } = prep;
     if (!grid) return;
@@ -841,16 +804,13 @@
     ctx.fillText("SUN →", W - 64, 18);
     drawAxisTicks(ctx, W, H, grid, yKey);
   }
-
   function shadeMono(hex) {
     return "rgba(180,140,100,0.55)";
   }
-
   function shadeContrast(hex) {
     if (!hex || typeof hex !== "string") return "#e07a3d";
     return hex;
   }
-
   function drawMagnetosphere() {
     const prep = prepMagCanvas();
     const mag = state?.magnetosphere;
@@ -863,7 +823,6 @@
         .join("");
     }
   }
-
   function drawEquatorial() {
     const prep = prepMagCanvas();
     const mag = state?.magnetosphere;
@@ -876,7 +835,6 @@
         .join("");
     }
   }
-
   function bmagColor(t) {
     if (colorMode === "mono") {
       const g = Math.round(40 + t * 180);
@@ -909,7 +867,6 @@
     const c = a[1].map((v, i) => Math.round(v + (b[1][i] - v) * u));
     return `rgb(${c[0]},${c[1]},${c[2]})`;
   }
-
   function drawBmag() {
     const prep = prepMagCanvas();
     const mag = state?.magnetosphere;
@@ -958,7 +915,6 @@
     }
     void cv;
   }
-
   function drawFieldLinesView() {
     const prep = prepMagCanvas();
     const mag = state?.magnetosphere;
@@ -971,13 +927,11 @@
       z_max: 3,
     };
     const rss = Math.max(1.05, Number(mag.standoff_rm) || 1.45);
-
     const grd = ctx.createRadialGradient(W * 0.55, H * 0.5, 20, W * 0.55, H * 0.5, W * 0.55);
     grd.addColorStop(0, "rgba(224,122,61,0.12)");
     grd.addColorStop(1, themePlot());
     ctx.fillStyle = grd;
     ctx.fillRect(0, 0, W, H);
-
     const strokePoly = (pts, color, width) => {
       if (!pts || pts.length < 2) return;
       ctx.beginPath();
@@ -997,7 +951,6 @@
     (mag.field_lines || []).forEach((ln) => {
       strokePoly(ln.points, ln.closed ? "#7ec8d6" : "#e25b5b", ln.closed ? 1.4 : 1.1);
     });
-
     if (!(mag.field_lines || []).length) {
       for (let i = -4; i <= 4; i++) {
         if (i === 0) continue;
@@ -1033,7 +986,6 @@
         '<span><i style="background:#7ec8d6"></i>closed</span><span><i style="background:#e25b5b"></i>open</span><span><i style="background:#e07a3d"></i>MP</span>';
     }
   }
-
   function drawStandoffView() {
     const prep = prepMagCanvas();
     const mag = state?.magnetosphere;
@@ -1049,7 +1001,6 @@
     ctx.fillStyle = "#f0a060";
     ctx.font = "12px IBM Plex Sans, sans-serif";
     ctx.fillText("SUN →", W - 62, 24);
-
     const drawShue = (R, col, width) => {
       ctx.beginPath();
       for (let i = 0; i <= 72; i++) {
@@ -1066,12 +1017,10 @@
     };
     drawShue(rbs, "#e8c48a", 1.6);
     drawShue(rss, "#e07a3d", 2.6);
-
     ctx.fillStyle = "#8a7a6b";
     ctx.beginPath();
     ctx.arc(cx, cy, pr, 0, Math.PI * 2);
     ctx.fill();
-
     ctx.strokeStyle = "rgba(224,122,61,0.5)";
     ctx.setLineDash([4, 4]);
     ctx.beginPath();
@@ -1091,7 +1040,6 @@
         '<span><i style="background:#e07a3d"></i>magnetopause</span><span><i style="background:#e8c48a"></i>bow shock</span>';
     }
   }
-
   function drawDensityView() {
     const prep = prepMagCanvas();
     if (!prep) return;
@@ -1135,7 +1083,6 @@
         '<span><i style="background:#dc8a3c"></i>dense SW</span><span><i style="background:#284060"></i>wake / magnetosphere</span>';
     }
   }
-
   function drawClockOnMag() {
     const prep = prepMagCanvas();
     if (!prep) return;
@@ -1179,7 +1126,6 @@
         '<span><i style="background:#e07a3d"></i>northward</span><span><i style="background:#e25b5b"></i>southward</span>';
     }
   }
-
   function drawCombinedCut() {
     if (magCut === "xy") drawEquatorial();
     else if (magCut === "b") drawBmag();
@@ -1189,7 +1135,6 @@
     else if (magCut === "clock") drawClockOnMag();
     else drawMagnetosphere();
   }
-
   function lineChart(canvas, series, color, extra) {
     if (!canvas) return;
     const ctx = canvas.getContext("2d");
@@ -1365,7 +1310,6 @@
       ctx.fillText("24 h", pad.l + w - 24, cssH - 6);
     }
   }
-
   function drawPressure() {
     const cv = $("cvP");
     if (!cv) return;
@@ -1394,7 +1338,6 @@
       ctx.fillRect(16, y + 10, (cssW - 40) * (b[1] / max), 18);
     });
   }
-
   function drawSitesCompare() {
     const cv = $("cvSites");
     if (!cv) return;
@@ -1420,7 +1363,6 @@
       ctx.fillRect(140, y, ((cssW - 160) * s.radiation) / maxR, 10);
     });
   }
-
   function drawHelio() {
     const cv = $("cvHelio");
     if (!cv) return;
@@ -1436,21 +1378,18 @@
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     ctx.fillStyle = themePlot();
     ctx.fillRect(0, 0, cssW, cssH);
-
     const cx = cssW * 0.42;
     const cy = cssH * 0.52;
     const rAu = Number(state?.r_au ?? forecast?.r_au ?? 0.387) || 0.387;
     const scale = Math.min(cssW, cssH) * 0.38;
     const rM = rAu * scale;
     const rE = 1.0 * scale;
-
     const day = Date.now() / 86400000;
     const mercLon = ((day / 87.969) * 360) % 360;
     const earthLon = ((day / 365.25) * 360) % 360;
     const mercAng = (mercLon * Math.PI) / 180;
     const earthAng = (earthLon * Math.PI) / 180;
     const rel = ((mercLon - earthLon + 540) % 360) - 180;
-
     ctx.strokeStyle = "rgba(224,122,61,0.35)";
     ctx.lineWidth = 1.2;
     ctx.beginPath();
@@ -1460,7 +1399,6 @@
     ctx.beginPath();
     ctx.arc(cx, cy, rE, 0, Math.PI * 2);
     ctx.stroke();
-
     const sunG = ctx.createRadialGradient(cx, cy, 2, cx, cy, 18);
     sunG.addColorStop(0, "#fff8dc");
     sunG.addColorStop(0.5, "#ffc44a");
@@ -1473,12 +1411,10 @@
     ctx.beginPath();
     ctx.arc(cx, cy, 8, 0, Math.PI * 2);
     ctx.fill();
-
     const mx = cx + Math.cos(mercAng) * rM;
     const my = cy + Math.sin(mercAng) * rM;
     const ex = cx + Math.cos(earthAng) * rE;
     const ey = cy + Math.sin(earthAng) * rE;
-
     ctx.strokeStyle = "rgba(224,122,61,0.4)";
     ctx.setLineDash([3, 3]);
     ctx.beginPath();
@@ -1491,7 +1427,6 @@
     ctx.lineTo(ex, ey);
     ctx.stroke();
     ctx.setLineDash([]);
-
     ctx.fillStyle = "#8a7a6b";
     ctx.beginPath();
     ctx.arc(mx, my, 6, 0, Math.PI * 2);
@@ -1500,23 +1435,19 @@
     ctx.beginPath();
     ctx.arc(ex, ey, 7, 0, Math.PI * 2);
     ctx.fill();
-
     ctx.fillStyle = themeInk();
     ctx.font = "12px IBM Plex Sans, sans-serif";
     ctx.fillText("Sun", cx - 12, cy - 22);
     ctx.fillText("Mercury", mx + 10, my + 4);
     ctx.fillText("Earth", ex + 10, ey + 4);
-
     ctx.fillStyle = "#c4a574";
     ctx.font = "12px IBM Plex Sans, sans-serif";
     ctx.fillText(`r = ${fmt(rAu, 4)} AU`, 14, 22);
     ctx.fillText(`Δλ (Merc−Earth) ${fmt(rel, 1)}°`, 14, 42);
     ctx.fillText(`λ_M ${fmt(mercLon, 1)}° · λ_E ${fmt(earthLon, 1)}°`, 14, 62);
-
     const sub = $("mercHelioSub");
     if (sub) sub.textContent = `Mercury at ${fmt(rAu, 3)} AU · ${fmt(rel, 1)}° from Earth`;
   }
-
   function ensureMetricCharts() {
     let host = $("mercMetricCharts");
     const mp = $("metricsPanel");
@@ -1539,7 +1470,6 @@
     }
     return host;
   }
-
   function setActiveChart(key) {
     activeChartKey = activeChartKey === key ? null : key;
     const host = ensureMetricCharts();
@@ -1554,11 +1484,9 @@
     });
     if (activeChartKey) renderCharts();
   }
-
   function first24(arr) {
     return (arr || []).slice(0, 24);
   }
-
   function renderCharts() {
     if (!forecast) return;
     ensureMetricCharts();
@@ -1592,7 +1520,6 @@
     drawPressure();
     drawSitesCompare();
   }
-
   function renderAlerts() {
     const alerts = (state && state.alerts) || [];
     const board = $("warningsContainer");
@@ -1612,7 +1539,6 @@
       })
       .join("");
   }
-
   function renderMeta() {
     if (!state) return;
     const mapTitle = $("mapTitle");
@@ -1628,7 +1554,6 @@
     }
     document.title = `LIPAS Mercury · ${state.site?.name || "Dashboard"}`;
   }
-
   function kpiSubtitle() {
     if (!state) return "Sun — · flare — · field —";
     const m = state.magnetosphere || {};
@@ -1636,12 +1561,10 @@
     const ml = String(state.source || "").includes("lstm");
     return `Sun ${fmt(phys.f107, 0)} · flare ${phys.flare_class || fmt(phys.flare_index, 1)} · field ${fmt(m.imf_b_mag_nt ?? state.wind_mercury?.imf_b_mag, 1)} nT · ${ml ? "physics + ML" : "physics nowcast"}`;
   }
-
   function pruneMetrics() {
     const mp = $("metricsPanel");
     if (!mp || !state) return;
     ensureMetricCharts();
-
     let sub = $("mercMetricsKpi");
     if (!sub) {
       const title = document.querySelector(".metrics-title");
@@ -1659,7 +1582,6 @@
       }
     }
     sub.textContent = kpiSubtitle();
-
     const p = state.prediction || {};
     const m = state.magnetosphere || {};
     const phys = state.physics || {};
@@ -1689,7 +1611,6 @@
         return `<div class="${cls}${active}"${click}><div class="metric-label">${label}</div><div class="metric-value">${value}</div><div class="metric-accuracy">${unit}</div></div>`;
       })
       .join("");
-
     if (!mp.dataset.chartBound) {
       mp.dataset.chartBound = "1";
       mp.addEventListener("click", (e) => {
@@ -1706,11 +1627,9 @@
       });
     }
   }
-
   function startParticles() {
     window.drawMercuryParticles(performance.now(), window._forecastCache || forecast);
   }
-
   window.drawMercuryParticles = function drawMercuryParticles(nowMs, data) {
     const canvas = $("particleMapCanvas");
     if (!canvas) return;
@@ -1750,7 +1669,6 @@
     bg.addColorStop(1, "#121820");
     ctx.fillStyle = bg;
     ctx.fillRect(0, 0, W, H);
-
     const sunX = 36;
     const sunY = H / 2;
     const sunR = 14 + intensity * 6 + Math.max(0, flareIdx) * 1.2;
@@ -1766,7 +1684,6 @@
     ctx.beginPath();
     ctx.arc(sunX, sunY, sunR, 0, Math.PI * 2);
     ctx.fill();
-
     if (flareIdx > 1.5) {
       const pulse = 0.5 + 0.5 * Math.sin(t * (2 + flareIdx * 0.4));
       ctx.strokeStyle = `rgba(255,160,80,${0.25 + pulse * 0.35})`;
@@ -1783,15 +1700,12 @@
         ctx.stroke();
       }
     }
-
     ctx.fillStyle = "#f2c56d";
     ctx.font = "10px IBM Plex Sans, sans-serif";
     ctx.fillText("SUN", sunX - 12, sunY + sunR + 14);
-
     const mercX = W - 52;
     const mercY = H / 2;
     const mercR = 16;
-
     const compress = Math.max(0.55, Math.min(1.35, rss / 1.5));
     const mpRx = mercR * (2.4 * compress) * (1 - Math.min(0.35, pDyn / 40));
     const mpRy = mercR * (1.9 * compress) * (1 - Math.min(0.25, pDyn / 50));
@@ -1800,7 +1714,6 @@
     ctx.beginPath();
     ctx.ellipse(mercX - mpRx * 0.15, mercY, mpRx, mpRy, 0, 0, Math.PI * 2);
     ctx.stroke();
-
     for (let i = -2; i <= 2; i++) {
       if (i === 0) continue;
       ctx.strokeStyle = `rgba(126,200,214,${0.35 + intensity * 0.25})`;
@@ -1809,7 +1722,6 @@
       ctx.ellipse(mercX - 2, mercY, mpRx * (0.45 + Math.abs(i) * 0.22), mpRy * (0.7 + Math.abs(i) * 0.18), 0, i > 0 ? -0.2 : Math.PI + 0.2, i > 0 ? Math.PI + 0.2 : -0.2);
       ctx.stroke();
     }
-
     ctx.fillStyle = "#8a7a6b";
     ctx.beginPath();
     ctx.arc(mercX, mercY, mercR, 0, Math.PI * 2);
@@ -1821,7 +1733,6 @@
     ctx.fillStyle = themeMuted();
     ctx.font = "10px IBM Plex Sans, sans-serif";
     ctx.fillText("Mercury", mercX - 22, mercY + mercR + 14);
-
     const n = 28 + Math.round(intensity * 90) + Math.round(density / 8);
     let s = Math.abs(Math.round(sep * 9137 + protons * 401 + hi * 17 + flareIdx * 91)) >>> 0 || 1;
     const rand = () => {
@@ -1833,7 +1744,6 @@
       const y = 12 + lane * (H - 24);
       const drift = ((t * (60 + speed * 0.08 + intensity * 120) + i * 17) % (mercX - sunX - 30)) + sunX + sunR;
       const x = drift;
-
       const dx = x - (mercX - mpRx * 0.15);
       const dy = y - mercY;
       const inMp = (dx * dx) / (mpRx * mpRx) + (dy * dy) / (mpRy * mpRy) < 1;
@@ -1864,7 +1774,6 @@
       H - 12
     );
   };
-
   function renderAll() {
     const locHint = (window.LOCS || [])[window._topoLocIdx | 0] || SITES.find((s) => s.id === siteId) || { id: siteId };
     document.body.classList.toggle("merc-overview", isOverviewLoc(locHint));
@@ -1881,7 +1790,6 @@
       window._refreshMercurySolarPanel();
     }
   }
-
   function hideMoonSections() {
     const hide = ["evaNowStrip", "terminator-section", "nearfar-section", "forecastHorizonRow", "illumination-section"];
     hide.forEach((id) => {
@@ -1901,7 +1809,6 @@
         el.style.display = "none";
       }
     });
-
     document.querySelectorAll(".loading-screen").forEach((el) => {
       el.classList.add("hidden");
       el.style.display = "none";
@@ -1956,7 +1863,6 @@
       if (t === "Posture") el.textContent = "Level";
     });
   }
-
   function pruneGraphFactors() {
     const keep = new Set([
       "radiation",
@@ -2003,7 +1909,6 @@
       });
     }
   }
-
   window.onMercuryDashboardReady = async function (idx, loc) {
     injectMagShell();
     hideMoonSections();
@@ -2028,9 +1933,7 @@
       if (meta) meta.textContent = "Could not load Mercury. Is the server running?";
     }
   };
-
   window.renderMercuryAlerts = renderAlerts;
-
   window.onMercuryHourChange = function (h) {
     hour = Number(h) || 0;
     clearTimeout(hourTimer);
@@ -2043,13 +1946,11 @@
       }
     }, 90);
   };
-
   const prevApply = window.applyTimelapseFrame;
   window.applyTimelapseFrame = function (h, total) {
     if (typeof prevApply === "function") prevApply(h, total);
     if (typeof window.onMercuryHourChange === "function") window.onMercuryHourChange(h);
   };
-
   function waitForJsPDF(ms) {
     const limit = Number(ms) || 8000;
     return new Promise((resolve, reject) => {
@@ -2066,7 +1967,6 @@
       }, 80);
     });
   }
-
   function canvasPng(id) {
     const el = $(id);
     if (!el || el.tagName !== "CANVAS" || el.width < 8 || el.height < 8) return null;
@@ -2077,7 +1977,6 @@
       return null;
     }
   }
-
   function pdfAddImage(doc, dataUrl, pageW, margin, y) {
     if (!dataUrl) return y;
     const pageH = doc.internal.pageSize.height;
@@ -2102,7 +2001,6 @@
       return y;
     }
   }
-
   async function mercuryDownloadPDF() {
     const loc = window.currentLocation || (window.locations && window.locations[0]) || { name: "Mercury", lat: 0, lon: 0 };
     const now = window._mercuryNow || state || {};
@@ -2251,7 +2149,6 @@
     }
   }
   window.mercuryDownloadPDF = mercuryDownloadPDF;
-
   function boot() {
     document.body.dataset.app = "mercury";
     document.body.classList.add("mercury-mode");
@@ -2260,7 +2157,6 @@
     hideMoonSections();
     pruneGraphFactors();
     loadSites();
-
     const tryReplace = () => {
       if (typeof window.initLocationsMercury === "function") {
         try {
@@ -2270,14 +2166,12 @@
     };
     setTimeout(tryReplace, 400);
     setTimeout(tryReplace, 1200);
-
     window.mercuryDownloadPDF = mercuryDownloadPDF;
     window.downloadPDF = mercuryDownloadPDF;
     window.addEventListener("load", () => {
       window.downloadPDF = mercuryDownloadPDF;
       window.mercuryDownloadPDF = mercuryDownloadPDF;
     });
-
     window.addEventListener("resize", () => {
       if (state) {
         drawCombinedCut();
@@ -2292,7 +2186,6 @@
       renderCharts();
     });
   }
-
   if (document.readyState === "loading") {
     document.addEventListener("DOMContentLoaded", boot);
   } else {

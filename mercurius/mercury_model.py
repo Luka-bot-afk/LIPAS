@@ -1,18 +1,13 @@
 from __future__ import annotations
-
 import sys
 from pathlib import Path
 from typing import Any
-
 _ROOT = Path(__file__).resolve().parents[1]
 if str(_ROOT) not in sys.path:
     sys.path.insert(0, str(_ROOT))
-
 from mercurius.mercury_physics import physics_estimate_mercury
-
 PARENT_MODEL_DIR = str(_ROOT / 'saved_model')
 MERCURY_MODEL_DIR = str(_ROOT / 'mercurius' / 'saved_model')
-
 RETRAIN_VERDICT = {
     'retrain_lunar_lstm': False,
     'use_lunar_weights_on_mercury_outputs': False,
@@ -27,7 +22,6 @@ RETRAIN_VERDICT = {
         'Train a Mercury-headed LSTM (train2 window/arch, next-day Y) into mercurius/saved_model, not a lunar fine-tune.',
     ],
 }
-
 def one_au_solar_prior(inputs, extra=None) -> tuple[float, bool, str]:
     extra = extra or {}
     solar_in = float(inputs[0]) if inputs else 5.0
@@ -44,7 +38,6 @@ def one_au_solar_prior(inputs, extra=None) -> tuple[float, bool, str]:
         return float(solar), False, 'lipas_physics_solar_1au'
     except Exception:
         return solar_in, False, 'input_solar'
-
 def hybrid_forecast(inputs, lat=0.0, lon=0.0, local_time=12.0, extra=None) -> dict[str, Any]:
     extra = dict(extra or {})
     solar_1au, _, src = one_au_solar_prior(inputs, extra)
@@ -57,7 +50,6 @@ def hybrid_forecast(inputs, lat=0.0, lon=0.0, local_time=12.0, extra=None) -> di
         day_of_year=extra.get('day_of_year'), extra=extra,
     )
     from mercurius.mercury_lstm import blend_with_physics, model_ready, predict_channels
-
     ml = None
     ml_used = False
     ml_error = None
@@ -72,14 +64,12 @@ def hybrid_forecast(inputs, lat=0.0, lon=0.0, local_time=12.0, extra=None) -> di
         ml = None
         ml_used = False
         ml_error = type(exc).__name__
-
     if ml_used:
         hybrid = blend_with_physics(phys, ml)
         source = 'mercury_lstm+physics'
     else:
         hybrid = blend_with_physics(phys, None)
         source = 'mercury_physics+1au_solar_prior'
-
     return {
         'hybrid': hybrid,
         'physics': phys,

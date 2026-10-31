@@ -3,7 +3,6 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <!-- Optional: point static Netlify deploy at a live Flask API, e.g. content="https://your-app.onrender.com" -->
   <meta name="lipas-api-base" content="">
   <title>L.I.P.A.S. Mission Planner</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -49,7 +48,6 @@
       background-size: 52px 52px;
       mask-image: radial-gradient(ellipse at 50% 30%, black 15%, transparent 72%);
     }
-
     .loading-screen {
       position: fixed; inset: 0; z-index: 9999;
       display: flex; flex-direction: column; align-items: center; justify-content: center;
@@ -66,12 +64,10 @@
       font-family: var(--font-display); letter-spacing: 0.18em; font-size: 11px;
       color: var(--steel); text-transform: uppercase;
     }
-
     .shell {
       position: relative; z-index: 1;
       max-width: 1680px; margin: 0 auto; padding: 24px 22px 56px;
     }
-
     .mast {
       display: grid; grid-template-columns: 1fr auto; gap: 20px; align-items: end;
       margin-bottom: 16px; animation: rise 0.65s var(--ease) both;
@@ -88,7 +84,6 @@
     .mast p { margin-top: 8px; color: var(--muted); font-size: 13px; max-width: 52ch; line-height: 1.45; }
     .mast-meta { text-align: right; font-size: 12px; color: var(--dim); font-variant-numeric: tabular-nums; }
     .mast-meta strong { display: block; color: var(--steel); font-weight: 600; font-size: 13px; margin-bottom: 4px; }
-
     #ops-banner {
       padding: 10px 14px; margin-bottom: 16px; border-left: 3px solid var(--steel-dim);
       background: linear-gradient(90deg, rgba(26, 51, 88, 0.45), transparent);
@@ -97,8 +92,6 @@
     #ops-banner[data-kind="go"] { border-left-color: var(--go); background: linear-gradient(90deg, rgba(62, 207, 142, 0.12), transparent); }
     #ops-banner[data-kind="caution"] { border-left-color: var(--caution); background: linear-gradient(90deg, rgba(224, 177, 74, 0.12), transparent); }
     #ops-banner[data-kind="nogo"] { border-left-color: var(--nogo); background: linear-gradient(90deg, rgba(226, 91, 91, 0.12), transparent); }
-
-    /* Stretch columns so side panels fill height beside tall middle stack */
     .ops-grid {
       display: grid;
       grid-template-columns: minmax(270px, 300px) minmax(0, 1.45fr) minmax(300px, 360px);
@@ -109,7 +102,6 @@
       display: flex; flex-direction: column; gap: 16px; min-height: 0;
     }
     .col > .panel.grow { flex: 1; }
-
     .panel {
       background: linear-gradient(165deg, rgba(28, 37, 51, 0.94), rgba(18, 24, 33, 0.97));
       border: 1px solid var(--line); padding: 16px; position: relative;
@@ -124,7 +116,6 @@
       font-size: 10px; font-weight: 600; letter-spacing: 0.16em; text-transform: uppercase;
       color: var(--dim); margin-bottom: 12px;
     }
-
     .field { margin-bottom: 10px; }
     .field label { display: block; font-size: 11px; color: var(--muted); margin-bottom: 4px; letter-spacing: 0.04em; }
     .field input, .field select {
@@ -136,7 +127,6 @@
       border-color: var(--steel); box-shadow: 0 0 0 3px rgba(110, 182, 255, 0.15);
     }
     .field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
-
     .preset-row { display: flex; flex-wrap: wrap; gap: 5px; margin: 2px 0 12px; }
     .preset-chip {
       background: transparent; border: 1px solid var(--line); color: var(--muted);
@@ -145,7 +135,6 @@
     }
     .preset-chip:hover { color: var(--text); border-color: var(--steel-dim); }
     .preset-chip.active { color: var(--void); background: var(--steel); border-color: var(--steel); font-weight: 600; }
-
     .btn {
       width: 100%; border: none; font-family: var(--font-ui); font-weight: 600; font-size: 13px;
       letter-spacing: 0.04em; padding: 11px 14px; cursor: pointer;
@@ -156,7 +145,6 @@
     .btn-primary { background: linear-gradient(180deg, #5aa8f0, #2f6fad); color: #fff; margin-top: 2px; }
     .btn-ghost { background: transparent; border: 1px solid var(--line-strong); color: var(--steel); margin-top: 7px; }
     .btn-pdf { background: var(--navy); color: var(--text); border: 1px solid var(--steel-dim); margin-top: 7px; }
-
     #compute-pulse { height: 2px; margin-top: 10px; background: var(--line); overflow: hidden; opacity: 0; }
     #compute-pulse.active { opacity: 1; }
     #compute-pulse.active::after {
@@ -164,10 +152,7 @@
       animation: pulse-scan 1s linear infinite;
     }
     @keyframes pulse-scan { from { transform: translateX(-100%); } to { transform: translateX(350%); } }
-
     .hint { font-size: 11px; color: var(--dim); margin-top: 10px; line-height: 1.4; }
-
-    /* Hazard matrix */
     .hz-grid {
       display: grid; grid-template-columns: 1fr 1fr; gap: 8px;
     }
@@ -201,8 +186,6 @@
     .equip-pill.go .dot { background: var(--go); box-shadow: 0 0 8px rgba(62, 207, 142, 0.5); }
     .equip-pill.caution .dot { background: var(--caution); box-shadow: 0 0 8px rgba(224, 177, 74, 0.45); }
     .equip-pill.nogo .dot { background: var(--nogo); box-shadow: 0 0 8px rgba(226, 91, 91, 0.45); }
-
-    /* GO dial */
     .go-block {
       display: grid; grid-template-columns: 160px 1fr; gap: 16px; align-items: center;
     }
@@ -239,7 +222,6 @@
       padding: 4px 0 4px 10px; border-left: 2px solid var(--line); margin-bottom: 3px;
       white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
     }
-
     .metrics {
       display: grid; grid-template-columns: repeat(4, 1fr); gap: 1px;
       background: var(--line); border: 1px solid var(--line);
@@ -252,7 +234,6 @@
     .metric .u { font-size: 10px; color: var(--dim); margin-top: 3px; letter-spacing: 0.05em; text-transform: uppercase; }
     .metric .c { font-size: 10px; color: var(--dim); margin-top: 4px; font-weight: 600; }
     .metric .c strong { color: var(--steel); }
-
     #window-rail { display: flex; gap: 4px; height: 42px; margin-bottom: 10px; }
     .rail-seg {
       background: var(--ink); border: 1px solid var(--line); color: var(--muted); cursor: pointer;
@@ -266,7 +247,6 @@
     .rail-seg.nogo { border-top: 2px solid var(--nogo); }
     .rail-rank { font-weight: 700; color: var(--text); font-size: 12px; }
     .rail-time { color: var(--dim); }
-
     .window-row, .zone-row {
       display: grid; grid-template-columns: 26px 1fr auto; gap: 8px; align-items: center;
       padding: 9px 6px; border-bottom: 1px solid var(--line); width: 100%;
@@ -282,7 +262,6 @@
     .wr-meta, .zr-meta { font-size: 11px; color: var(--dim); margin-top: 2px; line-height: 1.3; }
     .wr-side, .zr-score { text-align: right; display: flex; flex-direction: column; align-items: flex-end; gap: 3px; }
     .wr-score, .pct { font-variant-numeric: tabular-nums; font-weight: 700; font-size: 14px; color: var(--steel); }
-
     .badge {
       display: inline-block; font-size: 9px; font-weight: 700; letter-spacing: 0.08em;
       padding: 2px 6px; border: 1px solid currentColor;
@@ -290,9 +269,7 @@
     .badge.go { color: var(--go); }
     .badge.caution { color: var(--caution); }
     .badge.nogo { color: var(--nogo); }
-
     .chart-box { height: 200px; position: relative; margin-top: 8px; }
-
     .dose-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; }
     .dose-cell { padding: 10px; background: var(--ink); border: 1px solid var(--line); }
     .dose-cell .k { font-size: 10px; color: var(--dim); text-transform: uppercase; letter-spacing: 0.08em; }
@@ -300,14 +277,11 @@
     #dose-risk[data-risk="high"] { color: var(--nogo); }
     #dose-risk[data-risk="moderate"] { color: var(--caution); }
     #dose-risk[data-risk="low"], #dose-risk[data-risk="minimal"] { color: var(--go); }
-
     .meta-foot {
       margin-top: 12px; font-size: 11px; color: var(--dim);
       display: flex; justify-content: space-between; gap: 10px; flex-wrap: wrap;
     }
     .meta-foot strong { color: var(--muted); font-weight: 500; }
-
-    /* Best base pick hero */
     .base-pick {
       position: relative; overflow: hidden; padding: 18px 16px 16px;
       background:
@@ -362,21 +336,17 @@
     .bp-use {
       margin-top: 12px; width: 100%; position: relative; z-index: 1;
     }
-
     #zone-list { flex: 1; overflow: auto; max-height: none; }
     .col-right .panel.grow { display: flex; flex-direction: column; }
     .empty-note { color: var(--dim); font-size: 13px; padding: 10px 0; }
-
     #results-shell { opacity: 0.55; transition: opacity 0.35s; }
     #results-shell.ready { opacity: 1; }
-
     .model-pill {
       display: inline-flex; align-items: center; gap: 6px; font-size: 10px;
       padding: 3px 8px; border: 1px solid var(--line); color: var(--muted); margin-top: 8px;
     }
     .model-pill.on { border-color: rgba(62, 207, 142, 0.4); color: var(--go); }
     .model-pill .dot { width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
-
     .ml-overview {
       display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 4px;
     }
@@ -394,14 +364,12 @@
     .ml-chip.ok { border-left: 3px solid var(--go); }
     .ml-chip.warn { border-left: 3px solid var(--caution); }
     .ml-chip.off { border-left: 3px solid var(--dim); }
-
     @media (max-width: 1180px) {
       .ops-grid { grid-template-columns: 1fr; }
       .go-block { grid-template-columns: 1fr; }
       .metrics { grid-template-columns: repeat(2, 1fr); }
       .dose-grid { grid-template-columns: 1fr 1fr; }
       .brand-mark { position: static; margin-right: auto; }
-      /* topnav responsive rules live in styles/main.css */
       .mast { grid-template-columns: 1fr; }
       .mast-meta { text-align: left; }
       #ops-banner { white-space: normal; }
@@ -412,9 +380,7 @@
   <div class="loading-screen" id="loadingScreen">
     <div class="load-label">Mission planner</div>
   </div>
-
   <div id="lipas-topnav" data-active="mission"></div>
-
   <div class="shell">
     <header class="mast">
       <div>
@@ -427,11 +393,8 @@
         <span id="active-site">Select coordinates</span>
       </div>
     </header>
-
     <div id="ops-banner" data-kind="info">Enter coords and EVA length, then run plan.</div>
-
     <div class="ops-grid">
-      
       <div class="col col-left">
         <aside class="panel" aria-label="Mission inputs">
           <div class="panel-label">Mission inputs</div>
@@ -493,7 +456,6 @@
             <div class="ml-chip off" id="ml-horizon"><div class="mk">Forecast</div><div class="mv">-</div><div class="mm">Hours ready</div></div>
           </div>
         </aside>
-
         <section class="panel grow" aria-label="Hazard matrix">
           <div class="panel-label">Hazard matrix (now)</div>
           <div class="hz-grid" id="hz-grid">
@@ -515,8 +477,6 @@
           </div>
         </section>
       </div>
-
-      
       <main class="col col-center" id="results-shell">
         <section class="panel mp-stage-panel" aria-label="Site">
           <div class="panel-label">EVA day</div>
@@ -538,7 +498,6 @@
             </div>
           </div>
         </section>
-
         <section class="panel">
           <div class="panel-label">Surface conditions</div>
           <div class="metrics">
@@ -552,7 +511,6 @@
             <div class="metric"><div class="v" id="m-storm">-</div><div class="u">Storm</div><div class="c" id="m-storm-c">Conf -</div></div>
           </div>
         </section>
-
         <section class="panel">
           <div class="panel-label">EVA windows across the day</div>
           <div id="window-rail" aria-label="EVA window timeline"></div>
@@ -564,7 +522,6 @@
             <canvas id="hazard-chart" aria-label="24-hour hazard chart"></canvas>
           </div>
         </section>
-
         <section class="panel">
           <div class="panel-label">Crew dose estimate</div>
           <div class="dose-grid">
@@ -581,8 +538,6 @@
           </div>
         </section>
       </main>
-
-      
       <div class="col col-right">
         <section class="base-pick" id="base-pick" aria-label="Best base zone now">
           <div class="bp-eyebrow"><i></i>Best base zone (now)</div>
@@ -600,7 +555,6 @@
           <div class="hint" id="bp-conf" style="margin-top:10px;margin-bottom:0">Confidence -</div>
           <button class="btn btn-primary bp-use" id="btn-use-base" type="button">Plan EVA at this base</button>
         </section>
-
         <aside class="panel grow" aria-label="Landing zones">
           <div class="panel-label">Ranked base zones</div>
           <p class="hint" style="margin-top:0;margin-bottom:10px">EVA safety and hab fit. Your site is in the list. Click to replan.</p>
@@ -609,7 +563,6 @@
       </div>
     </div>
   </div>
-
   <script src="js/lipas-api.js"></script>
   <script src="js/mission_planner_client.js?v=2"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
@@ -682,6 +635,6 @@
       out.textContent = answer || "Luna could not reach a model just now. The plan on this page still runs from the local physics.";
     });
   </script>
-  <script src="js/navbar.js?v=26" defer></script>
+  <script src="js/navbar.js?v=30" defer></script>
 </body>
 </html>

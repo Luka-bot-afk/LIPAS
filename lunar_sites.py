@@ -1,7 +1,6 @@
 """LIPAS."""
 from dataclasses import dataclass
 from typing import List, Optional
-
 @dataclass(frozen=True)
 class LunarSite:
     name: str
@@ -13,7 +12,6 @@ class LunarSite:
     albedo: float
     emissivity: float
     source: str
-
 LUNAR_SITES: List[LunarSite] = [
     LunarSite(
         name='Apollo 11 (Mare Tranquillitatis)', lat=0.67408, lon=23.47297, terrain='mare',
@@ -85,16 +83,13 @@ LUNAR_SITES: List[LunarSite] = [
         source='ISRO high-southern highland; between polar and mid-lat highland classes.',
     ),
 ]
-
 def get_site_names() -> List[str]:
     return [s.name for s in LUNAR_SITES]
-
 def get_site_by_name(name: str) -> Optional[LunarSite]:
     for s in LUNAR_SITES:
         if s.name == name:
             return s
     return None
-
 def nearest_site(lat: float, lon: float) -> LunarSite:
     best, best_d = LUNAR_SITES[0], 1e18
     for s in LUNAR_SITES:

@@ -1,5 +1,4 @@
 from __future__ import annotations
-
 import io
 import json
 import os
@@ -9,11 +8,9 @@ import time
 import urllib.error
 import urllib.request
 from datetime import datetime, timedelta, timezone
-
 import numpy as np
 from PIL import Image
 from scipy.ndimage import map_coordinates
-
 ROOT = os.path.dirname(os.path.abspath(__file__))
 CACHE_DIR = os.path.join(ROOT, "data", "cache", "solar_globe")
 MASTER_PATH = os.path.join(CACHE_DIR, "master.jpg")
@@ -29,11 +26,9 @@ OUT_H = 1024
 TILE = 256
 MAX_LEVEL = 4
 JPEG_QUALITY = 86
-
 _lock = threading.Lock()
 _mem_master = None
 _mem_mtime = 0.0
-
 def _fetch(url: str, timeout: int = 30) -> bytes:
     req = urllib.request.Request(url, headers={"User-Agent": UA})
     with urllib.request.urlopen(req, timeout=timeout) as resp:
@@ -41,18 +36,15 @@ def _fetch(url: str, timeout: int = 30) -> bytes:
     if not data or len(data) < 2000:
         raise RuntimeError("empty image " + url)
     return data
-
 def _round_sdo_quarter(dt: datetime) -> datetime:
-    minute = (dt.minute // 15) * 15
+    minute = (dt.minute
     return dt.replace(minute=minute, second=0, microsecond=0)
-
 def _browse_hmiic_url(dt: datetime, size: int = 2048) -> str:
     stamp = dt.strftime("%Y%m%d_%H%M%S")
     return (
         f"https://sdo.gsfc.nasa.gov/assets/img/browse/"
         f"{dt:%Y}/{dt:%m}/{dt:%d}/{stamp}_{size}_HMIIC.jpg"
     )
-
 def _load_disk_at(now: datetime, days_ago: float) -> tuple[Image.Image, str]:
     if days_ago < 0.35:
         img = Image.open(io.BytesIO(_fetch(NEAR_URL, timeout=30))).convert("RGB")
@@ -73,7 +65,6 @@ def _load_disk_at(now: datetime, days_ago: float) -> tuple[Image.Image, str]:
             errors.append(f"{url}: {exc}")
             continue
     raise RuntimeError("HMI continuum unavailable at -%.1fd: %s" % (days_ago, "; ".join(errors[:2])))
-
 def _disk_radius(arr: np.ndarray) -> tuple[float, float, float]:
     lum = arr.mean(axis=2)
     h, w = lum.shape
@@ -91,9 +82,7 @@ def _disk_radius(arr: np.ndarray) -> tuple[float, float, float]:
     if r < 0.32 * min(w, h):
         r = fallback
     return float(r), float(cx), float(cy)
-
 def _sample_disk(disk: np.ndarray, lon0_rad: float, out_w: int, out_h: int):
-
     sh, sw = disk.shape[:2]
     r, cx, cy = _disk_radius(disk)
     ys, xs = np.meshgrid(
@@ -116,7 +105,6 @@ def _sample_disk(disk: np.ndarray, lon0_rad: float, out_w: int, out_h: int):
         & (v >= 0.5)
         & (v <= sh - 1.5)
     )
-
     weight = np.where(inside, np.clip(z, 0.0, 1.0) ** 3.0, 0.0).astype(np.float32)
     rgb = np.zeros((out_h, out_w, 3), dtype=np.float32)
     coords = np.vstack([v.ravel(), u.ravel()])
@@ -129,7 +117,6 @@ def _sample_disk(disk: np.ndarray, lon0_rad: float, out_w: int, out_h: int):
         ).reshape(out_h, out_w)
         rgb[:, :, c] = sampled
     return rgb, weight
-
 def _compose_synoptic(frames: list[tuple[Image.Image, float]]) -> Image.Image:
     acc = np.zeros((OUT_H, OUT_W, 3), dtype=np.float32)
     wsum = np.zeros((OUT_H, OUT_W), dtype=np.float32)
@@ -152,13 +139,11 @@ def _compose_synoptic(frames: list[tuple[Image.Image, float]]) -> Image.Image:
             out[empty, x] = out[nearest, x]
     out = np.clip(out, 0, 255).astype(np.uint8)
     return Image.fromarray(out, mode="RGB")
-
 def _master_fresh() -> bool:
     try:
         return os.path.isfile(MASTER_PATH) and (time.time() - os.path.getmtime(MASTER_PATH)) < MASTER_MAX_AGE
     except OSError:
         return False
-
 def ensure_master(force: bool = False) -> Image.Image:
     global _mem_master, _mem_mtime
     with _lock:
@@ -171,13 +156,11 @@ def ensure_master(force: bool = False) -> Image.Image:
             return img
         now = datetime.now(timezone.utc)
         from concurrent.futures import ThreadPoolExecutor
-
         def _one(i):
             days_ago = i * SYNODIC_DAYS / N_FRAMES
             lon0 = 2.0 * np.pi * (i / N_FRAMES)
             img, url = _load_disk_at(now, days_ago)
             return i, img, lon0, url, days_ago
-
         with ThreadPoolExecutor(max_workers=N_FRAMES) as pool:
             loaded = list(pool.map(_one, range(N_FRAMES)))
         loaded.sort(key=lambda row: row[0])
@@ -209,7 +192,6 @@ def ensure_master(force: bool = False) -> Image.Image:
         _mem_master = master
         _mem_mtime = time.time()
         return master
-
 def _tile_bounds(z: int, x: int, y: int):
     tiles_x = 2 << z
     tiles_y = 1 << z
@@ -220,7 +202,6 @@ def _tile_bounds(z: int, x: int, y: int):
     north = 90.0 - y * (180.0 / tiles_y)
     south = north - 180.0 / tiles_y
     return west, south, east, north
-
 def render_tile(z: int, y: int, x: int) -> bytes:
     bounds = _tile_bounds(int(z), int(x), int(y))
     if bounds is None:
@@ -262,7 +243,6 @@ def render_tile(z: int, y: int, x: int) -> bytes:
     except OSError:
         pass
     return data
-
 def master_jpeg() -> bytes:
     ensure_master()
     with open(MASTER_PATH, "rb") as f:

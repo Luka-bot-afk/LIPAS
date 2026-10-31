@@ -1,19 +1,14 @@
 from __future__ import annotations
-
 import math
 from typing import Any
-
 import numpy as np
-
 R_M_KM = 2439.7
 B0_EQ_NT = 195.0
 DIPOLE_OFFSET_Z_RM = 0.196
-
 STANDOFF_COEFF = 2.15
 BOW_SHOCK_RATIO = 1.35
 SHUE_ALPHA = 0.50
 MU0 = 4.0e-7 * math.pi
-
 def magnetopause_standoff_rm(p_dyn_npa: float, imf_bz_nt: float | None = None) -> float:
     p = max(float(p_dyn_npa), 0.35)
     rss = STANDOFF_COEFF * (p ** (-1.0 / 6.0))
@@ -24,26 +19,20 @@ def magnetopause_standoff_rm(p_dyn_npa: float, imf_bz_nt: float | None = None) -
         else:
             rss *= 1.0 + 0.03 * min(1.0, bz / 40.0)
     return float(max(0.82, min(2.8, rss)))
-
 def bow_shock_standoff_rm(rss: float) -> float:
     return float(max(1.05, BOW_SHOCK_RATIO * float(rss)))
-
 def shue_radius(rss: float, theta_rad: float, alpha: float = SHUE_ALPHA) -> float:
-
     c = math.cos(theta_rad)
     return float(rss * (2.0 / max(1e-6, 1.0 + c)) ** alpha)
-
 def _mp_points(rss: float, n: int = 72) -> list[list[float]]:
     pts = []
     for i in range(n + 1):
         theta = math.pi * i / n
         r = shue_radius(rss, theta)
-
         x = r * math.cos(theta)
         z = r * math.sin(theta)
         pts.append([x, z])
     return pts
-
 def _bs_points(rss: float, n: int = 64) -> list[list[float]]:
     rbs = bow_shock_standoff_rm(rss)
     pts = []
@@ -54,31 +43,25 @@ def _bs_points(rss: float, n: int = 64) -> list[list[float]]:
         z = r * math.sin(theta)
         pts.append([x, z])
     return pts
-
 def dipole_field_nt(x_rm: float, z_rm: float) -> tuple[float, float, float]:
-
     x = float(x_rm)
     z = float(z_rm) - DIPOLE_OFFSET_Z_RM
     r2 = x * x + z * z
     r = math.sqrt(max(r2, 0.05))
-
     m_dot_r = z
     fac = B0_EQ_NT / (r ** 3)
     bx = fac * (3.0 * m_dot_r * x / r2)
     bz = fac * (3.0 * m_dot_r * z / r2 - 1.0)
     bmag = math.sqrt(bx * bx + bz * bz)
     return bx, bz, bmag
-
 def cusp_latitude_deg(rss: float) -> float:
     rss = max(float(rss), 1.01)
     colat = math.degrees(math.asin(min(1.0, math.sqrt(1.0 / rss))))
     return float(90.0 - colat)
-
 def field_line_polylines(rss: float, n_lines: int = 8) -> list[dict[str, Any]]:
-
     lines = []
-    l_shells = list(np.linspace(1.08, max(rss * 0.98, 1.2), max(4, n_lines // 2)))
-    l_shells += list(np.linspace(rss * 1.05, rss * 1.8, max(3, n_lines // 2)))
+    l_shells = list(np.linspace(1.08, max(rss * 0.98, 1.2), max(4, n_lines
+    l_shells += list(np.linspace(rss * 1.05, rss * 1.8, max(3, n_lines
     for L in l_shells:
         closed = float(L) <= rss * 1.01
         pts = []
@@ -92,9 +75,7 @@ def field_line_polylines(rss: float, n_lines: int = 8) -> list[dict[str, Any]]:
             pts.append([x, z])
         lines.append({'closed': bool(closed), 'L': float(L), 'points': pts})
     return lines
-
 def classify_point(x: float, z: float, rss: float) -> str:
-
     r = math.sqrt(x * x + z * z)
     if r <= 1.0:
         return 'planet'
@@ -107,7 +88,6 @@ def classify_point(x: float, z: float, rss: float) -> str:
         return 'solar_wind'
     if r > r_mp:
         return 'magnetosheath'
-
     if x < -0.3 and abs(z) < 0.35 + 0.08 * abs(x):
         return 'plasma_sheet'
     if x > 0 and r < 1.35:
@@ -118,7 +98,6 @@ def classify_point(x: float, z: float, rss: float) -> str:
     if rss <= 1.08 and x > 0.15 and r < 1.25:
         return 'open_dayside'
     return 'magnetosphere'
-
 def region_grid(rss: float, nx: int = 72, nz: int = 48) -> dict[str, Any]:
     x_min, x_max = -6.2, 3.2
     z_min, z_max = -3.1, 3.1
@@ -136,9 +115,7 @@ def region_grid(rss: float, nx: int = 72, nz: int = 48) -> dict[str, Any]:
         'nx': nx, 'nz': nz,
         'cells': grid,
     }
-
 def classify_equatorial(x: float, y: float, rss: float) -> str:
-
     r = math.sqrt(x * x + y * y)
     if r <= 1.0:
         return 'planet'
@@ -154,7 +131,6 @@ def classify_equatorial(x: float, y: float, rss: float) -> str:
     if rss <= 1.08 and x > 0.15 and r < 1.25:
         return 'open_dayside'
     return 'magnetosphere'
-
 def equatorial_grid(rss: float, nx: int = 72, ny: int = 48) -> dict[str, Any]:
     x_min, x_max = -6.2, 3.2
     y_min, y_max = -3.1, 3.1
@@ -172,9 +148,7 @@ def equatorial_grid(rss: float, nx: int = 72, ny: int = 48) -> dict[str, Any]:
         'nx': nx, 'ny': ny,
         'cells': grid,
     }
-
 def bmag_grid(rss: float, imf_b_nt: float = 20.0, nx: int = 72, nz: int = 48) -> dict[str, Any]:
-
     x_min, x_max = -6.2, 3.2
     z_min, z_max = -3.1, 3.1
     xs = np.linspace(x_min, x_max, nx)
@@ -205,7 +179,6 @@ def bmag_grid(rss: float, imf_b_nt: float = 20.0, nx: int = 72, nz: int = 48) ->
         'vmax': 200.0,
         'palette': 'plasma',
     }
-
 def imf_clock(by_nt: float, bz_nt: float) -> dict[str, float | str]:
     ang = math.degrees(math.atan2(float(by_nt), float(bz_nt)))
     if bz_nt < -1.0 and abs(by_nt) < abs(bz_nt):
@@ -222,12 +195,10 @@ def imf_clock(by_nt: float, bz_nt: float) -> dict[str, float | str]:
         'angle_deg': float(ang),
         'orientation': clock,
     }
-
 def magnetic_pressure_npa(b_nt: float) -> float:
     b_t = float(b_nt) * 1e-9
     p = (b_t * b_t) / (2.0 * MU0)
     return float(p * 1e9)
-
 def magnetosphere_state(p_dyn_npa: float, by_nt: float, bz_nt: float, b_mag_nt: float) -> dict[str, Any]:
     rss = magnetopause_standoff_rm(p_dyn_npa, imf_bz_nt=bz_nt)
     rbs = bow_shock_standoff_rm(rss)

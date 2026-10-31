@@ -1,10 +1,8 @@
-
 const TOPO = (() => {
     const WAC  = 'https://trek.nasa.gov/tiles/Moon/EQ/LRO_WAC_Mosaic_Global_303ppd_v02/1.0.0/default/default028mm';
     const ZOOM = 7;
     const TILE_SIZE = 256;
     const GRID = 5;
-
     const LOCS = [
         [ 0.0,    0.0,   'mare'],
         [-89.68, 166.15, 'polar'],
@@ -63,7 +61,6 @@ const TOPO = (() => {
         [-35.2, -166.3,  'crater'],
         [-69.3, -172.0,  'basin'],
     ];
-
     function latLonToTile(lat, lon, zoom) {
         const n = 1 << zoom;
         const col = Math.floor((lon + 180) / 360 * n);
@@ -73,21 +70,18 @@ const TOPO = (() => {
             col: ((col % n) + n) % n
         };
     }
-
     function latLonToPixelOffset(lat, lon, zoom) {
         const n = 1 << zoom;
         const fx = (lon + 180) / 360 * n;
         const fy = (90 - lat) / 180 * (n / 2);
         return { px: (fx - Math.floor(fx)) * TILE_SIZE, py: (fy - Math.floor(fy)) * TILE_SIZE };
     }
-
     function tileUrl(row, col, zoom) {
         const n = 1 << zoom;
         const c = ((col % n) + n) % n;
         const r = Math.max(0, Math.min(n / 2 - 1, row));
         return `${WAC}/${zoom}/${r}/${c}.jpg`;
     }
-
     function elevColor(e, type) {
         switch (type) {
             case 'polar': {
@@ -114,16 +108,13 @@ const TOPO = (() => {
             }
         }
     }
-
     function seededRand(seed) {
         let s = (Math.abs(Math.round(seed * 9973)) | 1) >>> 0;
         return () => { s = Math.imul(s, 1664525) + 1013904223 >>> 0; return s / 4294967296; };
     }
-
     function drawElevationOverlay(ctx, W, H, locIdx, type) {
         const [lat, lon] = LOCS[locIdx];
         const rand = seededRand(lat * 1000 + lon * 100 + locIdx * 7);
-
         const FW = 64, FH = 32;
         const field = new Float32Array(FW * FH);
         const layers = [
@@ -144,7 +135,6 @@ const TOPO = (() => {
         for (let i = 0; i < field.length; i++) { if (field[i] < mn) mn = field[i]; if (field[i] > mx) mx = field[i]; }
         const rng = mx - mn || 1;
         for (let i = 0; i < field.length; i++) field[i] = (field[i] - mn) / rng;
-
         const scaleX = W / FW, scaleY = H / FH;
         for (let y = 0; y < FH; y++) {
             for (let x = 0; x < FW; x++) {
@@ -153,7 +143,6 @@ const TOPO = (() => {
                              Math.ceil(scaleX) + 1, Math.ceil(scaleY) + 1);
             }
         }
-
         const levels = 10;
         ctx.save();
         for (let l = 1; l < levels; l++) {
@@ -187,11 +176,9 @@ const TOPO = (() => {
         }
         ctx.restore();
     }
-
     function drawMarker(ctx, cx, cy, name, scale = 1.0) {
         const baseScale = scale;
         const pulse = 0.92 + 0.08 * Math.sin(_blobPhase * 1.4);
-
         const glowRadius = 34 * baseScale * pulse;
         const glow = ctx.createRadialGradient(cx, cy, 2 * baseScale, cx, cy, glowRadius);
         glow.addColorStop(0, 'rgba(110,182,255,0.45)');
@@ -199,7 +186,6 @@ const TOPO = (() => {
         glow.addColorStop(1, 'rgba(110,182,255,0)');
         ctx.beginPath(); ctx.arc(cx, cy, glowRadius, 0, Math.PI * 2);
         ctx.fillStyle = glow; ctx.fill();
-
         ctx.save();
         ctx.strokeStyle = 'rgba(230,238,248,0.85)';
         ctx.lineWidth = 2 * baseScale;
@@ -209,16 +195,13 @@ const TOPO = (() => {
         ctx.lineTo(cx, cy + 18 * baseScale);
         ctx.stroke();
         ctx.restore();
-
         ctx.beginPath(); ctx.arc(cx, cy, 10 * baseScale, 0, Math.PI * 2);
         ctx.strokeStyle = 'rgba(230,238,248,0.95)'; ctx.lineWidth = 2 * baseScale; ctx.stroke();
         ctx.beginPath(); ctx.arc(cx, cy, 10 * baseScale, 0, Math.PI * 2);
         ctx.strokeStyle = 'rgba(110,182,255,0.9)'; ctx.lineWidth = 1.2 * baseScale; ctx.stroke();
-
         ctx.beginPath(); ctx.arc(cx, cy, 4.5 * baseScale, 0, Math.PI * 2);
         ctx.fillStyle = '#6eb6ff'; ctx.fill();
         ctx.strokeStyle = 'rgba(255,255,255,0.9)'; ctx.lineWidth = 1 * baseScale; ctx.stroke();
-
         if (name) {
             ctx.save();
             ctx.font = `600 ${11 * baseScale}px IBM Plex Sans, system-ui, sans-serif`;
@@ -244,7 +227,6 @@ const TOPO = (() => {
             ctx.restore();
         }
     }
-
     function drawWaypoints(ctx, W, H, locIdx) {
         const [clat, clon] = LOCS[locIdx] || LOCS[0];
         const names = (typeof window.LOCS !== 'undefined' && Array.isArray(window.LOCS))
@@ -264,7 +246,6 @@ const TOPO = (() => {
             if (px < 12 || px > W - 12 || py < 12 || py > H - 12) continue;
             const dist = Math.hypot(dLat, dLon);
             if (dist > 28) continue;
-
             const a = Math.max(0.25, 1 - dist / 28);
             ctx.beginPath();
             ctx.arc(px, py, 4.5, 0, Math.PI * 2);
@@ -273,7 +254,6 @@ const TOPO = (() => {
             ctx.strokeStyle = `rgba(230,238,248,${0.75 * a})`;
             ctx.lineWidth = 1.2;
             ctx.stroke();
-
             const label = (names[i] || '').split(/[---]/)[0].trim().slice(0, 18);
             if (label && dist < 14) {
                 ctx.save();
@@ -284,7 +264,6 @@ const TOPO = (() => {
             }
         }
     }
-
     function sampleField(field, fw, fh, u, v) {
         if (!field || !fw || !fh) return 0;
         const x = Math.max(0, Math.min(fw - 1.001, u * (fw - 1)));
@@ -296,7 +275,6 @@ const TOPO = (() => {
         const c = field[y1 * fw + x0], d = field[y1 * fw + x1];
         return a * (1 - tx) * (1 - ty) + b * tx * (1 - ty) + c * (1 - tx) * ty + d * tx * ty;
     }
-
     function getSelectedOverlays() {
         if (typeof window.getActiveHazardOverlays === 'function') {
             const keys = window.getActiveHazardOverlays();
@@ -305,12 +283,10 @@ const TOPO = (() => {
         const overlayType = document.getElementById('hazardOverlaySelect')?.value || 'none';
         return overlayType === 'none' ? [] : [overlayType];
     }
-
     function drawHazardBlobs(ctx, W, H) {
         if (!window.hazardData) return;
         const types = getSelectedOverlays();
         if (!types.length) return;
-
         const palettes = {
             radiation:       { c0: [255, 70, 60],  c1: [255, 140, 70], c2: [180, 40, 100] },
             micrometeorites: { c0: [255, 200, 60], c1: [255, 140, 40], c2: [220, 100, 30] },
@@ -322,7 +298,6 @@ const TOPO = (() => {
             cme:             { c0: [255, 160, 60], c1: [240, 100, 40], c2: [160, 50, 20] },
         };
         const pulse = 0.92 + 0.08 * Math.sin(_blobPhase);
-
         types.forEach((overlayType, layerIdx) => {
             const layer = window.hazardData[overlayType];
             if (!layer) return;
@@ -331,7 +306,6 @@ const TOPO = (() => {
             const fw = layer.fw || 48, fh = layer.fh || 32;
             const baseI = (layer.intensity != null ? layer.intensity : 0.5) * pulse;
             const stackBoost = 0.75 + layerIdx * 0.08;
-
             ctx.save();
             if (layerIdx > 0) ctx.globalCompositeOperation = 'lighter';
             const step = Math.max(3, Math.floor(Math.min(W, H) / 90));
@@ -372,7 +346,6 @@ const TOPO = (() => {
                     ctx.fillRect(x, y, step + 1, step + 1);
                 }
             }
-
             ctx.globalCompositeOperation = 'lighter';
             const blobs = Array.isArray(layer) ? layer : [];
             blobs.forEach((b, i) => {
@@ -394,7 +367,6 @@ const TOPO = (() => {
             ctx.restore();
         });
     }
-
     function drawVignette(ctx, W, H) {
         const v = ctx.createRadialGradient(W/2, H/2, H * 0.28, W/2, H/2, H * 0.78);
         v.addColorStop(0, 'rgba(0,0,0,0)');
@@ -402,7 +374,6 @@ const TOPO = (() => {
         ctx.fillStyle = v;
         ctx.fillRect(0, 0, W, H);
     }
-
     function drawScaleBar(ctx, W, H, zoom) {
         const kmPerTile = 340;
         const pxPerKm = TILE_SIZE / kmPerTile;
@@ -422,7 +393,6 @@ const TOPO = (() => {
         ctx.fillText(`${barKm} km`, x + barPx / 2 - 14, y - 8);
         ctx.restore();
     }
-
     let _canvas, _ctx;
     let _locIdx = 0;
     let _zoom = 0, _offX = 0, _offY = 0;
@@ -434,7 +404,6 @@ const TOPO = (() => {
     let _cachedTiles = null;
     let _cachedLocIdx = -1;
     let _initialLoadDone = false;
-
     function loadTile(url) {
         if (_tileCache[url]) return _tileCache[url];
         const img = new Image();
@@ -447,7 +416,6 @@ const TOPO = (() => {
         _tileCache[url] = p;
         return p;
     }
-
     function debugTileUrls(lat, lon, zoom) {
         const { row: cr, col: cc } = latLonToTile(lat, lon, zoom);
         const half = Math.floor(GRID / 2);
@@ -459,7 +427,6 @@ const TOPO = (() => {
         }
         return urls;
     }
-
     async function loadTileGrid(centerRow, centerCol, zoom) {
         const half = Math.floor(GRID / 2);
         const promises = [];
@@ -470,16 +437,13 @@ const TOPO = (() => {
         }
         return Promise.all(promises);
     }
-
     async function render() {
         if (!_canvas) return;
         const W = _canvas.width, H = _canvas.height;
         const ctx = _ctx;
-
         const [lat, lon, type] = LOCS[_locIdx] || LOCS[0];
         const { row: cr, col: cc } = latLonToTile(lat, lon, ZOOM);
         const { px: offPx, py: offPy } = latLonToPixelOffset(lat, lon, ZOOM);
-
         if (!_initialLoadDone) {
             ctx.fillStyle = '#000';
             ctx.fillRect(0, 0, W, H);
@@ -488,7 +452,6 @@ const TOPO = (() => {
             ctx.textAlign = 'center';
             ctx.fillText('Loading LRO imagery...', W / 2, H / 2);
         }
-
         let tiles;
         if (_cachedLocIdx === _locIdx && _cachedTiles) {
             tiles = _cachedTiles;
@@ -498,20 +461,16 @@ const TOPO = (() => {
             _cachedLocIdx = _locIdx;
             _initialLoadDone = true;
         }
-
         ctx.fillStyle = '#000';
         ctx.fillRect(0, 0, W, H);
-
         ctx.save();
         ctx.translate(_offX, _offY);
         ctx.scale(1 + _zoom * 0.4, 1 + _zoom * 0.4);
-
         const half = Math.floor(GRID / 2);
         const gridPxW = GRID * TILE_SIZE;
         const gridPxH = GRID * TILE_SIZE;
         const startX = W / 2 - (half * TILE_SIZE + offPx);
         const startY = H / 2 - (half * TILE_SIZE + offPy);
-
         let ti = 0;
         for (let dr = -half; dr <= half; dr++) {
             for (let dc = -half; dc <= half; dc++) {
@@ -526,7 +485,6 @@ const TOPO = (() => {
                 }
             }
         }
-
         ctx.save();
         ctx.beginPath();
         ctx.rect(startX, startY, gridPxW, gridPxH);
@@ -534,32 +492,24 @@ const TOPO = (() => {
         ctx.translate(startX, startY);
         drawElevationOverlay(ctx, gridPxW, gridPxH, _locIdx, type);
         ctx.restore();
-
         drawHazardBlobs(ctx, W, H);
-
         const locName = document.getElementById('locationName')?.textContent || '';
         const zoomScale = 1 + _zoom * 0.4;
         const markerScale = 1.0 / Math.max(0.5, zoomScale);
         drawWaypoints(ctx, W, H, _locIdx);
         drawMarker(ctx, W / 2, H / 2, locName, markerScale);
-
         drawVignette(ctx, W, H);
-
         ctx.restore();
-
         drawScaleBar(ctx, W, H, ZOOM);
-
         const zoomLabel = (1 + _zoom * 0.4).toFixed(1);
         const info = document.getElementById('moonMapInfo');
         if (info) info.textContent = `Lat: ${lat.toFixed(2)}°  Lon: ${lon.toFixed(2)}°  |  Zoom: ${zoomLabel}×  |  LRO WAC`;
     }
-
     function scheduleDraw() {
         if (_pendingDraw) return;
         _pendingDraw = true;
         requestAnimationFrame(() => { _pendingDraw = false; render(); });
     }
-
     let _lastAnimTs = 0;
     function _startAnim() {
         if (_animFrame) return;
@@ -575,21 +525,17 @@ const TOPO = (() => {
         };
         _animFrame = requestAnimationFrame(step);
     }
-
     function _stopAnim() {
         if (_animFrame) { cancelAnimationFrame(_animFrame); _animFrame = null; }
     }
-
     function refreshHazardAnim() {
         if (window.hazardData && getSelectedOverlays().length) _startAnim();
         else if (!_animFrame) _startAnim();
         scheduleDraw();
     }
-
     function init(canvas) {
         _canvas = canvas;
         _ctx = canvas.getContext('2d');
-
         canvas.addEventListener('mousedown', e => {
             _dragging = true; _lastX = e.clientX; _lastY = e.clientY;
             canvas.style.cursor = 'grabbing';
@@ -599,45 +545,37 @@ const TOPO = (() => {
             const dx = e.clientX - _lastX;
             const dy = e.clientY - _lastY;
             _lastX = e.clientX; _lastY = e.clientY;
-            
             const zoomScale = 1 + _zoom * 0.4;
             const scaledGridSize = GRID * TILE_SIZE * zoomScale;
-            
             if (scaledGridSize > _canvas.width) {
                 const maxPanX = (scaledGridSize - _canvas.width) / 2;
                 _offX = Math.max(-maxPanX, Math.min(maxPanX, _offX + dx));
             } else {
                 _offX = 0;
             }
-            
             if (scaledGridSize > _canvas.height) {
                 const maxPanY = (scaledGridSize - _canvas.height) / 2;
                 _offY = Math.max(-maxPanY, Math.min(maxPanY, _offY + dy));
             } else {
                 _offY = 0;
             }
-            
             scheduleDraw();
         });
         const endDrag = () => { _dragging = false; canvas.style.cursor = 'crosshair'; };
         canvas.addEventListener('mouseup', endDrag);
         canvas.addEventListener('mouseleave', endDrag);
-
         canvas.addEventListener('wheel', e => {
             e.preventDefault();
             const newZoom = Math.max(0, Math.min(8, _zoom + (e.deltaY < 0 ? 0.3 : -0.3)));
             const zoomScale = 1 + newZoom * 0.4;
             const scaledGridSize = GRID * TILE_SIZE * zoomScale;
-            
             if (scaledGridSize <= _canvas.width && scaledGridSize <= _canvas.height) {
                 _offX = 0;
                 _offY = 0;
             }
-            
             _zoom = newZoom;
             scheduleDraw();
         }, { passive: false });
-
         let lastTouchDist = null;
         canvas.addEventListener('touchstart', e => {
             if (e.touches.length === 1) { _dragging = true; _lastX = e.touches[0].clientX; _lastY = e.touches[0].clientY; }
@@ -649,24 +587,20 @@ const TOPO = (() => {
                 const dx = e.touches[0].clientX - _lastX;
                 const dy = e.touches[0].clientY - _lastY;
                 _lastX = e.touches[0].clientX; _lastY = e.touches[0].clientY;
-                
                 const zoomScale = 1 + _zoom * 0.4;
                 const scaledGridSize = GRID * TILE_SIZE * zoomScale;
-                
                 if (scaledGridSize > _canvas.width) {
                     const maxPanX = (scaledGridSize - _canvas.width) / 2;
                     _offX = Math.max(-maxPanX, Math.min(maxPanX, _offX + dx));
                 } else {
                     _offX = 0;
                 }
-                
                 if (scaledGridSize > _canvas.height) {
                     const maxPanY = (scaledGridSize - _canvas.height) / 2;
                     _offY = Math.max(-maxPanY, Math.min(maxPanY, _offY + dy));
                 } else {
                     _offY = 0;
                 }
-                
                 scheduleDraw();
             }
             if (e.touches.length === 2 && lastTouchDist !== null) {
@@ -678,7 +612,6 @@ const TOPO = (() => {
         }, { passive: false });
         canvas.addEventListener('touchend', () => { _dragging = false; lastTouchDist = null; });
     }
-
     function setLocation(idx) {
         _locIdx = Math.max(0, Math.min(LOCS.length - 1, idx));
         _zoom = 0; _offX = 0; _offY = 0;
@@ -694,7 +627,6 @@ const TOPO = (() => {
                 loadTile(tileUrl(cr + dr, cc + dc, ZOOM));
         scheduleDraw();
     }
-
     function resize() {
         if (!_canvas) return;
         const container = _canvas.parentElement;
@@ -708,11 +640,9 @@ const TOPO = (() => {
         }
         scheduleDraw();
     }
-
     function zoomIn()  { _zoom = Math.min(8, _zoom + 0.5); scheduleDraw(); }
     function zoomOut() { _zoom = Math.max(0, _zoom - 0.5); scheduleDraw(); }
     function reset()   { _zoom = 0; _offX = 0; _offY = 0; scheduleDraw(); }
     function redraw()  { refreshHazardAnim(); }
-
     return { init, setLocation, resize, zoomIn, zoomOut, reset, redraw, refreshHazardAnim };
 })();

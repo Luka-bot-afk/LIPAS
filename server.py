@@ -1,10 +1,7 @@
-# flask app entry
 from typing import Any
-
 from flask import Flask, send_from_directory, jsonify, request, Response
 import os, math, random, json, sys, threading, time, urllib.request
 from datetime import datetime, timezone, timedelta
-
 try:
     from dotenv import load_dotenv
     _env_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), '.env')
@@ -12,15 +9,12 @@ try:
     load_dotenv()
 except ImportError:
     pass
-
 try:
     from pdf_generator import generate_mission_pdf, build_filename
 except ImportError:
     generate_mission_pdf = None
     build_filename = None
-
 app = Flask(__name__, static_folder=None)
-
 MISSION_CANDIDATE_SITES = [
     {"name": "Shackleton Crater Rim", "lat": -89.68, "lon": 166.15, "notes": "Near-constant illumination, polar ice access"},
     {"name": "Malapert Massif", "lat": -85.9, "lon": 12.9, "notes": "Earth-facing high ground, comms favorable"},
@@ -45,9 +39,7 @@ MISSION_CANDIDATE_SITES = [
     {"name": "Mare Orientale", "lat": -19.4, "lon": -92.8, "notes": "Far-side limb multi-ring basin"},
     {"name": "Aitken Crater", "lat": -16.8, "lon": 173.4, "notes": "Far side-SPA namesake crater"},
 ]
-
 _ML_BOOTSTRAPPED = False
-
 def _ensure_ml_loaded():
     global _ML_BOOTSTRAPPED
     if _ML_BOOTSTRAPPED:
@@ -76,7 +68,6 @@ def _ensure_ml_loaded():
                 swm.load_blend_weights(swm.MODEL_DIR)
             except Exception:
                 pass
-
             try:
                 if hasattr(swm, 'warm_start_feature_history'):
                     swm.warm_start_feature_history(swm.MODEL_DIR)
@@ -85,7 +76,6 @@ def _ensure_ml_loaded():
         _ML_BOOTSTRAPPED = True
     except Exception:
         _ML_BOOTSTRAPPED = True
-
 def _gate_ops_prediction(result):
     out = dict(result or {})
     pred = dict(out.get("prediction") or {})
@@ -95,7 +85,6 @@ def _gate_ops_prediction(result):
     if not phys:
         out["ml_gated"] = False
         return out
-
     gated_fields = []
     pr = float(phys.get("radiation", 0.07))
     hr = float(pred.get("radiation", pr))
@@ -103,42 +92,35 @@ def _gate_ops_prediction(result):
     if mr > 0.4 or hr > 0.32:
         pred["radiation"] = pr
         gated_fields.append("radiation")
-
     ps = float(phys.get("solar", 5.0))
     hs = float(pred.get("solar", ps))
     if hs > 35 and ps < 22:
         pred["solar"] = ps
         gated_fields.append("solar")
-
     pt = float(phys.get("temperature", 0.0))
     ht = float(pred.get("temperature", pt))
     if abs(ht - pt) > 90:
         pred["temperature"] = pt
         gated_fields.append("temperature")
-
     pq = float(phys.get("moonquakes", 25.0))
     hq = float(pred.get("moonquakes", pq))
     if hq < 1.0 and pq > 10:
         pred["moonquakes"] = pq
         gated_fields.append("moonquakes")
-
     out["prediction"] = pred
     out["ml_gated"] = bool(gated_fields)
     out["gated_fields"] = gated_fields
     if gated_fields and out.get("source") == "ml+physics":
         out["source"] = "ml+physics (ops-gated)"
     return out
-
 def _serve_extra(local_time=None):
     try:
         from data_ingestion import serve_extra_for_local_time
         return serve_extra_for_local_time(local_time)
     except Exception:
         return {}
-
 _SERVE_EXTRA_CACHE: dict[str, tuple[float, dict]] = {}
 _SERVE_EXTRA_TTL_S = 120.0
-
 def _serve_extra_cached(local_time=None):
     import time as _time
     key = f"{float(local_time or 12.0) % 24.0:.2f}"
@@ -149,7 +131,6 @@ def _serve_extra_cached(local_time=None):
     extra = _serve_extra(local_time)
     _SERVE_EXTRA_CACHE[key] = (now, extra)
     return extra
-
 def _try_ml_predict(inputs, lat, lon, local_time, extra=None, fast=False):
     try:
         _ensure_ml_loaded()
@@ -208,15 +189,12 @@ def _try_ml_predict(inputs, lat, lon, local_time, extra=None, fast=False):
             syn["model_loaded"] = False
             syn["ml_gated"] = False
             return syn
-
 def _earth_link_mode(lon):
     try:
         lo = float(lon)
     except Exception:
         lo = 0.0
-
     return "Direct" if abs(lo) <= 95.0 else "Relay"
-
 def _derived_driver_channels(solar, radiation, dust, micrometeorites, lat, lon, local_time):
     sol = float(solar)
     rad = float(radiation)
@@ -231,7 +209,6 @@ def _derived_driver_channels(solar, radiation, dust, micrometeorites, lat, lon, 
         cos_z = max(-1.0, min(1.0, math.sin(lat_r) * 0.05 + math.cos(lat_r) * math.cos(hour_angle)))
     illum = max(0.0, min(100.0, 55.0 + 40.0 * max(0.0, cos_z) + (8.0 if abs(float(lat or 0)) > 80 else 0.0)))
     solar_out = max(0.0, min(100.0, illum * (0.85 + 0.03 * min(sol, 12.0))))
-
     kp = max(0.0, min(9.0, 2.0 + 0.35 * sol + 8.0 * max(0.0, rad - 0.06)))
     sep = max(0.05, 0.25 * sol + 12.0 * rad)
     protons = max(0.1, 35.0 * rad + 0.15 * sol)
@@ -239,7 +216,6 @@ def _derived_driver_channels(solar, radiation, dust, micrometeorites, lat, lon, 
     cme = max(0.05, 0.3 * sol + 0.15 * max(0.0, kp - 3.0))
     storm = int(max(0, min(3, round(sol / 4.0 + (1 if rad > 0.12 else 0) + (1 if kp >= 6 else 0)))))
     eva_risk = max(0.0, min(100.0, rad * 220.0 + dust_v * 6.0 + met * 5.0 + max(0.0, sol - 5.0) * 4.0))
-
     link = _earth_link_mode(lon)
     comms = 92.0 if link == "Direct" else 48.0
     if abs(float(lat or 0)) > 85:
@@ -258,10 +234,8 @@ def _derived_driver_channels(solar, radiation, dust, micrometeorites, lat, lon, 
         "comms": round(max(35.0, min(99.0, comms)), 1),
         "earth_link": link,
     }
-
 def utc_to_lst(utc_hour, lon, when=None, hour_offset=None):
     """Lunar local solar time from the true subsolar point (phase-aware).
-
     New moon lights the far side; full moon lights the near side. The old
     Earth-like ``utc + lon/15`` clock put noon on the wrong hemisphere.
     """
@@ -271,7 +245,6 @@ def utc_to_lst(utc_hour, lon, when=None, hour_offset=None):
     else:
         instant = instant_from_utc_hour(utc_hour, when)
     return lunar_local_solar_time(lon, instant)
-
 def _landing_thermal_ok(temp, lat=None):
     try:
         t = float(temp)
@@ -281,7 +254,6 @@ def _landing_thermal_ok(temp, lat=None):
     if polar:
         return -230.0 <= t <= 100.0
     return -180.0 <= t <= 130.0
-
 def real_forecast_series(lat, lon, hours=48):
     now = datetime.now(timezone.utc)
     hour0 = now.hour + now.minute / 60.0
@@ -295,21 +267,17 @@ def real_forecast_series(lat, lon, hours=48):
         from space_weather_model import physics_estimate as _phys_est
     except Exception:
         _phys_est = None
-
     hours = max(1, min(168, int(hours)))
-
     control = {0}
     for h in range(0, hours, 6):
         control.add(h)
     control.add(hours - 1)
     hybrid_cache = {}
-
     core_keys = ("time", "radiation", "dust", "temperature", "solar", "moonquakes", "micrometeorites")
     derived_keys = ("illumination", "solarOutput", "cos_z", "sep", "protons", "flares", "cme", "kp", "storm", "evaRisk", "comms", "plausibility")
     series: dict[str, Any] = {k: [] for k in core_keys + derived_keys}
     live_kp = extra0.get("kp_index")
     live_protons = extra0.get("proton_flux")
-
     for h in range(hours):
         t = (hour0 + h) % 24.0
         extra = _serve_extra_cached(t)
@@ -327,7 +295,6 @@ def real_forecast_series(lat, lon, hours=48):
         else:
             p = {"solar": base[0], "radiation": base[1], "temperature": base[2],
                  "moonquakes": base[3], "micrometeorites": base[4], "dust": base[5]}
-
         if h not in control and hybrid_cache:
             nearest = min(hybrid_cache.keys(), key=lambda k: abs(k - h))
             hp = hybrid_cache[nearest]
@@ -349,7 +316,6 @@ def real_forecast_series(lat, lon, hours=48):
         series["moonquakes"].append(round(mq, 2))
         series["micrometeorites"].append(round(met, 3))
         d = _derived_driver_channels(sol, rad, dust, met, lat, lon, lst)
-
         if h == 0:
             if live_kp is not None:
                 try:
@@ -406,10 +372,8 @@ def real_forecast_series(lat, lon, hours=48):
             round(max(35.0, float(overall) - 0.35 * h), 1) for h in range(n)
         ]
     return series
-
 _MODEL_ACCURACY_CACHE = None
 _MODEL_ACCURACY_TS = 0.0
-
 def _model_accuracy_pct():
     global _MODEL_ACCURACY_CACHE, _MODEL_ACCURACY_TS
     import time as _time
@@ -429,12 +393,10 @@ def _model_accuracy_pct():
     except Exception:
         pass
     return None
-
 def _baseline_inputs(lat, lon, hour):
     lst = (hour + (lon / 15.0)) % 24.0
     lat_r = math.radians(lat)
     hour_angle = (lst - 12.0) * 15.0 * math.pi / 180.0
-
     if abs(lat) > 80:
         cos_z = max(0.08, abs(math.cos(lat_r)) * 0.35 + 0.15 * max(0.0, math.cos(hour_angle)))
     else:
@@ -461,7 +423,6 @@ def _baseline_inputs(lat, lon, hour):
         round(max(0.8, min(6.0, micrometeorites)), 3),
         round(max(0.5, min(5.0, dust)), 3),
     ]
-
 def _lvl(val, yellow, red, higher_worse=True):
     if higher_worse:
         if val >= red:
@@ -474,7 +435,6 @@ def _lvl(val, yellow, red, higher_worse=True):
     if val <= yellow:
         return "yellow"
     return "green"
-
 def _hazard_levels(pred, lat=None):
     rad = float(pred.get("radiation", 0.08))
     dust = float(pred.get("dust", 1.5))
@@ -487,14 +447,12 @@ def _hazard_levels(pred, lat=None):
         temp_lvl = "yellow" if temp > 100 else "green"
     else:
         temp_lvl = "red" if temp > 125 or temp < -175 else "yellow" if temp > 100 or temp < -150 else "green"
-
     if solar >= 22 or rad > 0.145:
         storm = "red"
     elif solar >= 14 or rad > 0.095:
         storm = "yellow"
     else:
         storm = "green"
-
     abrasion = _lvl(dust, 1.7, 2.25)
     thermal_eq = "green"
     if not polar and (temp > 110 or temp < -155):
@@ -503,7 +461,6 @@ def _hazard_levels(pred, lat=None):
         thermal_eq = "yellow"
     struct = _lvl(quakes, 30, 42)
     impact = _lvl(meteor, 1.9, 2.5)
-
     equip_rank = {"green": 0, "yellow": 1, "red": 2}
     equipment = max([abrasion, thermal_eq, struct, impact], key=lambda x: equip_rank[x])
     return {
@@ -519,7 +476,6 @@ def _hazard_levels(pred, lat=None):
         "equip_structure": struct,
         "equip_impact": impact,
     }
-
 def _short_reason(key, pred, level):
     rad = float(pred.get("radiation", 0))
     dust = float(pred.get("dust", 0))
@@ -537,7 +493,6 @@ def _short_reason(key, pred, level):
         "equipment": "Equipment stress elevated",
     }
     return mapping.get(key, key)
-
 def _eva_score(pred, risk_posture="nominal", lat=None):
     rad = float(pred.get("radiation", 0.08))
     dust = float(pred.get("dust", 1.5))
@@ -594,7 +549,6 @@ def _eva_score(pred, risk_posture="nominal", lat=None):
             "nogo": "Hold EVA - limits exceeded.",
         }.get(status, ""),
     }
-
 def _base_suitability(pred, lat, lon, illum_pct):
     rad = float(pred.get("radiation", 0.08))
     dust = float(pred.get("dust", 1.5))
@@ -602,11 +556,8 @@ def _base_suitability(pred, lat, lon, illum_pct):
     meteor = float(pred.get("micrometeorites", 1.6))
     solar = float(pred.get("solar", 5.0))
     levels = _hazard_levels(pred, lat=lat)
-
     power = min(100.0, illum_pct * 0.55 + min(solar, 20) * 2.0)
-
     hab = 100.0 - (rad * 280 + max(0, dust - 1.0) * 14 + max(0, quakes - 20) * 0.7 + max(0, meteor - 1.2) * 8)
-
     near_side = math.cos(math.radians(lon))
     comms = 55 + 35 * max(-1, min(1, near_side))
     if abs(lat) > 80:
@@ -636,7 +587,6 @@ def _base_suitability(pred, lat, lon, illum_pct):
         "why": why[:4] or ["Balanced site factors"],
         "status": "go" if score >= 68 and levels["equipment"] != "red" else "caution" if score >= 45 else "nogo",
     }
-
 def _site_illumination(lat, lon, hour):
     lst = (hour + (lon / 15.0)) % 24.0
     lat_r = math.radians(lat)
@@ -646,7 +596,6 @@ def _site_illumination(lat, lon, hour):
     else:
         cos_z = max(0.0, math.cos(lat_r) * math.cos(hour_angle))
     return max(0, min(100, int(round(cos_z * 100))))
-
 def _score_zone(site, hour0, risk_posture, use_ml=False):
     b = _baseline_inputs(site["lat"], site["lon"], hour0)
     plaus = None
@@ -695,7 +644,6 @@ def _score_zone(site, hour0, risk_posture, use_ml=False):
         "is_query": bool(site.get("is_query")),
         "scored_with": "ml" if use_ml else "physics",
     }
-
 def _confidence_pct(plausibility, status=None, lat=None, lon=None, confidence=None):
     if isinstance(confidence, dict) and confidence.get("model_uncertainty_available") and confidence.get("overall_pct") is not None:
         try:
@@ -732,7 +680,6 @@ def _confidence_pct(plausibility, status=None, lat=None, lon=None, confidence=No
         pct -= 8
     elif st in ("caution", "yellow"):
         pct -= 4
-
     if lon is not None:
         try:
             if abs(((float(lon) + 180.0) % 360.0) - 180.0) > 90:
@@ -746,7 +693,6 @@ def _confidence_pct(plausibility, status=None, lat=None, lon=None, confidence=No
         except (TypeError, ValueError):
             pass
     return int(round(max(42, min(96, pct))))
-
 def _landing_ops_windows(hourly, now, risk_posture, lat, plausibility, confidence=None):
     land_h = 2
     windows = []
@@ -759,7 +705,6 @@ def _landing_ops_windows(hourly, now, risk_posture, lat, plausibility, confidenc
         scored = _eva_score(avg, risk_posture, lat=lat)
         storm_hits = sum(1 for x in slice_ if x["storm"] != "green")
         equip_hits = sum(1 for x in slice_ if x["equipment"] != "green")
-
         temp = avg["temperature"]
         thermal_ok = _landing_thermal_ok(temp, lat)
         land_score = scored["score"]
@@ -794,11 +739,9 @@ def _landing_ops_windows(hourly, now, risk_posture, lat, plausibility, confidenc
         })
     windows.sort(key=lambda w: (-w["score"], w["avg_radiation"]))
     return windows[:4]
-
 def _compute_mission_plan(payload):
     lat = float(payload.get("lat", -89.68))
     lon = float(payload.get("lon", 166.15))
-
     lat = max(-90.0, min(90.0, lat))
     lon = ((lon + 180.0) % 360.0) - 180.0
     name = (payload.get("name") or "").strip() or f"Site {lat:.2f}°, {lon:.2f}°"
@@ -808,17 +751,14 @@ def _compute_mission_plan(payload):
     risk_posture = str(payload.get("risk_posture", "nominal")).lower()
     if risk_posture not in ("conservative", "nominal", "aggressive"):
         risk_posture = "nominal"
-
     now = datetime.now(timezone.utc)
     hour0 = now.hour + now.minute / 60.0
-
     base0 = _baseline_inputs(lat, lon, hour0)
     cur = _try_ml_predict(base0, lat, lon, hour0)
     pred0 = cur.get("prediction") or cur.get("refined_estimate") or {}
     eva_now = _eva_score(pred0, risk_posture, lat=lat)
     illum = _site_illumination(lat, lon, hour0)
     site_base = _base_suitability(pred0, lat, lon, illum)
-
     try:
         from space_weather_model import physics_estimate as _phys_est
     except Exception:
@@ -829,7 +769,6 @@ def _compute_mission_plan(payload):
     for h in range(24):
         t = (hour0 + h) % 24.0
         base = _baseline_inputs(lat, lon, t)
-
         fade = max(0.0, 1.0 - h / 18.0)
         base[1] = base[1] * (1 - 0.55 * fade) + rad0 * (0.55 * fade)
         base[0] = base[0] * (1 - 0.45 * fade) + sol0 * (0.45 * fade)
@@ -855,7 +794,6 @@ def _compute_mission_plan(payload):
             "storm": hz["solar_storm"],
             "equipment": hz["equipment"],
         })
-
     windows = []
     for h in range(0, 24 - eva_h + 1):
         slice_ = hourly[h:h + eva_h]
@@ -884,7 +822,6 @@ def _compute_mission_plan(payload):
     windows.sort(key=lambda w: (-w["score"], w["avg_radiation"]))
     top_windows = windows[:6]
     landing_windows = _landing_ops_windows(hourly, now, risk_posture, lat, cur.get("plausibility"), confidence=cur.get("confidence"))
-
     candidates = list(MISSION_CANDIDATE_SITES) + [{
         "name": name,
         "lat": lat,
@@ -898,7 +835,6 @@ def _compute_mission_plan(payload):
     ]
     zones.sort(key=lambda z: (-z["ops_rank"], -z["base_pct"]))
     best_base = zones[0] if zones else None
-
     rad_h = float(pred0.get("radiation", 0.075))
     gcr = 0.022
     interior = gcr * 0.35
@@ -917,7 +853,6 @@ def _compute_mission_plan(payload):
         "pct_male": round(total / 600.0 * 100, 1),
         "pct_female": round(total / 400.0 * 100, 1),
     }
-
     hz = eva_now["hazards"]
     conf_now = _confidence_pct(cur.get("plausibility"), eva_now.get("status"), lat=lat, lon=lon, confidence=cur.get("confidence"))
     eva_now = {**eva_now, "confidence_pct": conf_now}
@@ -974,26 +909,18 @@ def _compute_mission_plan(payload):
         "landing_zones": zones,
         "dose": dose,
     }
-
 @app.route('/')
 def index():
     return send_from_directory('.', 'landing.html')
-
-
 @app.route('/mercury')
 def mercury_dashboard():
     return send_from_directory('.', 'index.html')
-
-
 @app.route('/dashboard')
 def lipas_dashboard():
     return send_from_directory('.', 'doctype.html')
-
-
 @app.route('/moon')
 def moon_dashboard():
     return send_from_directory('.', 'doctype.html')
-
 @app.route('/data')
 def data_endpoint():
     try:
@@ -1055,7 +982,6 @@ def data_endpoint():
         'radiation_cache': {'hourly': hourly, 'timestamp': int(now.timestamp() * 1000)}
     }
     return jsonify(payload)
-
 def make_synthetic_prediction(inputs, lat=0.0, lon=0.0, local_time=None):
     """Physics-only fallback when ML is unavailable — not random mock data."""
     try:
@@ -1093,12 +1019,10 @@ def make_synthetic_prediction(inputs, lat=0.0, lon=0.0, local_time=None):
         'ml_estimate': None,
         'plausibility': 0.72,
     }
-
 @app.route('/client-token')
 def client_token():
     token = os.getenv('CESIUM_ION_TOKEN', '')
     return jsonify({'token': token})
-
 @app.route('/predict', methods=['POST'])
 def predict_endpoint():
     try:
@@ -1133,7 +1057,6 @@ def predict_endpoint():
             'physics_estimate': result.get('physics_estimate'),
             'ml_estimate': result.get('ml_estimate'),
             'plausibility': result.get('plausibility'),
-
             'confidence': conf,
             'confidence_pct': overall,
             'gated_fields': result.get('gated_fields') or [],
@@ -1144,7 +1067,6 @@ def predict_endpoint():
         })
     except Exception as e:
         return jsonify({'error': str(e)}), 500
-
 @app.route('/status')
 def status_proxy():
     try:
@@ -1153,7 +1075,6 @@ def status_proxy():
         return swm.status_endpoint()
     except Exception as e:
         return jsonify({'model_loaded': False, 'error': str(e)}), 200
-
 @app.route('/api/real-data-status')
 def real_data_status():
     _ensure_ml_loaded()
@@ -1193,7 +1114,6 @@ def real_data_status():
                     if has_real_data else
                     'Model weights not loaded - using physics-only estimates'),
     })
-
 @app.route('/api/capability')
 def api_capability():
     _ensure_ml_loaded()
@@ -1221,7 +1141,6 @@ def api_capability():
         'model_generation': 'train2',
         'error': 'capability.json not generated — run: python scripts/verify_train2_capability.py',
     }), 404
-
 @app.route('/api/environmental-data')
 def environmental_data():
     try:
@@ -1250,7 +1169,6 @@ def environmental_data():
         'micrometeorites_series': series['micrometeorites'],
     }
     return jsonify(data)
-
 @app.route('/api/forecast')
 def api_forecast():
     try:
@@ -1294,7 +1212,6 @@ def api_forecast():
         'driver_sources': series.get('driver_sources'),
         'hybrid_control_hours': series.get('hybrid_control_hours'),
     })
-
 def evaluate_hazard_grid(step_deg=10.0, local_time=12.0, times=None, mode='hybrid', ml_stride=None):
     step = float(step_deg)
     step = max(5.0, min(30.0, step))
@@ -1315,24 +1232,19 @@ def evaluate_hazard_grid(step_deg=10.0, local_time=12.0, times=None, mode='hybri
     mode = str(mode or 'hybrid').lower()
     if mode not in ('hybrid', 'physics', 'ml'):
         mode = 'hybrid'
-
     if ml_stride is None:
         target = 36
         cells = max(1, n_lat * n_lon)
         ml_stride = max(1, int(math.ceil(math.sqrt(cells / float(target)))))
     ml_stride = max(1, int(ml_stride))
     grid_fast_ml = ml_stride >= 3
-
     channels = ('solar', 'radiation', 'temperature', 'moonquakes', 'micrometeorites', 'dust')
     idx = {'solar': 0, 'radiation': 1, 'temperature': 2, 'moonquakes': 3, 'micrometeorites': 4, 'dust': 5}
-
     try:
         from space_weather_model import physics_estimate as _phys_est
     except Exception:
         _phys_est = None
-
     from helio_aspects import cosine_incidence, instant_from_utc_hour, lunar_subsolar
-
     frames = []
     any_ml = False
     ml_control_total = 0
@@ -1343,7 +1255,6 @@ def evaluate_hazard_grid(step_deg=10.0, local_time=12.0, times=None, mode='hybri
             driver_sources = list(extra['driver_sources'])
         instant = instant_from_utc_hour(t)
         sub = lunar_subsolar(instant)
-
         phys_grid = {c: [[0.0] * n_lon for _ in range(n_lat)] for c in channels}
         for i, la in enumerate(lats):
             for j, lo in enumerate(lons):
@@ -1361,12 +1272,10 @@ def evaluate_hazard_grid(step_deg=10.0, local_time=12.0, times=None, mode='hybri
                         phys_grid[c][i][j] = float(pred[c])
                     else:
                         phys_grid[c][i][j] = float(base[idx[c]])
-
         out_grid = {c: [row[:] for row in phys_grid[c]] for c in channels}
         src_label = 'physics'
         n_ml = 0
         if mode in ('hybrid', 'ml'):
-
             residuals = []
             for i in range(0, n_lat, ml_stride):
                 for j in range(0, n_lon, ml_stride):
@@ -1391,7 +1300,6 @@ def evaluate_hazard_grid(step_deg=10.0, local_time=12.0, times=None, mode='hybri
                     residuals.append((i, j, res))
                     n_ml += 1
             ml_control_total += n_ml
-
             if residuals:
                 src_label = 'ml+physics_residual_nn'
                 for i in range(n_lat):
@@ -1405,12 +1313,10 @@ def evaluate_hazard_grid(step_deg=10.0, local_time=12.0, times=None, mode='hybri
                                 best = res
                         for c in channels:
                             out_grid[c][i][j] = phys_grid[c][i][j] + best[c]
-
         for i, la in enumerate(lats):
             for j, lo in enumerate(lons):
                 mu = cosine_incidence(la, lo, sub['lat'], sub['lon'])
                 out_grid['solar'][i][j] = max(0.0, float(out_grid['solar'][i][j])) * (0.06 + 0.94 * mu)
-
         fields = {}
         for c in channels:
             fields[c] = [
@@ -1442,14 +1348,11 @@ def evaluate_hazard_grid(step_deg=10.0, local_time=12.0, times=None, mode='hybri
         'driver_sources': driver_sources,
         'note': 'Moon-wide fields: physics at every cell + ML residuals from control lattice + live/archive drivers. Solar is dayside-weighted to the true subsolar point.',
     }
-
 _HAZARD_GRID_CACHE: dict[str, tuple[float, dict]] = {}
 _HAZARD_GRID_TTL_S = 600.0
-
 def _hazard_grid_cache_key(step, local_time, times, mode, ml_stride):
     tkey = ','.join(f'{t:.2f}' for t in (times or []))
     return f'{step:.1f}|{local_time:.2f}|{tkey}|{mode}|{ml_stride}'
-
 @app.route('/api/hazard-grid')
 def api_hazard_grid():
     try:
@@ -1486,11 +1389,9 @@ def api_hazard_grid():
     )
     _HAZARD_GRID_CACHE[key] = (now, grid)
     return jsonify(grid)
-
 @app.route('/api/mission/sites')
 def mission_sites():
     return jsonify({"sites": MISSION_CANDIDATE_SITES})
-
 @app.route('/api/mission/plan', methods=['POST'])
 def mission_plan():
     try:
@@ -1499,7 +1400,6 @@ def mission_plan():
         return jsonify(plan)
     except Exception as e:
         return jsonify({"error": str(e)}), 500
-
 @app.route('/api/mission/eva-now', methods=['POST'])
 def mission_eva_now():
     try:
@@ -1528,7 +1428,6 @@ def mission_eva_now():
         })
     except Exception as e:
         return jsonify({"error": str(e)}), 500
-
 @app.route('/api/mission/pdf', methods=['POST'])
 def mission_pdf():
     if generate_mission_pdf is None:
@@ -1548,7 +1447,6 @@ def mission_pdf():
         )
     except Exception as e:
         return jsonify({"error": str(e)}), 500
-
 def _lipas_snapshot_for_luna(lat=None, lon=None, client_context=None):
     ctx = dict(client_context or {})
     try:
@@ -1582,12 +1480,10 @@ def _lipas_snapshot_for_luna(lat=None, lon=None, client_context=None):
         snap["eva_score"] = scored.get("score")
     except Exception as e:
         snap["live_error"] = str(e)
-
     for k, v in ctx.items():
         if k not in snap and v is not None:
             snap[k] = v
     return snap
-
 def _luna_local_answer(message, snap):
     t = (message or "").lower().strip()
     site = snap.get("site") or "your site"
@@ -1597,13 +1493,11 @@ def _luna_local_answer(message, snap):
     solar = snap.get("solar")
     eva = snap.get("eva_now")
     score = snap.get("eva_score")
-
     def fmt(v, digits=3):
         try:
             return f"{float(v):.{digits}f}"
         except (TypeError, ValueError):
             return "n/a"
-
     def live_brief():
         parts = []
         if rad is not None:
@@ -1619,7 +1513,6 @@ def _luna_local_answer(message, snap):
         if not parts:
             return f"I don't have live numbers for {site} yet — pick a location on the dashboard."
         return f"At {site}: " + ", ".join(parts) + "."
-
     if any(k in t for k in ("hello", "hi ", "hey", "good morning", "good evening")):
         return (
             "Hi! I'm Luna. I can help with lunar weather, EVA safety, dust, storms, and how L.I.P.A.S. works. "
@@ -1630,7 +1523,6 @@ def _luna_local_answer(message, snap):
             "This is L.I.P.A.S. — a lunar hazard dashboard. It blends live space weather with physics and machine learning "
             "to forecast radiation, temperature, dust, and more across the Moon. Ask me anything about those hazards or EVA planning."
         )
-
     replies = [
         (["radiation", "dose", "gcr", "sievert", "µsv", "usv", "msv"],
          f"{live_brief()} Quiet-time dose is usually tens of µSv/h; solar storms can spike it fast. "
@@ -1667,7 +1559,6 @@ def _luna_local_answer(message, snap):
     return (
         "I'm not sure I caught that — try asking about radiation, EVA windows, dust, solar storms, or how L.I.P.A.S. works."
     )
-
 LUNA_LIPAS_KNOWLEDGE = (
     "LIPAS (Lunar Integrated Prediction & Assessment System) brief:\n"
     "- Six hazards: solar_activity, radiation_mSv, temperature_C, moonquakes_per_day, meteor_flux_1e15, dust_g_cm3.\n"
@@ -1678,7 +1569,6 @@ LUNA_LIPAS_KNOWLEDGE = (
     "- Data: NOAA SWPC JSON, NASA OMNI2, DONKI, Diviner climatology, MEM3 export, LDEX, Apollo seismic.\n"
     "- EVA scoring blends radiation, solar/storm, dust, thermal, micrometeoroids, site fit → GO / CAUTION / NO-GO."
 )
-
 def _luna_openai_answer(message, snap, history=None):
     import urllib.request
     key = (os.environ.get("OPENAI_API_KEY") or "").strip()
@@ -1724,7 +1614,6 @@ def _luna_openai_answer(message, snap, history=None):
         return text, "openai"
     except Exception as e:
         return None, f"openai_error:{e}"
-
 def _luna_pollinations_answer(message, snap, history=None):
     import ssl
     import urllib.error
@@ -1755,7 +1644,6 @@ def _luna_pollinations_answer(message, snap, history=None):
         "https://text.pollinations.ai/openai",
         "https://api.pollinations.ai/v1/chat/completions",
     ]
-
     contexts = []
     try:
         contexts.append(ssl.create_default_context())
@@ -1790,7 +1678,6 @@ def _luna_pollinations_answer(message, snap, history=None):
                 last_err = e
                 continue
     return None, f"pollinations_error:{last_err}"
-
 @app.route('/api/luna-chat', methods=['POST'])
 def luna_chat():
     try:
@@ -1798,7 +1685,6 @@ def luna_chat():
         message = (payload.get("message") or payload.get("q") or "").strip()
         if not message:
             return jsonify({"error": "message required"}), 400
-
         client_ctx = payload.get("context") or {}
         has_live = any(
             client_ctx.get(k) is not None
@@ -1815,7 +1701,6 @@ def luna_chat():
                 snap.setdefault("lat", -89.68)
                 snap.setdefault("lon", 166.15)
             snap.setdefault("site", snap.get("site") or "selected site")
-
             if snap.get("radiation") is not None and snap.get("radiation_mSv_h") is None:
                 try:
                     rv = float(snap["radiation"])
@@ -1827,11 +1712,9 @@ def luna_chat():
                 payload.get("lat"), payload.get("lon"), client_ctx
             )
         history = payload.get("history")
-
         answer = None
         source = None
         openai_key = (os.environ.get("OPENAI_API_KEY") or "").strip()
-
         if openai_key:
             answer, source = _luna_openai_answer(message, snap, history)
         if not answer:
@@ -1853,13 +1736,10 @@ def luna_chat():
         })
     except Exception as e:
         return jsonify({"error": str(e)}), 500
-
 @app.route('/api/mercury/sites')
 def api_mercury_sites():
     from mercurius.serve import build_sites_now
     return jsonify(build_sites_now())
-
-
 @app.route('/api/mercury/state')
 def api_mercury_state():
     from mercurius.serve import build_state
@@ -1885,8 +1765,6 @@ def api_mercury_state():
         except Exception:
             lat_f = lon_f = None
     return jsonify(build_state(site_id=site_id, lat=lat_f, lon=lon_f, hour=hour, lst=lst_f))
-
-
 @app.route('/api/mercury/forecast')
 def api_mercury_forecast():
     from mercurius.serve import build_forecast
@@ -1903,8 +1781,6 @@ def api_mercury_forecast():
         except Exception:
             lst_f = None
     return jsonify(build_forecast(site_id=site_id, hours=hours, lst=lst_f))
-
-
 def _register_optional_local_routes():
     from pathlib import Path
     extra = Path(__file__).resolve().parent / "terra" / "flask_routes.py"
@@ -1915,11 +1791,7 @@ def _register_optional_local_routes():
         _register_local(app)
     except Exception:
         pass
-
-
 _register_optional_local_routes()
-
-
 @app.route('/api/solar/disk')
 def api_solar_disk():
     """Active regions + intensity drivers for the LIPAS Sun globe."""
@@ -1932,8 +1804,6 @@ def api_solar_disk():
         return jsonify(build_solar_disk(max_spots=max_spots))
     except Exception as e:
         return jsonify({'error': str(e), 'spots': [], 'intensity': 0.35}), 500
-
-
 @app.route('/api/globe/clock')
 def api_globe_clock():
     """Subsolar point, planet aspects, and T+h drivers for the three globes."""
@@ -1947,8 +1817,6 @@ def api_globe_clock():
         return jsonify(globe_clock(body, hour))
     except Exception as e:
         return jsonify({'error': str(e), 'body': request.args.get('body'), 'hour': 0}), 500
-
-
 @app.route('/api/trek/<path:subpath>')
 def api_trek_proxy(subpath):
     """Same-origin NASA Trek tiles so Cesium can paint Mercury (avoids CORS/XHR stalls)."""
@@ -1993,8 +1861,6 @@ def api_trek_proxy(subpath):
             mime = 'image/png' if cache_name.endswith('.png') else 'image/jpeg'
             return send_from_directory(cache_dir, cache_name, mimetype=mime)
         return jsonify({'error': str(e)}), 502
-
-
 @app.route('/api/solar/tiles/<int:z>/<int:y>/<int:x>.jpg')
 def api_solar_tiles(z, y, x):
     """Geographic XYZ tiles of the real HMI continuum sphere (near + opposite face)."""
@@ -2010,8 +1876,6 @@ def api_solar_tiles(z, y, x):
         return resp
     except Exception as e:
         return jsonify({'error': str(e)}), 502
-
-
 @app.route('/api/solar/synoptic')
 def api_solar_synoptic():
     """Full equirectangular HMI continuum mosaic used to cut the Sun globe tiles."""
@@ -2024,8 +1888,6 @@ def api_solar_synoptic():
         return resp
     except Exception as e:
         return jsonify({'error': str(e)}), 502
-
-
 @app.route('/api/solar/sdo')
 def api_solar_sdo():
     """Proxy latest NASA SDO HMI continuum for the Cesium Sun globe (avoids CORS)."""
@@ -2059,11 +1921,8 @@ def api_solar_sdo():
             return send_from_directory(cache_dir, cache_name, mimetype='image/jpeg')
         return jsonify({'error': str(e)}), 502
     return jsonify({'error': 'empty solar image'}), 502
-
-
 @app.route('/<path:path>', methods=['GET', 'HEAD'])
 def static_proxy(path):
-
     if '..' in path or path.startswith('api/') or path in ('predict', 'client-token', 'data', 'status'):
         return jsonify({'error': 'not found'}), 404
     resp = send_from_directory('.', path)
@@ -2073,7 +1932,6 @@ def static_proxy(path):
     else:
         resp.cache_control.no_cache = True
     return resp
-
 if __name__ == '__main__':
     def _warm_start():
         try:
@@ -2091,8 +1949,6 @@ if __name__ == '__main__':
                 )
         except Exception:
             pass
-
     threading.Thread(target=_warm_start, daemon=True).start()
-
     port = int(os.getenv('PORT', 8000))
     app.run(host='0.0.0.0', port=port, debug=True)

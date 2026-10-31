@@ -1,15 +1,12 @@
-
 """LIPAS."""
 import os
 import json
 import time
 import requests
 from pathlib import Path
-
 ROOT = Path(__file__).parent.parent
 RAW_DIR = ROOT / 'data' / 'raw'
 RAW_DIR.mkdir(parents=True, exist_ok=True)
-
 ENDPOINTS = [
     'https://services.swpc.noaa.gov/json/f107_cm_flux.json',
     'https://services.swpc.noaa.gov/json/planetary_k_index_1m.json',
@@ -25,7 +22,6 @@ ENDPOINTS = [
     'https://services.swpc.noaa.gov/products/noaa-planetary-k-index.json',
     'https://services.swpc.noaa.gov/products/kyoto-dst.json',
 ]
-
 fetched = {}
 for url in ENDPOINTS:
     try:
@@ -42,7 +38,6 @@ for url in ENDPOINTS:
     except Exception as e:
         print(f'  FAIL: {e}')
         fetched[url] = {'ok': False, 'error': str(e)}
-
 report_path = ROOT / 'data' / 'fetch_swpc_report.json'
 with open(report_path, 'w') as f:
     json.dump({'timestamp': time.time(), 'endpoints': fetched}, f, indent=2)

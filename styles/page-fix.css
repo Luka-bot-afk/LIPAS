@@ -1,5 +1,3 @@
-/* Last stylesheet. Light-mode contrast and rounded controls, even when an older skin is cached. */
-
 .location-item,
 .li-image,
 .term-col,
@@ -92,7 +90,6 @@ html[data-theme="light"] .term-belt::after {
 .spinner-container,
 .spinner-ring,
 .loading-dots { display: none !important; }
-
 html[data-theme="light"] .location-item,
 html[data-theme="light"] .location-item:hover,
 html[data-theme="light"] .location-item.active,
@@ -193,10 +190,50 @@ html[data-theme="light"] .bp-eyebrow {
   background: #fffdf9 !important;
   color: #1a1916 !important;
 }
-html[data-theme="light"] .shell .panel,
-html[data-theme="light"] .planner-rail,
+html[data-theme="light"] body.lipas-body,
+html[data-theme="light"] body.mercury-mode.lipas-body,
+html[data-theme="light"] body.profile-page {
+  background: #f3f0ea !important;
+  color: #1a1916 !important;
+}
 html[data-theme="light"] .mast h1,
 html[data-theme="light"] .mast p,
+html[data-theme="light"] .profile-card h1,
+html[data-theme="light"] .profile-card p,
+html[data-theme="light"] .profile-card .who,
+html[data-theme="light"] .profile-card label {
+  background: transparent !important;
+  box-shadow: none !important;
+  color: #1a1916 !important;
+}
+html[data-theme="light"] .mast p,
+html[data-theme="light"] .src-card p,
+html[data-theme="light"] .note,
+html[data-theme="light"] .profile-card .note,
+html[data-theme="light"] .profile-card label {
+  color: #5c564c !important;
+}
+html[data-theme="light"] .src-card,
+html[data-theme="light"] .profile-card {
+  background: #fffdf9 !important;
+  color: #1a1916 !important;
+  border: 1px solid rgba(28, 25, 21, 0.12) !important;
+  border-radius: 18px !important;
+}
+html[data-theme="light"] .profile-card input,
+html[data-theme="light"] .agency {
+  background: #fff !important;
+  color: #1a1916 !important;
+  border-radius: 14px !important;
+}
+html[data-theme="light"] .agency { border-radius: 999px !important; }
+html[data-theme="light"] .agency.active,
+html[data-theme="light"] .profile-save {
+  background: #1a1916 !important;
+  color: #fffdf9 !important;
+}
+html[data-theme="light"] .shell .panel,
+html[data-theme="light"] .planner-rail,
 html[data-theme="light"] .field input,
 html[data-theme="light"] .field select,
 html[data-theme="light"] .hz-cell,
@@ -214,7 +251,6 @@ html[data-theme="light"] .timebar-kicker,
 html[data-theme="light"] #globeHourLabel {
   color: #1a1916 !important;
 }
-
 @media (min-width: 721px) {
   .globe-options-toggle {
     display: block !important;
@@ -232,3 +268,126 @@ html[data-theme="light"] #globeHourLabel {
   body.globe-options-open .globe-options-toggle { display: none !important; }
   body.globe-options-open .globe-options-close { display: block !important; }
 }
+.map-header,
+.moon-map-container,
+.pdf-box,
+.disclaimer-box,
+.pdf-box button,
+.metric-button,
+.hour-item,
+.kpi,
+.metric-chip,
+.map-panel,
+.warning-box {
+  border-radius: 18px !important;
+}
+html[data-theme="light"] .map-header,
+html[data-theme="light"] .moon-map-container,
+html[data-theme="light"] .pdf-box,
+html[data-theme="light"] .disclaimer-box,
+html[data-theme="light"] .kpi,
+html[data-theme="light"] .metric-chip,
+html[data-theme="light"] .map-panel,
+html[data-theme="light"] .earth-hero,
+html[data-theme="light"] .slider-section,
+html[data-theme="light"] body.earth-mode .panel,
+html[data-theme="light"] body.mercury-mode .merc-mag-hero,
+html[data-theme="light"] .shell .panel,
+html[data-theme="light"] .warning-box,
+html[data-theme="light"] .fact-section,
+html[data-theme="light"] .alert,
+html[data-theme="light"] .alert-row .alert {
+  background: #fffdf9 !important;
+  color: #1a1916 !important;
+  border: 1px solid rgba(28, 25, 21, 0.12) !important;
+}
+html[data-theme="light"] .map-title,
+html[data-theme="light"] .pdf-title,
+html[data-theme="light"] .earth-hero h1,
+html[data-theme="light"] .panel-head h2,
+html[data-theme="light"] .disclaimer-box,
+html[data-theme="light"] .pdf-box,
+html[data-theme="light"] .pdf-box button {
+  color: #1a1916 !important;
+}
+html[data-theme="light"] .moon-map-container,
+html[data-theme="light"] #earthMapCanvas {
+  background: #e7eef6 !important;
+}
+html[data-theme="light"] .sat-item,
+html[data-theme="light"] .sat-item button,
+html[data-theme="light"] #overviewBtn,
+html[data-theme="light"] .sat-follow {
+  color: #1a1916 !important;
+  border-color: rgba(28, 25, 21, 0.18) !important;
+}
+.merc-mag-canvas-wrap,
+#cvMag {
+  border-radius: 18px !important;
+}
+html[data-theme="light"] .merc-mag-canvas-wrap {
+  border-color: rgba(28, 25, 21, 0.12) !important;
+}
+html[data-theme="light"] .loading-screen {
+  background: #f3f0ea !important;
+  color: #1a1916 !important;
+}
+html[data-theme="light"] .shell,
+html[data-theme="light"] body.planner-page,
+html[data-theme="light"] .earth-main {
+  color: #1a1916 !important;
+}
+html[data-theme="light"] .planner-page,
+html[data-theme="light"] .planner-shell,
+html[data-theme="light"] .planner-stage,
+html[data-theme="light"] .planner-rail {
+  background: #f3f0ea !important;
+  color: #1a1916 !important;
+}
+html[data-theme="light"] .commit-hero,
+html[data-theme="light"] .commit-hero[data-kind="go"],
+html[data-theme="light"] .commit-hero[data-kind="caution"],
+html[data-theme="light"] .commit-hero[data-kind="nogo"],
+html[data-theme="light"] .stage-panel,
+html[data-theme="light"] .route-card,
+html[data-theme="light"] .win-cell,
+html[data-theme="light"] .preset-card,
+html[data-theme="light"] .commit-kpis .kpi,
+html[data-theme="light"] .commit-reasons li,
+html[data-theme="light"] .hz-cell,
+html[data-theme="light"] .planner-page input,
+html[data-theme="light"] .planner-page select {
+  background: #fffdf9 !important;
+  color: #1a1916 !important;
+  border: 1px solid rgba(28, 25, 21, 0.12) !important;
+  border-radius: 16px !important;
+}
+html[data-theme="light"] .rail-actions {
+  background: linear-gradient(180deg, rgba(243, 240, 234, 0), #f3f0ea 28%) !important;
+}
+html[data-theme="light"] .planner-page h1,
+html[data-theme="light"] .planner-page h2,
+html[data-theme="light"] .commit-title,
+html[data-theme="light"] .commit-kicker,
+html[data-theme="light"] .rail-lede,
+html[data-theme="light"] .panel-head h2,
+html[data-theme="light"] .panel-head span,
+html[data-theme="light"] .field-label,
+html[data-theme="light"] .luna-out {
+  color: #1a1916 !important;
+}
+html[data-theme="light"] .planner-page .btn-ghost {
+  color: #1a1916 !important;
+  border-color: rgba(28, 25, 21, 0.2) !important;
+}
+.control-panel,
+.legend-panel,
+#locSearchInput,
+.control-item select,
+.legend-color,
+#globe3d,
+#pathCanvas,
+#altCanvas {
+  border-radius: 16px !important;
+}
+.legend-color { border-radius: 50% !important; }

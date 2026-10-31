@@ -1,19 +1,14 @@
-
 """LIPAS."""
 from __future__ import annotations
-
 import time
 from pathlib import Path
 from urllib.parse import urljoin
-
 import requests
 from bs4 import BeautifulSoup
-
 ROOT = Path(__file__).resolve().parent.parent
 OUT = ROOT / 'data' / 'archives' / 'diviner' / 'gcp'
 BASE = 'https://pds-geosciences.wustl.edu/lro/urn-nasa-pds-lro_diviner_derived1/data_derived_gcp/'
 LABEL = 'https://pds-geosciences.wustl.edu/lro/urn-nasa-pds-lro_diviner_derived1/label/dlre_gcp.fmt'
-
 def main():
     OUT.mkdir(parents=True, exist_ok=True)
     fmt = OUT / 'dlre_gcp.fmt'
@@ -22,7 +17,6 @@ def main():
         r.raise_for_status()
         fmt.write_bytes(r.content)
         print('saved', fmt)
-
     r = requests.get(BASE, timeout=60)
     r.raise_for_status()
     soup = BeautifulSoup(r.text, 'html.parser')
@@ -42,6 +36,5 @@ def main():
         print(' OK', len(rr.content))
         time.sleep(0.15)
     print('Done. Next: python scripts/extract_diviner_site_climatology.py')
-
 if __name__ == '__main__':
     main()

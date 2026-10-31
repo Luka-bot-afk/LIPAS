@@ -1,9 +1,7 @@
 (function (global) {
   "use strict";
-
   const api = (p) => (typeof global.lipasApiUrl === "function" ? global.lipasApiUrl(p) : p);
   const GREEN = "#3ecf8e";
-
   let viewer = null;
   let hour = 0;
   let sites = [];
@@ -16,11 +14,9 @@
   let followId = null;
   let rotate = false;
   let pulseStarted = false;
-
   function hideLoading() {
     document.getElementById("loadingScreen")?.classList.add("hidden");
   }
-
   function wrapLon(lon) {
     let x = Number(lon);
     if (!Number.isFinite(x)) return 0;
@@ -28,7 +24,6 @@
     while (x < -180) x += 360;
     return x;
   }
-
   function splitTrack(track) {
     const segs = [];
     let cur = [];
@@ -48,7 +43,6 @@
     if (cur.length > 1) segs.push(cur);
     return segs;
   }
-
   async function ionToken() {
     try {
       const r = await fetch(api("/client-token"));
@@ -56,7 +50,6 @@
       if (j && j.token) Cesium.Ion.defaultAccessToken = j.token;
     } catch (_) {}
   }
-
   function imageryLayer() {
     return new Cesium.UrlTemplateImageryProvider({
       url: "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
@@ -64,28 +57,23 @@
       credit: "Esri World Imagery",
     });
   }
-
   function setSceneMode(mode) {
     if (mode === "2d") viewer.scene.mode = Cesium.SceneMode.SCENE2D;
     else if (mode === "columbus") viewer.scene.mode = Cesium.SceneMode.COLUMBUS_VIEW;
     else viewer.scene.mode = Cesium.SceneMode.SCENE3D;
   }
-
   function applyLighting(on) {
     viewer.scene.globe.enableLighting = !!on;
     if (viewer.scene.sun) viewer.scene.sun.show = !!on;
   }
-
   function applyAtmosphere(on) {
     if (viewer.scene.skyAtmosphere) viewer.scene.skyAtmosphere.show = !!on;
     viewer.scene.globe.showGroundAtmosphere = !!on;
   }
-
   function clear(list) {
     list.forEach((e) => { try { viewer.entities.remove(e); } catch (_) {} });
     list.length = 0;
   }
-
   function addSites() {
     clear(siteEntities);
     const show = document.getElementById("showLocations")?.checked !== false;
@@ -119,7 +107,6 @@
       siteEntities.push(ent);
     });
   }
-
   function satPosition(s) {
     const track = s.track || [];
     if (track.length < 2) {
@@ -141,14 +128,12 @@
     });
     return prop;
   }
-
   function regimeColor(alt) {
     const a = Number(alt) || 400;
     if (a > 20000) return "#c9a6ff";
     if (a > 1800) return "#e0b14a";
     return GREEN;
   }
-
   function addSats() {
     clear(satEntities);
     clear(orbitEntities);
@@ -210,7 +195,6 @@
     });
     applyFollow();
   }
-
   function applyFollow() {
     const on = document.getElementById("followSat")?.checked;
     if (!on || !followId) {
@@ -220,7 +204,6 @@
     const ent = viewer.entities.getById("sat-" + followId);
     viewer.trackedEntity = ent || undefined;
   }
-
   function flyOverview() {
     const follow = document.getElementById("followSat");
     if (follow) follow.checked = false;
@@ -230,12 +213,10 @@
       duration: 1.6,
     });
   }
-
   function hazardOn(type) {
     const el = document.getElementById("haz-" + type);
     return !el || el.checked;
   }
-
   function paintHazards() {
     if (hazardLayer) {
       try { viewer.imageryLayers.remove(hazardLayer); } catch (_) {}
@@ -295,7 +276,6 @@
       requestAnimationFrame(tick);
     }
   }
-
   function renderSatList() {
     const box = document.getElementById("satList");
     if (!box) return;
@@ -318,7 +298,6 @@
       });
     });
   }
-
   function renderSearch(q) {
     const box = document.getElementById("locSearchResults");
     if (!box) return;
@@ -342,7 +321,6 @@
       b.addEventListener("click", () => flyToSite(b.dataset.id));
     });
   }
-
   function flyToSite(id) {
     const s = sites.find((x) => x.id === id);
     if (!s || !viewer) return;
@@ -357,7 +335,6 @@
     });
     showHover(s);
   }
-
   function showHover(s) {
     const card = document.getElementById("locHoverCard");
     if (!card) return;
@@ -372,7 +349,6 @@
     card.classList.add("show", "pinned");
     card.style.display = "block";
   }
-
   async function load(hourVal) {
     hour = Number(hourVal) || 0;
     let siteJson = {};
@@ -431,7 +407,6 @@
     const meta = document.getElementById("globeHourMeta");
     if (meta) meta.textContent = `${sats.length} satellites moving · ${satJson.source || "catalog"} · ${blobs.length} hazard blobs`;
   }
-
   function bindUi() {
     document.getElementById("enableLighting")?.addEventListener("change", (e) => applyLighting(e.target.checked));
     document.getElementById("showAtmosphere")?.addEventListener("change", (e) => applyAtmosphere(e.target.checked));
@@ -447,6 +422,22 @@
     ["aurora", "hf", "pca", "gnss"].forEach((t) => {
       document.getElementById("haz-" + t)?.addEventListener("change", paintHazards);
     });
+    document.querySelectorAll("#legendPanel [data-hazard]").forEach((btn) => {
+      const box = document.getElementById(btn.getAttribute("data-hazard"));
+      const paint = () => {
+        const on = box ? !!box.checked : true;
+        btn.classList.toggle("is-off", !on);
+        btn.setAttribute("aria-pressed", on ? "true" : "false");
+      };
+      paint();
+      btn.addEventListener("click", () => {
+        if (!box) return;
+        box.checked = !box.checked;
+        box.dispatchEvent(new Event("change", { bubbles: true }));
+        paint();
+      });
+      box?.addEventListener("change", paint);
+    });
     document.getElementById("locCloseBtn")?.addEventListener("click", () => {
       const card = document.getElementById("locHoverCard");
       card?.classList.remove("show", "pinned");
@@ -461,7 +452,6 @@
     }
     openBtn?.addEventListener("click", () => setOpen(true));
     closeBtn?.addEventListener("click", () => setOpen(false));
-
     viewer.screenSpaceEventHandler.setInputAction((click) => {
       const picked = viewer.scene.pick(click.position);
       const id = picked && picked.id;
@@ -479,7 +469,6 @@
         if (s) showHover(s);
       }
     }, Cesium.ScreenSpaceEventType.LEFT_CLICK);
-
     if (global.LipasGlobeTimebar) {
       global.LipasGlobeTimebar.bind({
         onChange: (h) => { load(h).catch(() => {}); },
@@ -488,7 +477,6 @@
       document.getElementById("globeHourSlider")?.addEventListener("change", (e) => load(e.target.value));
     }
   }
-
   async function start() {
     await ionToken();
     const base = new Cesium.ImageryLayer(imageryLayer());
@@ -524,7 +512,6 @@
     await load(0);
     hideLoading();
   }
-
   start().catch((err) => {
     console.error(err);
     hideLoading();

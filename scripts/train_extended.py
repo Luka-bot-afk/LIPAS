@@ -1,4 +1,3 @@
-
 """LIPAS."""
 import argparse
 import glob
@@ -6,19 +5,15 @@ import json
 import os
 import sys
 from pathlib import Path
-
 ROOT = Path(__file__).parent.parent
 sys.path.insert(0, str(ROOT))
-
 from training_pipeline import train_extended_model, train_temporal_ensemble
-
 def _load_cfg(path: Path | None):
     if path is None:
         path = ROOT / 'configs' / 'hybrid_training_config.json'
     if path.exists():
         return json.loads(path.read_text())
     return {}
-
 def main():
     pre = argparse.ArgumentParser(add_help=False)
     pre.add_argument('--config', type=str, default=None)
@@ -26,7 +21,6 @@ def main():
     cfg = _load_cfg(Path(pre_args.config) if pre_args.config else None)
     arch = cfg.get('architecture', {})
     train_cfg = cfg.get('training', {})
-
     parser = argparse.ArgumentParser()
     parser.add_argument('--config', type=str, default=None, help=                                )
     parser.add_argument('--csv', type=str, default=None, help='Extended-schema training CSV (defaults to newest in data/ingested_extended/)')
@@ -58,14 +52,12 @@ def main():
     parser.add_argument('--channel-priority', type=str, default=None,
                          help='Comma-separated 6 floats for channel loss priority')
     args = parser.parse_args()
-
     csv_path = args.csv
     if csv_path is None:
         candidates = sorted(glob.glob('data/ingested_extended/extended_training_*.csv'), key=os.path.getmtime)
         if not candidates:
             raise SystemExit('No extended training CSV found; run scripts/build_extended_dataset.py first.')
         csv_path = candidates[-1]
-
     model_kwargs = {
         'lstm_units': tuple(arch.get('lstm_units', [256, 128, 64])),
         'dense_units': tuple(arch.get('dense_units', [256, 128])),
@@ -92,7 +84,6 @@ def main():
         model_kwargs['l2_reg'] = args.l2_reg
     if args.learning_rate is not None:
         model_kwargs['learning_rate'] = args.learning_rate
-
     metrics = train_extended_model(
         csv_path=csv_path,
         model_dir=args.model_dir,
@@ -110,19 +101,17 @@ def main():
         use_recency_weights=not args.no_recency_weights,
     )
     print('Final metrics:', metrics)
-
     if args.ensemble:
         paths = train_temporal_ensemble(
             csv_path=csv_path,
             model_dir=args.model_dir,
             n_models=args.n_ensemble,
-            epochs=max(30, args.epochs // 2),
+            epochs=max(30, args.epochs
             batch_size=args.batch_size,
             sequence_length=args.sequence_length,
             window_stride=args.window_stride,
             base_model_kwargs=model_kwargs,
         )
         print('Ensemble paths:', paths)
-
 if __name__ == '__main__':
     main()

@@ -44,7 +44,6 @@ body.earth-mode > .topnav { flex-shrink: 0; background: rgba(11, 16, 14, 0.86); 
   font-size: 11px; letter-spacing: .16em; text-transform: uppercase; color: #3ecf8e;
 }
 @keyframes earth-spin { to { transform: rotate(360deg); } }
-
 .earth-shell {
   display: flex;
   height: calc(100vh - 56px);
@@ -65,7 +64,6 @@ body.earth-mode > .topnav { flex-shrink: 0; background: rgba(11, 16, 14, 0.86); 
   color: inherit; font: inherit; outline: none;
 }
 #siteSearch:focus { border-color: rgba(62, 207, 142, .5); }
-
 .location-list { list-style: none; padding: 0; margin: 0; }
 .li-section-header {
   list-style: none; pointer-events: none; padding: 12px 4px 6px;
@@ -108,7 +106,6 @@ body.earth-mode > .topnav { flex-shrink: 0; background: rgba(11, 16, 14, 0.86); 
 .li-badge {
   font-size: 9px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; color: var(--steel);
 }
-
 .earth-main { flex: 1; min-width: 0; overflow-y: auto; padding: 22px 26px 48px; }
 .earth-hero { display: flex; justify-content: space-between; gap: 16px; align-items: flex-start; margin-bottom: 16px; }
 .earth-hero .k { font-size: 10px; letter-spacing: .14em; text-transform: uppercase; color: #8fb8a8; font-weight: 600; }
@@ -120,7 +117,6 @@ body.earth-mode > .topnav { flex-shrink: 0; background: rgba(11, 16, 14, 0.86); 
   text-decoration: none; font-weight: 600; font-size: 13px;
 }
 .btn-globe:hover { background: rgba(62, 207, 142, .12); }
-
 .alert-row { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 16px; }
 .alert { padding: 8px 12px; border: 1px solid var(--line); font-size: 13px; max-width: 52ch; }
 .alert b { display: block; font-size: 12px; margin-bottom: 2px; }
@@ -128,7 +124,6 @@ body.earth-mode > .topnav { flex-shrink: 0; background: rgba(11, 16, 14, 0.86); 
 .alert.warn { border-color: rgba(224,177,74,.5); }
 .alert.info { border-color: rgba(62,207,142,.4); }
 .alert.ok { border-color: rgba(62,207,142,.35); }
-
 .slider-section { margin-bottom: 16px; }
 #hourSlider { width: 100%; accent-color: var(--steel); }
 .metric-pills { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
@@ -137,13 +132,11 @@ body.earth-mode > .topnav { flex-shrink: 0; background: rgba(11, 16, 14, 0.86); 
   padding: 5px 10px; font: inherit; font-size: 12px; cursor: pointer;
 }
 .metric-pills button.active { color: #0b0e0c; background: var(--steel); border-color: var(--steel); }
-
 .kpi-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 18px; }
 .kpi { background: rgba(18,28,22,.72); border: 1px solid var(--line); padding: 12px 12px 10px; }
 .kpi .k { font-size: 10px; letter-spacing: .12em; text-transform: uppercase; color: var(--dim); }
 .kpi .v { font-family: var(--font-display, Syne, sans-serif); font-size: 1.35rem; font-weight: 800; color: var(--steel); margin-top: 4px; }
 .kpi .u { font-size: 11px; color: var(--muted); }
-
 .panel, .map-panel {
   background: rgba(18,28,22,.55); border: 1px solid var(--line); padding: 14px 16px 16px; margin-bottom: 16px;
 }
@@ -159,7 +152,6 @@ body.earth-mode > .topnav { flex-shrink: 0; background: rgba(11, 16, 14, 0.86); 
 .map-legend .gnss::before { background: #e07ad0; }
 .chart-axis { display: flex; justify-content: space-between; font-size: 11px; color: var(--dim); margin-top: 4px; }
 #graphCanvas { width: 100%; height: 180px; display: block; }
-
 .warnings { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; }
 .warning-box { padding: 10px 12px; border: 1px solid var(--line); border-left-width: 3px; }
 .warning-box.go { border-left-color: var(--go); }
@@ -167,7 +159,6 @@ body.earth-mode > .topnav { flex-shrink: 0; background: rgba(11, 16, 14, 0.86); 
 .warning-box.nogo, .warning-box.high { border-left-color: var(--nogo); }
 .warning-header { font-size: 12px; font-weight: 700; margin-bottom: 4px; }
 .warning-desc { font-size: 12px; color: var(--muted); }
-
 .sat-row { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 8px; }
 .sat-card {
   border: 1px solid var(--line); padding: 10px 12px; text-decoration: none; color: inherit; display: block;
@@ -175,13 +166,11 @@ body.earth-mode > .topnav { flex-shrink: 0; background: rgba(11, 16, 14, 0.86); 
 .sat-card:hover { border-color: rgba(62, 207, 142, .45); }
 .sat-card .n { font-weight: 600; font-size: 13px; }
 .sat-card .m { font-size: 11px; color: var(--muted); margin-top: 4px; }
-
 .metrics-title { font-size: 13px; letter-spacing: .12em; text-transform: uppercase; margin: 8px 0 10px; }
 .metrics-panel { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 22px; }
 .metric-chip { background: rgba(18,28,22,.72); border: 1px solid var(--line); padding: 10px 12px; }
 .metric-chip .k { font-size: 10px; letter-spacing: .1em; text-transform: uppercase; color: var(--dim); }
 .metric-chip .v { font-size: 1.1rem; font-weight: 700; color: var(--steel); margin-top: 4px; }
-
 .pdf-box {
   margin-top: 8px; padding: 18px 20px;
   border: 1px solid var(--line-strong);
@@ -194,14 +183,11 @@ body.earth-mode > .topnav { flex-shrink: 0; background: rgba(11, 16, 14, 0.86); 
   font: inherit; font-weight: 700; cursor: pointer;
 }
 .pdf-box button:hover { filter: brightness(1.08); }
-
 @media (max-width: 980px) {
   .earth-shell { flex-direction: column; height: auto; }
   .earth-mode .sidebar { width: 100%; flex: none; max-height: 280px; }
   .kpi-grid, .metrics-panel, .warnings { grid-template-columns: repeat(2, 1fr); }
 }
-
-/* —— Earth mission planner — ops console —— */
 body.planner-page {
   overflow: hidden;
   height: 100vh;
@@ -420,7 +406,6 @@ body.planner-page.planner-busy .btn-primary {
   color: var(--steel);
 }
 .planner-page .btn-ghost:hover { background: rgba(62, 207, 142, .08); }
-
 .planner-stage {
   min-width: 0;
   overflow-y: auto;
@@ -511,7 +496,6 @@ body.planner-page.planner-busy .btn-primary {
   margin: 0;
 }
 .commit-kpis .kpi .v { font-size: 1.15rem; }
-
 .stage-panel {
   background: rgba(18, 28, 22, .55);
   border: 1px solid var(--line);
@@ -562,7 +546,6 @@ body.planner-page.planner-busy .btn-primary {
   color: var(--muted);
   font-variant-numeric: tabular-nums;
 }
-
 .charts { display: grid; grid-template-rows: 220px 176px; gap: 8px; }
 canvas.path {
   width: 100%;
@@ -589,7 +572,6 @@ canvas.path {
   min-width: 0;
 }
 .phase-seg b { display: block; color: var(--text); font-size: 11px; letter-spacing: 0; text-transform: none; margin-top: 2px; }
-
 .hz-grid {
   display: grid;
   grid-template-columns: repeat(5, minmax(0, 1fr));
@@ -615,7 +597,6 @@ canvas.path {
   margin-top: 8px; height: 3px; background: rgba(62, 207, 142, .12); overflow: hidden;
 }
 .hbar i { display: block; height: 100%; background: currentColor; }
-
 .sample-table { font-size: 12.5px; }
 .sample-row {
   display: grid;
@@ -635,7 +616,6 @@ canvas.path {
   border-bottom-color: var(--line-strong);
 }
 .sample-row span:first-child, .sample-row .ph { color: var(--text); font-weight: 600; }
-
 @media (max-width: 1200px) {
   .commit-hero { grid-template-columns: auto 1fr; }
   .commit-kpis { grid-column: 1 / -1; grid-template-columns: repeat(4, 1fr); }

@@ -1,8 +1,6 @@
 (function () {
   "use strict";
-
   const api = (p) => (typeof window.lipasApiUrl === "function" ? window.lipasApiUrl(p) : p);
-
   let siteId = "equator";
   let hour = 0;
   let lstLocked = false;
@@ -11,25 +9,20 @@
   let sitesNow = null;
   let state = null;
   let timer = null;
-
   function $(id) { return document.getElementById(id); }
-
   function fmt(v, d) {
     if (v == null || !Number.isFinite(Number(v))) return "—";
     return Number(v).toFixed(d);
   }
-
   async function loadSites() {
     const r = await fetch(api("/api/mercury/sites"));
     sitesNow = await r.json();
     renderSites();
   }
-
   async function loadForecast() {
     const r = await fetch(api(`/api/mercury/forecast?site=${encodeURIComponent(siteId)}&hours=24`));
     forecast = await r.json();
   }
-
   async function loadState() {
     const q = new URLSearchParams({ site: siteId, hour: String(hour) });
     if (lstLocked) q.set("lst", String(lst));
@@ -41,7 +34,6 @@
     }
     renderAll();
   }
-
   function renderSites() {
     const row = $("siteRow");
     const list = (sitesNow && sitesNow.catalog) || [];
@@ -60,7 +52,6 @@
       });
     });
   }
-
   function renderAlerts() {
     const alerts = (state && state.alerts) || [];
     $("alertRow").innerHTML = alerts
@@ -69,7 +60,6 @@
       )
       .join("");
   }
-
   function renderKpis() {
     if (!state) return;
     const p = state.prediction || {};
@@ -93,7 +83,6 @@
       .map(([k, v, u]) => `<div class="kpi"><div class="k">${k}</div><div class="v">${v}</div><div class="u">${u}</div></div>`)
       .join("");
   }
-
   function renderMeta() {
     if (!state) return;
     $("hourLabel").textContent = `T+${hour} h`;
@@ -108,7 +97,6 @@
         "Mercury nowcast uses 1 AU SWPC drivers scaled to this heliocentric distance, plus a Hermean magnetosphere. Dust, micrometeoroids, thermal-contraction quakes, EVA, and comms are physics-derived at this site — not the lunar LSTM.";
     }
   }
-
   function xyMag(canvas, xrm, zrm, mag) {
     const g = mag.grid;
     const w = canvas.width;
@@ -117,7 +105,6 @@
     const y = (1 - (zrm - g.z_min) / (g.z_max - g.z_min)) * h;
     return [x, y];
   }
-
   function drawMagnetosphere() {
     const cv = $("cvMag");
     const ctx = cv.getContext("2d");
@@ -137,7 +124,6 @@
       }
     }
     ctx.globalAlpha = 1;
-
     function strokePoly(pts, color, width) {
       if (!pts || pts.length < 2) return;
       ctx.beginPath();
@@ -154,11 +140,9 @@
     strokePoly(mag.bow_shock?.south, "#e8c48a", 1.6);
     strokePoly(mag.magnetopause?.north, "#7ec8d6", 2);
     strokePoly(mag.magnetopause?.south, "#7ec8d6", 2);
-
     (mag.field_lines || []).forEach((ln) => {
       strokePoly(ln.points, ln.closed ? colors.closed_line : colors.open_line, ln.closed ? 1.1 : 0.9);
     });
-
     const [cx, cy] = xyMag(cv, 0, 0, mag);
     const [ex] = xyMag(cv, 1, 0, mag);
     const pr = Math.abs(ex - cx);
@@ -168,7 +152,6 @@
     ctx.fill();
     ctx.strokeStyle = "rgba(255,255,255,0.25)";
     ctx.stroke();
-
     ctx.fillStyle = "#f2c56d";
     ctx.font = "12px IBM Plex Sans, sans-serif";
     ctx.fillText("SUN →", cv.width - 72, 22);
@@ -179,12 +162,10 @@
       ctx.fillStyle = "#e25b5b";
       ctx.fillText("DAYSIDE OPEN", 12, 54);
     }
-
     $("magLegend").innerHTML = (mag.legend || [])
       .map(([k, lab]) => `<span><i style="background:${colors[k]}"></i>${lab}</span>`)
       .join("");
   }
-
   function drawClock() {
     const cv = $("cvClock");
     const ctx = cv.getContext("2d");
@@ -206,7 +187,6 @@
     ctx.fillText("+By", cx + r + 8, cy + 4);
     if (!clock) return;
     const ang = (Number(clock.angle_deg) * Math.PI) / 180;
-
     const x2 = cx + Math.sin(ang) * (r - 8);
     const y2 = cy - Math.cos(ang) * (r - 8);
     ctx.strokeStyle = clock.orientation === "southward" ? "#e25b5b" : "#e07a3d";
@@ -223,7 +203,6 @@
     ctx.fillText(`Bz ${fmt(clock.bz_nt, 1)} nT`, cv.width * 0.62, 88);
     ctx.fillText(`${fmt(clock.angle_deg, 0)}°`, cv.width * 0.62, 106);
   }
-
   function drawParker() {
     const cv = $("cvParker");
     const ctx = cv.getContext("2d");
@@ -267,7 +246,6 @@
     ctx.fillText("Mercury", cx + rM - 10, cy - 10);
     ctx.fillText("Earth", cx + rE - 8, cy - 12);
   }
-
   function lineChart(canvas, series, color, extra) {
     const ctx = canvas.getContext("2d");
     ctx.fillStyle = "#07090c";
@@ -333,7 +311,6 @@
       ctx.stroke();
     }
   }
-
   function drawPressure() {
     const cv = $("cvP");
     const ctx = cv.getContext("2d");
@@ -355,7 +332,6 @@
       ctx.fillRect(16, y + 10, (cv.width - 40) * (b[1] / max), 18);
     });
   }
-
   function drawSitesCompare() {
     const cv = $("cvSites");
     const ctx = cv.getContext("2d");
@@ -373,7 +349,6 @@
       ctx.fillRect(130, y, ((cv.width - 150) * s.radiation) / maxR, 10);
     });
   }
-
   function renderCharts() {
     if (!forecast) return;
     lineChart($("cvSolar"), forecast.solar, "#e07a3d");
@@ -388,7 +363,6 @@
     drawPressure();
     drawSitesCompare();
   }
-
   function renderAll() {
     renderSites();
     renderAlerts();
@@ -399,7 +373,6 @@
     drawParker();
     renderCharts();
   }
-
   async function refresh(reloadForecast) {
     $("loadingScreen").classList.remove("hidden");
     try {
@@ -412,7 +385,6 @@
     }
     $("loadingScreen").classList.add("hidden");
   }
-
   $("hourSlider").addEventListener("input", (e) => {
     hour = Number(e.target.value);
     $("hourLabel").textContent = `T+${hour} h`;
@@ -426,6 +398,5 @@
     clearTimeout(timer);
     timer = setTimeout(() => loadState(), 80);
   });
-
   window.addEventListener("load", () => refresh(true));
 })();

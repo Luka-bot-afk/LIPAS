@@ -1,6 +1,3 @@
-# /api/* is the live function in netlify/functions/live.mjs
-# (NOAA SWPC, NASA Trek, SDO, CelesTrak). Trained weights stay on Flask.
-
 [build]
   publish = "."
 

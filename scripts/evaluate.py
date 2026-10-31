@@ -1,16 +1,12 @@
-
 """LIPAS."""
 import argparse
 import json
 import os
 import sys
 from pathlib import Path
-
 import numpy as np
 import pandas as pd
-
 sys.path.insert(0, str(Path(__file__).parent.parent))
-
 from data_ingestion import (
     split_extended_dataset,
     load_training_csv,
@@ -25,13 +21,10 @@ from space_weather_model import (
     get_channel_blend_weights,
     load_blend_weights,
 )
-
 def _rmse(a, b):
     return float(np.sqrt(np.mean((a - b) ** 2)))
-
 def _mae(a, b):
     return float(np.mean(np.abs(a - b)))
-
 def evaluate_extended(csv_path, model_dir, sequence_length=SEQUENCE_LENGTH, window_stride=7, max_samples=None):
     model = load_saved_model(model_dir, set_global=False)
     if model is None:
@@ -39,7 +32,6 @@ def evaluate_extended(csv_path, model_dir, sequence_length=SEQUENCE_LENGTH, wind
     scaler = np.load(os.path.join(model_dir, 'scaler.npz'))
     mean, std = scaler['mean'], scaler['std']
     load_blend_weights(model_dir)
-
     df = pd.read_csv(csv_path)
     split = split_extended_dataset(df, val_frac=0.15, test_frac=0.15, chronological=True)
     X_test = split['X_test'].astype(np.float32)
@@ -48,7 +40,6 @@ def evaluate_extended(csv_path, model_dir, sequence_length=SEQUENCE_LENGTH, wind
     if len(X_test) == 0:
         raise RuntimeError('empty test split')
     Xs = (X_test - mean) / std
-
     is_temporal = isinstance(model.input_shape, tuple) and len(model.input_shape) == 3
     if is_temporal:
         Xw, Yw = make_sliding_windows_grouped(
@@ -58,16 +49,13 @@ def evaluate_extended(csv_path, model_dir, sequence_length=SEQUENCE_LENGTH, wind
     else:
         Xw, Yw = Xs, Y_test
         raw = X_test
-
     sampled = False
     if max_samples is not None and len(Xw) > int(max_samples):
         rng = np.random.default_rng(42)
         idx = np.sort(rng.choice(len(Xw), size=int(max_samples), replace=False))
         Xw, Yw, raw = Xw[idx], Yw[idx], raw[idx]
         sampled = True
-
     preds = model.predict(Xw, verbose=0, batch_size=min(512, len(Xw)))
-
     phys = np.zeros_like(Yw)
     regimes = []
     for i in range(len(raw)):
@@ -76,7 +64,6 @@ def evaluate_extended(csv_path, model_dir, sequence_length=SEQUENCE_LENGTH, wind
         phys[i] = [p['solar'], p['radiation'], p['temperature'],
                    p['moonquakes'], p['micrometeorites'], p['dust']]
         regimes.append(p.get('regime') or {})
-
     base_w = np.asarray(get_channel_blend_weights(), dtype=np.float64)
     hybrid = np.zeros_like(preds)
     for i in range(len(preds)):
@@ -85,9 +72,7 @@ def evaluate_extended(csv_path, model_dir, sequence_length=SEQUENCE_LENGTH, wind
         )
         w = np.asarray(w, dtype=np.float64)
         hybrid[i] = w * preds[i] + (1.0 - w) * phys[i]
-
     persistence = raw[:, :6]
-
     out = {
         'n_test': int(len(Yw)),
         'sampled': sampled,
@@ -108,7 +93,6 @@ def evaluate_extended(csv_path, model_dir, sequence_length=SEQUENCE_LENGTH, wind
         'blend_weights': base_w.tolist(),
     }
     return out
-
 def evaluate_legacy_dense(csv_path, model_dir):
     from tensorflow import keras
     X_df, Y_df = load_training_csv(csv_path, allow_inputs_as_targets=False)
@@ -125,7 +109,6 @@ def evaluate_legacy_dense(csv_path, model_dir):
         'n': n,
         'legacy_dense': True,
     }
-
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('--csv', required=True)
@@ -134,7 +117,6 @@ def main():
     parser.add_argument('--window-stride', type=int, default=7)
     parser.add_argument('--out', type=str, default=None, help='Optional JSON report path')
     args = parser.parse_args()
-
     df_head = pd.read_csv(args.csv, nrows=2)
     if 'site' in df_head.columns and 'lat' in df_head.columns:
         out = evaluate_extended(args.csv, args.model_dir, args.sequence_length, args.window_stride)
@@ -144,6 +126,5 @@ def main():
     if args.out:
         Path(args.out).write_text(json.dumps(out, indent=2))
         print('Wrote', args.out)
-
 if __name__ == '__main__':
     main()

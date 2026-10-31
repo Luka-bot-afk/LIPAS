@@ -10,7 +10,7 @@
   <link rel="stylesheet" href="styles/theme.css">
   <link rel="stylesheet" href="styles/main.css">
   <link rel="stylesheet" href="styles/earth.css?v=2">
-  <link rel="stylesheet" href="styles/globe-page.css?v=4">
+  <link rel="stylesheet" href="styles/globe-page.css?v=5">
   <style>
     body { --steel: #3ecf8e; --steel-dim: #2da86a; --steel-glow: rgba(62,207,142,.22); --globe-accent-rgb: 62, 207, 142; overflow: hidden; }
     .sat-panel { position: fixed; left: auto; right: 16px; top: 88px; bottom: auto; z-index: 1000; width: min(260px, calc(100vw - 40px)); max-height: 42vh; overflow: auto;
@@ -30,7 +30,6 @@
     <div class="load-label">Loading Earth Globe</div>
   </div>
   <div id="lipas-topnav" data-active="globe"></div>
-
   <div class="globe-tools" id="globeTools">
     <div class="loc-search-panel" id="locSearchPanel">
       <div class="control-title">Find location</div>
@@ -66,14 +65,12 @@
       <button type="button" class="globe-options-close" id="globeOptionsClose">Close option selection &amp; view globe</button>
     </div>
   </div>
-
   <div class="sat-panel" id="satPanel">
     <div class="control-title">Catalog · all tracked</div>
     <input class="sat-filter" id="satFilter" type="search" placeholder="Filter ISS, GPS, NOAA…" autocomplete="off">
     <div id="satList"></div>
     <label class="sat-follow"><input type="checkbox" id="followSat"> Camera follow</label>
   </div>
-
   <div id="locHoverCard">
     <h4 id="locHoverName">-</h4>
     <div class="coords" id="locHoverCoords">-</div>
@@ -85,21 +82,18 @@
       <button type="button" class="loc-close-btn" id="locCloseBtn">Close</button>
     </div>
   </div>
-
   <div id="cesiumContainer"></div>
-
   <div class="legend-panel" id="legendPanel">
     <div class="legend-title">Earth</div>
     <div class="legend-item"><div class="legend-color" style="background:#3ecf8e"></div><span>Launch sites</span></div>
     <div class="legend-item"><div class="legend-color" style="background:#7dffb2"></div><span>LEO</span></div>
     <div class="legend-item"><div class="legend-color" style="background:#e0b14a"></div><span>MEO</span></div>
     <div class="legend-item"><div class="legend-color" style="background:#b794f6"></div><span>GEO</span></div>
-    <div class="legend-item"><div class="legend-color" style="background:#3dff9a"></div><span>Aurora</span></div>
-    <div class="legend-item"><div class="legend-color" style="background:#ffb020"></div><span>HF</span></div>
-    <div class="legend-item"><div class="legend-color" style="background:#ff5a6a"></div><span>Polar cap</span></div>
-    <div class="legend-item"><div class="legend-color" style="background:#e07ad0"></div><span>GNSS</span></div>
+    <button type="button" class="legend-item" data-hazard="haz-aurora" aria-pressed="true"><div class="legend-color" style="background:#3dff9a"></div><span>Aurora</span></button>
+    <button type="button" class="legend-item" data-hazard="haz-hf" aria-pressed="true"><div class="legend-color" style="background:#ffb020"></div><span>HF</span></button>
+    <button type="button" class="legend-item" data-hazard="haz-pca" aria-pressed="true"><div class="legend-color" style="background:#ff5a6a"></div><span>Polar cap</span></button>
+    <button type="button" class="legend-item" data-hazard="haz-gnss" aria-pressed="true"><div class="legend-color" style="background:#e07ad0"></div><span>GNSS</span></button>
   </div>
-
   <div class="globe-timebar" id="globeTimebar">
     <div class="timebar-head">
       <span class="timebar-kicker">Next 24 hours</span>
@@ -111,11 +105,10 @@
     </div>
     <div class="timebar-meta" id="globeHourMeta"></div>
   </div>
-
   <script src="js/lipas-api.js"></script>
   <script src="js/globe_timebar.js?v=1"></script>
   <script src="https://unpkg.com/cesium@1.130/Build/Cesium/Cesium.js"></script>
-  <script src="js/earth_globe.js?v=8"></script>
-  <script src="js/navbar.js?v=26" defer></script>
+  <script src="js/earth_globe.js?v=9"></script>
+  <script src="js/navbar.js?v=30" defer></script>
 </body>
 </html>

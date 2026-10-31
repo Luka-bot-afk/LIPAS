@@ -22,14 +22,12 @@ body.mercury-mode {
   --nogo: #e25b5b;
   --text: #f3ebe3;
 }
-
 body.mercury-mode {
   background:
     radial-gradient(ellipse 90% 55% at 8% -8%, rgba(224, 122, 61, 0.16), transparent 55%),
     radial-gradient(ellipse 70% 50% at 95% 8%, rgba(160, 70, 28, 0.12), transparent 52%),
     linear-gradient(180deg, #14110e 0%, #0d0b0a 45%, #0a0908 100%) !important;
 }
-
 body.mercury-mode .topnav {
   background: rgba(13, 11, 10, 0.86);
   border-bottom-color: rgba(224, 122, 61, 0.18);
@@ -37,7 +35,6 @@ body.mercury-mode .topnav {
 body.mercury-mode .topnav .nav-cta:hover {
   background: rgba(224, 122, 61, 0.12);
 }
-
 body.mercury-mode .loading-screen.hidden {
   display: none !important;
   opacity: 0 !important;
@@ -55,7 +52,6 @@ body.mercury-mode .spinner-ring {
   border-color: rgba(224, 122, 61, 0.15);
   border-top-color: var(--merc-orange, #e07a3d);
 }
-
 body.mercury-mode .moon-assist-fab {
   background: linear-gradient(160deg, rgba(58, 36, 20, 0.55), rgba(14, 12, 10, 0.9));
   box-shadow:
@@ -74,7 +70,6 @@ body.mercury-mode .moon-assist-pulse {
 body.mercury-mode .moon-assist-panel {
   background: linear-gradient(165deg, rgba(42, 28, 18, 0.98), rgba(14, 12, 10, 0.99));
 }
-
 body.mercury-mode #evaNowStrip,
 body.mercury-mode .advice-head,
 body.mercury-mode .advice-box,
@@ -101,7 +96,6 @@ body.mercury-mode #overviewRankGrid,
 body.mercury-mode .graph-accuracy {
   display: none !important;
 }
-
 body.mercury-mode .pdf-box {
   display: block !important;
   border-color: rgba(224, 122, 61, 0.35);
@@ -109,14 +103,12 @@ body.mercury-mode .pdf-box {
 body.mercury-mode .pdf-box button {
   background: #e07a3d !important;
 }
-
 body.mercury-mode:not(.merc-overview) .merc-overview-only {
   display: none !important;
 }
 body.mercury-mode.merc-overview .merc-site-only {
   display: none !important;
 }
-
 body.mercury-mode .li-dot.green { background: #e0a060; }
 body.mercury-mode .li-dot.yellow { background: #f0c14a; }
 body.mercury-mode .li-dot.red { background: #e25b5b; }
@@ -129,7 +121,6 @@ body.mercury-mode .li-image {
   border-color: rgba(224, 122, 61, 0.28);
   filter: saturate(1.2) contrast(1.12) brightness(1.08);
 }
-
 body.mercury-mode .location-item {
   background: linear-gradient(165deg, rgba(42, 28, 18, 0.92), rgba(18, 14, 12, 0.96));
   border-color: rgba(224, 122, 61, 0.16);
@@ -147,13 +138,11 @@ body.mercury-mode .location-item.selected {
   border-color: rgba(224, 122, 61, 0.55);
   border-left-color: var(--merc-orange);
 }
-
 body.mercury-mode .title-box {
   background: rgba(224, 122, 61, 0.1);
   box-shadow: 0 8px 32px rgba(224, 122, 61, 0.18), inset 0 0 10px rgba(255, 255, 255, 0.04);
   border-color: rgba(224, 122, 61, 0.22);
 }
-
 body.mercury-mode .search-bar {
   background: linear-gradient(165deg, rgba(42, 28, 18, 0.95), rgba(18, 14, 12, 0.98));
   border-color: rgba(224, 122, 61, 0.18);
@@ -164,23 +153,19 @@ body.mercury-mode .search-bar:focus {
   box-shadow: 0 0 0 3px rgba(224, 122, 61, 0.1);
   background: linear-gradient(165deg, rgba(48, 32, 20, 0.98), rgba(18, 14, 12, 1));
 }
-
 body.mercury-mode .sidebar {
   background: linear-gradient(180deg, rgba(28, 20, 14, 0.98) 0%, rgba(12, 10, 8, 0.99) 100%);
 }
-
 body.mercury-mode .eva-plan-btn {
   background: linear-gradient(180deg, #e07a3d, #c45d2c);
 }
 body.mercury-mode .eva-plan-btn:hover {
   box-shadow: 0 8px 20px rgba(196, 93, 44, 0.35);
 }
-
 body.mercury-mode .sidebar-open-tab {
   background: linear-gradient(165deg, rgba(42, 28, 18, 0.98), rgba(18, 14, 12, 0.99));
   border-color: rgba(224, 122, 61, 0.35);
 }
-
 body.mercury-mode .loading-title {
   color: var(--merc-orange);
   text-shadow: 0 0 20px rgba(224, 122, 61, 0.45);
@@ -191,7 +176,6 @@ body.mercury-mode .loading-subtitle {
 body.mercury-mode .dot {
   background-color: var(--merc-orange);
 }
-
 body.mercury-mode .location-item.li-section-header,
 body.mercury-mode li.li-section-header {
   pointer-events: none;
@@ -207,7 +191,6 @@ body.mercury-mode li.li-section-header {
   color: var(--merc-amber, #f0a060);
   font-weight: 650;
 }
-
 body.mercury-mode .map-container {
   background: transparent;
   border: none;
@@ -219,7 +202,6 @@ body.mercury-mode .map-container {
 body.mercury-mode .merc-map-minimal {
   display: none;
 }
-
 .merc-mag-hero {
   margin: 12px 0 18px;
   padding: 16px 16px 14px;
@@ -310,7 +292,6 @@ body.mercury-mode .merc-map-minimal {
   text-transform: none;
   letter-spacing: 0;
 }
-
 .merc-mag-slider {
   display: none;
 }
@@ -319,7 +300,6 @@ body.mercury-mode .merc-map-minimal {
   color: var(--text, #e6eef8);
   min-width: 4.5em;
 }
-
 .merc-mag-tl.timelapse-container {
   display: block !important;
   margin: 12px 0 0;
@@ -454,7 +434,6 @@ body.mercury-mode .merc-map-minimal {
   color: var(--merc-orange, #e07a3d);
   font-weight: 600;
 }
-
 .merc-mag-canvas-wrap {
   width: 100%;
   min-height: 360px;
@@ -469,7 +448,6 @@ body.mercury-mode .merc-map-minimal {
   display: block;
   background: #07090c;
 }
-
 .merc-legend {
   display: flex;
   flex-wrap: wrap;
@@ -485,7 +463,6 @@ body.mercury-mode .merc-map-minimal {
   margin-right: 5px;
   vertical-align: -1px;
 }
-
 .merc-helio-panel {
   margin: 28px 0 22px;
   padding: 16px 16px 14px;
@@ -522,7 +499,6 @@ body.mercury-mode .merc-map-minimal {
   background: #07090c;
   border: 1px solid rgba(224, 122, 61, 0.12);
 }
-
 #mercMetricsKpi,
 .merc-metrics-kpi {
   color: var(--merc-amber, #f0a060) !important;
@@ -574,12 +550,10 @@ body.mercury-mode #metricsPanel .metric-box.metric-active {
   from { opacity: 0; transform: translateY(-6px); }
   to { opacity: 1; transform: translateY(0); }
 }
-
 .merc-hour-strip,
 #mercHourStrip {
   display: none !important;
 }
-
 .merc-shell {
   position: relative;
   z-index: 1;
@@ -613,7 +587,6 @@ body.mercury-mode #metricsPanel .metric-box.metric-active {
 .merc-top p { color: var(--muted); max-width: 62ch; margin-top: 8px; font-size: 14.5px; }
 .merc-meta { text-align: right; color: var(--dim); font-size: 12px; line-height: 1.7; }
 .merc-meta strong { color: var(--text); font-weight: 600; }
-
 .site-row {
   display: grid;
   grid-template-columns: repeat(6, 1fr);
@@ -632,7 +605,6 @@ body.mercury-mode #metricsPanel .metric-box.metric-active {
 }
 .site-btn small { display: block; color: var(--dim); font-size: 11px; margin-top: 4px; }
 .site-btn.active { border-color: var(--steel); box-shadow: inset 0 0 0 1px var(--steel); }
-
 .alert-row { display: grid; gap: 8px; margin-bottom: 16px; }
 .alert {
   border: 1px solid var(--line);
@@ -645,7 +617,6 @@ body.mercury-mode #metricsPanel .metric-box.metric-active {
 .alert.info { border-left-color: var(--steel); }
 .alert.warn { border-left-color: var(--caution); }
 .alert.high { border-left-color: var(--nogo); }
-
 .kpi-row {
   display: grid;
   grid-template-columns: repeat(6, 1fr);
@@ -660,7 +631,6 @@ body.mercury-mode #metricsPanel .metric-box.metric-active {
 .kpi .k { color: var(--dim); font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; }
 .kpi .v { font-family: var(--font-display); font-size: 1.35rem; margin-top: 4px; }
 .kpi .u { color: var(--muted); font-size: 11px; }
-
 .sliders {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -674,7 +644,6 @@ body.mercury-mode #metricsPanel .metric-box.metric-active {
 }
 .slider-box label { display: flex; justify-content: space-between; font-size: 12px; color: var(--muted); margin-bottom: 8px; }
 .slider-box input[type="range"] { width: 100%; accent-color: var(--steel); }
-
 .viz-grid {
   display: grid;
   grid-template-columns: 1.15fr 0.85fr;
@@ -698,7 +667,6 @@ body.mercury-mode #metricsPanel .metric-box.metric-active {
 .panel canvas { width: 100%; display: block; background: #0a0d12; }
 .legend { display: flex; flex-wrap: wrap; gap: 8px 14px; margin-top: 8px; font-size: 11px; color: var(--muted); }
 .legend i { display: inline-block; width: 9px; height: 9px; margin-right: 5px; vertical-align: -1px; }
-
 .chart-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -718,11 +686,9 @@ body.mercury-mode #metricsPanel .metric-box.metric-active {
   max-width: 90ch;
   margin-top: 8px;
 }
-
 body.mercury-mode .warning-box.go { border-left-color: var(--go); }
 body.mercury-mode .warning-box.caution { border-left-color: var(--caution); }
 body.mercury-mode .warning-box.nogo { border-left-color: var(--nogo); }
-
 @media (max-width: 980px) {
   .site-row, .kpi-row { grid-template-columns: repeat(3, 1fr); }
   .viz-grid, .chart-grid, .sliders, .trio, .merc-top { grid-template-columns: 1fr; }

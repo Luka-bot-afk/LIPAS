@@ -1,21 +1,15 @@
-
 """LIPAS."""
 from __future__ import annotations
-
 import csv
 import json
 import math
 import sys
 from pathlib import Path
-
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
-
 from lunar_sites import LUNAR_SITES
-
 PRP = ROOT / 'data' / 'archives' / 'diviner' / 'prp'
 OUT = ROOT / 'data' / 'archives' / 'diviner' / 'prp_polar_site_temps.json'
-
 def _dist2(a_lat, a_lon, b_lat, b_lon):
     dlat = float(a_lat) - float(b_lat)
     dlon = float(a_lon) - float(b_lon)
@@ -23,10 +17,8 @@ def _dist2(a_lat, a_lon, b_lat, b_lon):
         dlon -= 360
     if dlon < -180:
         dlon += 360
-
     scale = max(0.05, math.cos(math.radians(float(a_lat))))
     return dlat * dlat + (dlon * scale) ** 2
-
 def scan_tab(path: Path, targets: list[dict], max_dist_deg: float = 2.5) -> None:
     if not path.exists() or path.stat().st_size < 1000:
         print(f'SKIP missing/empty {path}')
@@ -37,14 +29,12 @@ def scan_tab(path: Path, targets: list[dict], max_dist_deg: float = 2.5) -> None
         header = next(reader, None)
         if not header:
             return
-
         try:
             i_lon = header.index('tri_clon')
             i_lat = header.index('tri_clat')
             i_tavg = header.index('temp_avg')
             i_tmax = header.index('temp_max')
         except ValueError:
-
             i_lon, i_lat, i_tavg, i_tmax = 9, 10, 12, 13
         for row in reader:
             if len(row) <= max(i_lon, i_lat, i_tavg, i_tmax):
@@ -66,7 +56,6 @@ def scan_tab(path: Path, targets: list[dict], max_dist_deg: float = 2.5) -> None
                     t['temp_max_K'] = tmax
                     t['sample_lat'] = clat
                     t['sample_lon'] = clon
-
 def main() -> int:
     polar = [
         {
@@ -91,7 +80,6 @@ def main() -> int:
         scan_tab(PRP / 'dlre_prp_north.tab', north)
     if south:
         scan_tab(PRP / 'dlre_prp_south.tab', south)
-
     sites = {}
     for t in polar:
         if t['temp_avg_K'] is None:
@@ -108,7 +96,6 @@ def main() -> int:
             'source': 'diviner_prp',
         }
         print(f'  OK {t["name"][:40]} avgC={sites[t["name"]]["temp_avg_C"]} dist={sites[t["name"]]["dist_deg"]}')
-
     OUT.parent.mkdir(parents=True, exist_ok=True)
     OUT.write_text(json.dumps({
         'product': 'Diviner PRP polar site samples',
@@ -117,6 +104,5 @@ def main() -> int:
     }, indent=2))
     print(f'Wrote {OUT} ({len(sites)} sites)')
     return 0 if sites else 2
-
 if __name__ == '__main__':
     raise SystemExit(main())

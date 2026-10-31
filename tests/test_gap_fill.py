@@ -1,7 +1,6 @@
 """LIPAS."""
 import numpy as np
 import pandas as pd
-
 from gap_fill import (
     cross_fill_omni_drivers,
     expand_base_to_omni_spine,
@@ -10,11 +9,9 @@ from gap_fill import (
     interpolate_numeric_columns,
     kp_from_ap,
 )
-
 def test_kp_ap_roundtrip_reasonable():
     assert 3.5 <= kp_from_ap(27) <= 4.5
     assert f107_from_ssn(100) > 100
-
 def test_cross_fill_from_siblings():
     df = pd.DataFrame([{
         'kp_index': np.nan, 'ap': 27.0, 'f107': np.nan, 'ssn': 100.0,
@@ -24,12 +21,10 @@ def test_cross_fill_from_siblings():
     assert pd.notna(out.loc[0, 'kp_index'])
     assert pd.notna(out.loc[0, 'f107'])
     assert abs(float(out.loc[0, 'solar_wind_speed']) - 400.0) < 1e-6
-
 def test_expand_spine_is_noop():
     base = pd.DataFrame({'date': ['2020-01-01'], 'solar_activity': [5.0]})
     omni = pd.DataFrame({'date': ['2020-01-01', '2020-01-02'], 'kp_index': [2.0, 3.0]})
     assert len(expand_base_to_omni_spine(base, omni)) == 1
-
 def test_gap_fill_does_not_invent_targets():
     df = pd.DataFrame({
         'date': ['2020-01-01', '2020-01-02'],
@@ -61,7 +56,6 @@ def test_gap_fill_does_not_invent_targets():
     out = gap_fill_extended_training(df)
     assert len(out) == 1
     assert out.iloc[0]['date'] == '2020-01-01'
-
 def test_short_interp_drivers():
     df = pd.DataFrame({
         'date': ['2020-01-01', '2020-01-02', '2020-01-03'],

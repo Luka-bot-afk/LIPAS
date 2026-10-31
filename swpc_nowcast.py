@@ -1,5 +1,4 @@
 from __future__ import annotations
-
 import json
 import math
 import os
@@ -8,14 +7,11 @@ from concurrent.futures import ThreadPoolExecutor, wait
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Iterable, Optional
-
 ROOT = Path(__file__).resolve().parent
 ARCH = ROOT / "data" / "archives"
-
 _REFRESH_TS = 0.0
 _REFRESH_LOCK_TS = 0.0
 _REFRESH_TTL_S = 15 * 60.0
-
 SWPC_FILES = {
     "goes_xrays_1day.json": "https://services.swpc.noaa.gov/json/goes/primary/xrays-1-day.json",
     "goes_xrays_7day.json": "https://services.swpc.noaa.gov/json/goes/primary/xrays-7-day.json",
@@ -28,13 +24,10 @@ SWPC_FILES = {
     "solar_wind_plasma_1day.json": "https://services.swpc.noaa.gov/json/rtsw/rtsw_wind_1d.json",
     "kp_index_forecast.json": "https://services.swpc.noaa.gov/products/noaa-planetary-k-index-forecast.json",
 }
-
 _UA = {"User-Agent": "LIPAS/3.0 (space-weather-ops)"}
-
 def _skip_refresh() -> bool:
     flag = (os.environ.get("LIPAS_SKIP_SWPC_REFRESH") or "").strip().lower()
     return flag in ("1", "true", "yes", "on")
-
 def parse_utc(value: Any) -> Optional[datetime]:
     if value is None:
         return None
@@ -58,15 +51,12 @@ def parse_utc(value: Any) -> Optional[datetime]:
     if dt.tzinfo is None:
         dt = dt.replace(tzinfo=timezone.utc)
     return dt.astimezone(timezone.utc)
-
 def hours_from_now(dt: Optional[datetime], now: Optional[datetime] = None) -> Optional[float]:
     if dt is None:
         return None
     now = now or datetime.now(timezone.utc)
     return (dt - now).total_seconds() / 3600.0
-
 def flare_class_from_flux(flux: float) -> tuple[str, float]:
-
     f = float(flux)
     if not math.isfinite(f) or f <= 0:
         return "A0.0", 0.0
@@ -82,7 +72,6 @@ def flare_class_from_flux(flux: float) -> tuple[str, float]:
         letter, scale = "A", max(f / 1e-8, 0.1)
     idx = float(min(10.0, max(0.0, math.log10(f) + 8.0)))
     return f"{letter}{scale:.1f}", idx
-
 def interp_series(
     points: Iterable[tuple[float, float]],
     hour: float,
@@ -91,7 +80,6 @@ def interp_series(
     tau_h: Optional[float] = None,
     background: Optional[float] = None,
 ) -> Optional[float]:
-
     pts = [
         (float(t), float(v))
         for t, v in points
@@ -120,7 +108,6 @@ def interp_series(
     if tau_h and tau_h > 0 and background is not None:
         return float(background + (last_v - background) * math.exp(-dt / tau_h))
     return last_v
-
 def _read_json(path: Path) -> Any:
     if not path.exists():
         return None
@@ -128,13 +115,11 @@ def _read_json(path: Path) -> Any:
         return json.loads(path.read_text(encoding="utf-8"))
     except Exception:
         return None
-
 def _atomic_write_json(path: Path, payload: Any) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     tmp = path.with_suffix(path.suffix + ".tmp")
     tmp.write_text(json.dumps(payload), encoding="utf-8")
     tmp.replace(path)
-
 def _http_json(url: str, timeout: float = 8.0) -> Any:
     try:
         import requests
@@ -143,9 +128,7 @@ def _http_json(url: str, timeout: float = 8.0) -> Any:
         return r.json()
     except Exception:
         return None
-
 def refresh_swpc_archives(force: bool = False) -> dict[str, Any]:
-
     global _REFRESH_TS, _REFRESH_LOCK_TS
     now = time.time()
     if _skip_refresh() and not force:
@@ -155,9 +138,7 @@ def refresh_swpc_archives(force: bool = False) -> dict[str, Any]:
     if not force and (now - _REFRESH_LOCK_TS) < 20.0:
         return {"skipped": True, "reason": "lock"}
     _REFRESH_LOCK_TS = now
-
     fetched: dict[str, Any] = {}
-
     def _one(name_url: tuple[str, str]) -> tuple[str, bool, str]:
         name, url = name_url
         data = _http_json(url, timeout=8.0)
@@ -171,7 +152,6 @@ def refresh_swpc_archives(force: bool = False) -> dict[str, Any]:
             return name, True, f"n={n}"
         except Exception as exc:
             return name, False, str(exc)
-
     try:
         items = list(SWPC_FILES.items())
         with ThreadPoolExecutor(max_workers=8) as pool:
@@ -189,7 +169,6 @@ def refresh_swpc_archives(force: bool = False) -> dict[str, Any]:
     except Exception as exc:
         fetched["error"] = str(exc)
     return {"skipped": False, "files": fetched, "utc": datetime.now(timezone.utc).isoformat()}
-
 def _as_rows(raw: Any) -> list[dict[str, Any]]:
     if isinstance(raw, list) and raw:
         if isinstance(raw[0], dict):
@@ -203,9 +182,7 @@ def _as_rows(raw: Any) -> list[dict[str, Any]]:
                 out.append({header[i]: rec[i] for i in range(min(len(header), len(rec)))})
             return out
     return []
-
 def parse_swpc_location(location: Any, latitude: Any = None, longitude: Any = None) -> tuple[Optional[float], Optional[float]]:
-
     import re
     text = str(location or "").strip().upper()
     m = re.match(r"([NS])(\d+(?:\.\d+)?)([EW])(\d+(?:\.\d+)?)", text)
@@ -218,9 +195,7 @@ def parse_swpc_location(location: Any, latitude: Any = None, longitude: Any = No
     lon = _num(longitude)
     if lat is None or lon is None:
         return lat, lon
-
     return lat, lon
-
 def _num(value: Any) -> Optional[float]:
     if value is None or value == "":
         return None
@@ -236,7 +211,6 @@ def _num(value: Any) -> Optional[float]:
         return v if math.isfinite(v) else None
     except (TypeError, ValueError):
         return None
-
 def _xray_points(now: datetime) -> list[tuple[float, float]]:
     pts: list[tuple[float, float]] = []
     for name in ("goes_xrays_1day.json", "goes_xrays_7day.json"):
@@ -257,7 +231,6 @@ def _xray_points(now: datetime) -> list[tuple[float, float]]:
             break
     pts.sort(key=lambda p: p[0])
     return pts
-
 def _kp_points(now: datetime) -> list[tuple[float, float]]:
     pts: list[tuple[float, float]] = []
     rows = _as_rows(_read_json(ARCH / "planetary_k_index_1m.json"))
@@ -272,7 +245,6 @@ def _kp_points(now: datetime) -> list[tuple[float, float]]:
         if kp is None or h is None:
             continue
         pts.append((h, float(max(0.0, min(9.0, kp)))))
-
     three_hour = _as_rows(_read_json(ARCH / "noaa_planetary_k_index.json"))
     if three_hour:
         extra = []
@@ -287,7 +259,6 @@ def _kp_points(now: datetime) -> list[tuple[float, float]]:
             pts = extra
     pts.sort(key=lambda p: p[0])
     return pts
-
 def _kp_forecast_points(now: datetime) -> list[tuple[float, float]]:
     raw = _read_json(ARCH / "kp_index_forecast.json")
     rows = _as_rows(raw)
@@ -306,7 +277,6 @@ def _kp_forecast_points(now: datetime) -> list[tuple[float, float]]:
         pts.append((h, float(max(0.0, min(9.0, kp)))))
     pts.sort(key=lambda p: p[0])
     return pts
-
 def _proton_points(now: datetime) -> list[tuple[float, float]]:
     rows = _as_rows(_read_json(ARCH / "goes_integral_protons_1day.json"))
     prefer = [r for r in rows if "10" in str(r.get("energy") or "")]
@@ -321,7 +291,6 @@ def _proton_points(now: datetime) -> list[tuple[float, float]]:
         pts.append((h, max(0.0, flux)))
     pts.sort(key=lambda p: p[0])
     return pts
-
 def _bin_hourly(points: list[tuple[float, float]], *, how: str = "last") -> list[tuple[float, float]]:
     if not points:
         return []
@@ -339,15 +308,12 @@ def _bin_hourly(points: list[tuple[float, float]], *, how: str = "last") -> list
             val = vals[-1]
         out.append((float(hour) + 0.5, val))
     return out
-
 def _rtsw_latest(now: datetime) -> dict[str, Any]:
     mag_rows = _as_rows(_read_json(ARCH / "solar_wind_mag_1day.json"))
     plasma_rows = _as_rows(_read_json(ARCH / "solar_wind_plasma_1day.json"))
     prefer = {"IMAP", "DSCOVR", "SOLAR1"}
-
     def _stamp(r: dict) -> Optional[float]:
         return hours_from_now(parse_utc(r.get("time_tag")), now)
-
     def _good_mag(r: dict) -> bool:
         if _num(r.get("bz_gsm") if "bz_gsm" in r else r.get("bz")) is None:
             return False
@@ -355,7 +321,6 @@ def _rtsw_latest(now: datetime) -> dict[str, Any]:
         if q not in (None, 0, "0"):
             return False
         return True
-
     def _good_plasma(r: dict) -> bool:
         v = _num(r.get("speed") or r.get("proton_speed"))
         n = _num(r.get("density") or r.get("proton_density"))
@@ -367,7 +332,6 @@ def _rtsw_latest(now: datetime) -> dict[str, Any]:
         if q not in (None, 0, "0"):
             return False
         return True
-
     def _pick(rows: list, ok) -> list[dict]:
         recent = []
         for r in rows:
@@ -377,14 +341,12 @@ def _rtsw_latest(now: datetime) -> dict[str, Any]:
             recent.append((h, r))
         if not recent:
             return []
-
         near = [(h, r) for h, r in recent if h >= -4.0]
         pool = near or recent
         pref = [(h, r) for h, r in pool if str(r.get("source") or "").upper() in prefer]
         use = pref or pool
         use.sort(key=lambda x: x[0])
         return [r for _, r in use]
-
     mag_ok = _pick(mag_rows, _good_mag)
     plasma_ok = _pick(plasma_rows, _good_plasma)
     mag_pts = {"bz": [], "by": [], "bt": [], "bx": []}
@@ -415,15 +377,12 @@ def _rtsw_latest(now: datetime) -> dict[str, Any]:
             plasma_pts["speed"].append((h, v))
         if n is not None:
             plasma_pts["density"].append((h, n))
-
     out: dict[str, Any] = {}
-
     def _last(pts: list[tuple[float, float]]) -> Optional[tuple[float, float]]:
         if not pts:
             return None
         pts = sorted(pts, key=lambda p: p[0])
         return pts[-1]
-
     bz = _last(mag_pts["bz"])
     by = _last(mag_pts["by"])
     bx = _last(mag_pts["bx"])
@@ -433,7 +392,6 @@ def _rtsw_latest(now: datetime) -> dict[str, Any]:
     ages = [p[0] for p in (bz, by, bt, speed, dens) if p is not None]
     if not ages:
         return out
-
     latest_t = max(ages)
     if latest_t < -18.0:
         return out
@@ -460,7 +418,6 @@ def _rtsw_latest(now: datetime) -> dict[str, Any]:
     out["series_speed"] = _bin_hourly(plasma_pts["speed"], how="mean")
     out["series_density"] = _bin_hourly(plasma_pts["density"], how="mean")
     return out
-
 def _region_probs() -> dict[str, Any]:
     rows = _as_rows(_read_json(ARCH / "solar_regions.json"))
     if not rows:
@@ -477,7 +434,6 @@ def _region_probs() -> dict[str, Any]:
             if v is not None:
                 vals.append(v)
         return max(vals) if vals else 0.0
-
     obs = parse_utc(latest)
     age_h = abs(hours_from_now(obs) or 999.0) if obs else 999.0
     return {
@@ -489,7 +445,6 @@ def _region_probs() -> dict[str, Any]:
         "proton_probability": _p("proton_probability"),
         "age_hours": age_h,
     }
-
 def _omni_27d(now: datetime) -> dict[str, Any]:
     path = ARCH / "omni2_daily.csv"
     if not path.exists():
@@ -528,9 +483,7 @@ def _omni_27d(now: datetime) -> dict[str, Any]:
         if v is not None:
             rec[k] = v
     return rec
-
 def attach_nowcast(out: dict[str, Any], now: Optional[datetime] = None) -> dict[str, Any]:
-
     now = now or datetime.now(timezone.utc)
     xray = _bin_hourly(_xray_points(now), how="max")
     kp_obs = _bin_hourly(_kp_points(now), how="last")
@@ -539,7 +492,6 @@ def attach_nowcast(out: dict[str, Any], now: Optional[datetime] = None) -> dict[
     rtsw = _rtsw_latest(now)
     regions = _region_probs()
     rec27 = _omni_27d(now)
-
     series = {
         "xray_flux": xray,
         "kp": kp_obs,
@@ -554,7 +506,6 @@ def attach_nowcast(out: dict[str, Any], now: Optional[datetime] = None) -> dict[
     out["series"] = series
     out["region_probs"] = regions
     out["omni_27d"] = rec27
-
     if rtsw.get("wind_source"):
         for k in (
             "solar_wind_speed", "solar_wind_density", "imf_bz", "imf_by",
@@ -568,7 +519,6 @@ def attach_nowcast(out: dict[str, Any], now: Optional[datetime] = None) -> dict[
             out.setdefault("sources", []).append("dscovr_rtsw")
     else:
         out.setdefault("wind_source", "omni2")
-
     if xray:
         flux = xray[-1][1]
         cls, idx = flare_class_from_flux(flux)
@@ -578,7 +528,6 @@ def attach_nowcast(out: dict[str, Any], now: Optional[datetime] = None) -> dict[
         out["xray_age_hours"] = abs(xray[-1][0])
         if "goes_xray" not in (out.get("sources") or []):
             out.setdefault("sources", []).append("goes_xray")
-
     kp_now = interp_series(kp_obs, 0.0, persist=True)
     if kp_now is None:
         kp_now = interp_series(kp_fcst, 0.0, persist=True)
@@ -586,7 +535,6 @@ def attach_nowcast(out: dict[str, Any], now: Optional[datetime] = None) -> dict[
         out["kp_index"] = float(kp_now)
         if "swpc_kp" not in (out.get("sources") or []):
             out.setdefault("sources", []).append("swpc_kp")
-
     if protons:
         out["proton_flux_raw"] = protons[-1][1]
         try:
@@ -595,7 +543,6 @@ def attach_nowcast(out: dict[str, Any], now: Optional[datetime] = None) -> dict[
         except Exception:
             out["proton_flux"] = max(0.05, protons[-1][1])
         out["proton_age_hours"] = abs(protons[-1][0])
-
     if regions.get("count"):
         out["solar_region_count"] = int(regions["count"])
         out["c_flare_probability"] = regions.get("c_flare_probability")
@@ -603,7 +550,6 @@ def attach_nowcast(out: dict[str, Any], now: Optional[datetime] = None) -> dict[
         out["x_flare_probability"] = regions.get("x_flare_probability")
         out["proton_probability"] = regions.get("proton_probability")
         out["regions_observed_date"] = regions.get("observed_date")
-
     ages = []
     for key in ("xray_age_hours", "proton_age_hours", "rtsw_age_hours"):
         if out.get(key) is not None:
@@ -613,7 +559,6 @@ def attach_nowcast(out: dict[str, Any], now: Optional[datetime] = None) -> dict[
     out["data_age_hours"] = round(min(ages), 3) if ages else None
     out["confidence"] = forecast_confidence(out, hour=0.0)
     return out
-
 def forecast_confidence(drv: dict[str, Any], hour: float = 0.0) -> dict[str, Any]:
     h = max(0.0, float(hour))
     xray_age = float(drv.get("xray_age_hours") if drv.get("xray_age_hours") is not None else 48.0)
@@ -624,7 +569,6 @@ def forecast_confidence(drv: dict[str, Any], hour: float = 0.0) -> dict[str, Any
     rtsw_age = float(drv.get("rtsw_age_hours") if drv.get("rtsw_age_hours") is not None else 48.0)
     region_age = float((drv.get("region_probs") or {}).get("age_hours") or 72.0)
     f107 = drv.get("f107")
-
     photon = 92.0 if xray_age <= 2 else (84.0 if xray_age <= 12 else (70.0 if xray_age <= 36 else 52.0))
     kp_pct = 90.0 if kp_age <= 4 else (80.0 if kp_age <= 12 else 58.0)
     if h > 0.5 and kp_fcst:
@@ -673,9 +617,7 @@ def forecast_confidence(drv: dict[str, Any], hour: float = 0.0) -> dict[str, Any
         "data_age_hours": drv.get("data_age_hours"),
         "wind_source": wind_src or "omni2",
     }
-
 def drivers_at_hour(extra: dict[str, Any], hour: float) -> dict[str, Any]:
-
     out = dict(extra)
     h = float(hour)
     if h <= 0.05:
@@ -684,7 +626,6 @@ def drivers_at_hour(extra: dict[str, Any], hour: float) -> dict[str, Any]:
     series = extra.get("series") or {}
     rec27 = extra.get("omni_27d") or {}
     regions = extra.get("region_probs") or {}
-
     xray0 = extra.get("xray_flux")
     xray = interp_series(
         series.get("xray_flux") or [],
@@ -694,12 +635,10 @@ def drivers_at_hour(extra: dict[str, Any], hour: float) -> dict[str, Any]:
         background=2.5e-7,
     )
     if xray is not None and xray > 0:
-
         if h > 0.25:
             p_m = float(regions.get("m_flare_probability") or extra.get("m_flare_probability") or 0.0)
             p_x = float(regions.get("x_flare_probability") or extra.get("x_flare_probability") or 0.0)
             p_c = float(regions.get("c_flare_probability") or extra.get("c_flare_probability") or 0.0)
-
             lift = 1.0 + 0.015 * (p_c / 100.0) + 0.08 * (p_m / 100.0) + 0.25 * (p_x / 100.0)
             xray = min(2e-3, xray * lift)
         cls, idx = flare_class_from_flux(xray)
@@ -707,7 +646,6 @@ def drivers_at_hour(extra: dict[str, Any], hour: float) -> dict[str, Any]:
         out["flare_class"] = cls
         out["flare_index"] = idx
         out["solar_activity"] = max(float(out.get("solar_activity") or 5.0), 4.0 + idx * 0.9)
-
     kp_obs = interp_series(series.get("kp") or [], h, persist=False)
     kp_fc = interp_series(series.get("kp_forecast") or [], h, persist=True)
     if h <= 0.05 and kp_obs is not None:
@@ -727,7 +665,6 @@ def drivers_at_hour(extra: dict[str, Any], hour: float) -> dict[str, Any]:
         if rec_dst is not None and cur_dst is not None:
             w = min(0.42, 0.035 * h)
             out["dst"] = (1.0 - w) * float(cur_dst) + w * float(rec_dst)
-
     proton = interp_series(
         series.get("proton_flux") or [],
         h,
@@ -742,7 +679,6 @@ def drivers_at_hour(extra: dict[str, Any], hour: float) -> dict[str, Any]:
             out["proton_flux"] = round(normalize_proton_flux(max(0.05, proton)), 4)
         except Exception:
             out["proton_flux"] = max(0.05, proton)
-
     def _wind_blend(key: str, default: float, tau: float) -> float:
         obs = interp_series(series.get(key) or [], h, persist=True, tau_h=tau, background=default)
         cur = extra.get(key)
@@ -758,10 +694,8 @@ def drivers_at_hour(extra: dict[str, Any], hour: float) -> dict[str, Any]:
             base = default
         if rec is None or h < 6.0:
             return float(base)
-
         w = min(0.35, 0.08 + 0.01 * h)
         return float((1.0 - w) * base + w * float(rec))
-
     out["solar_wind_speed"] = max(250.0, _wind_blend("solar_wind_speed", 400.0, 18.0))
     out["solar_wind_density"] = max(0.4, _wind_blend("solar_wind_density", 5.0, 12.0))
     out["imf_bz"] = _wind_blend("imf_bz", float(extra.get("imf_bz") or -2.0), 10.0)
@@ -769,11 +703,9 @@ def drivers_at_hour(extra: dict[str, Any], hour: float) -> dict[str, Any]:
         out["imf_by"] = _wind_blend("imf_by", float(extra.get("imf_by") or 0.0), 10.0)
     if extra.get("imf_bt") is not None or (series.get("imf_bt")):
         out["imf_bt"] = max(1.5, _wind_blend("imf_bt", float(extra.get("imf_bt") or 5.0), 10.0))
-
     if extra.get("dst") is not None:
         out["dst"] = float(extra["dst"])
     if extra.get("f107") is not None:
         out["f107"] = float(extra["f107"])
-
     out["confidence"] = forecast_confidence({**extra, **out}, hour=h)
     return out
