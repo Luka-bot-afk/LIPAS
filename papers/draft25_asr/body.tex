@@ -1,10 +1,14 @@
 \section{Introduction}
 
-Renewed international interest in lunar exploration, particularly through NASA's Artemis program and its international partners, has increased the need for reliable and accessible information about the lunar environment (NASA, 2020). The Moon has no protective atmosphere or global magnetic field, leaving its surface exposed to large temperature variations, radiation, micrometeorite impacts, electrostatic dust, and seismic activity. These hazards can affect crew safety and the operation of spacecraft and surface equipment. A range of scientific models already exists for studying individual lunar hazards. These models, however, are generally designed for specific hazards and operate as separate tools. Their outputs are difficult to combine into a single operational view or use together for forecasting. Mission planners may therefore need to consult several data sources and models when assessing environmental conditions, which complicates decision making. The Lunar Impact and Predictive Analysis System (LIPAS) was developed to address this fragmentation by bringing multiple lunar-hazard forecasts into a single decision-support platform. The system combines machine-learning predictions with physics-based models, public heliophysics data1, and adaptive weighting between the two approaches. The literature reviewed here describes specialized lunar hazard models and archives, while LIPAS explores how these sources can be combined with machine learning in a unified decision-support framework.
+Renewed international interest in lunar exploration, particularly through NASA's Artemis program and its international partners, has increased the need for reliable and accessible information about the lunar environment (NASA, 2020). The Moon has no protective atmosphere or global magnetic field, leaving its surface exposed to large temperature variations, radiation, micrometeorite impacts, electrostatic dust, and seismic activity. These hazards can affect crew safety and the operation of spacecraft and surface equipment. A range of scientific models already exists for studying individual lunar hazards. These models, however, are generally designed for specific hazards and operate as separate tools. Their outputs are difficult to combine into a single operational view or use together for forecasting. Mission planners may therefore need to consult several data sources and models when assessing environmental conditions, which complicates decision making. The Lunar Impact and Predictive Analysis System (LIPAS) was developed to address this fragmentation by bringing multiple lunar-hazard forecasts into a single decision-support platform. The system combines machine-learning predictions with physics-based models, public heliophysics data\footnote{Heliophysics studies the Sun, the solar wind, and their interaction with planetary environments throughout the heliosphere.}, and adaptive weighting between the two approaches. The literature reviewed here describes specialized lunar hazard models and archives, while LIPAS explores how these sources can be combined with machine learning in a unified decision-support framework.
 
 This study addresses three research questions:
 
-RQ1: Can a hybrid lunar-forecasting system be developed by effectively combining machine-learning and physics-based approaches? RQ2: Can integrating multiple lunar environmental hazards and data sources into a unified forecasting and decision-support system improve operational usability? RQ3: Does the locked LIPAS hybrid improve prediction performance for selected lunar hazards relative to selected replicated public baselines and physics-only references? 1Heliophysics studies the Sun, the solar wind, and their interaction with planetary environments throughout the heliosphere.
+RQ1: Can a hybrid lunar-forecasting system be developed by effectively combining machine-learning and physics-based approaches?
+
+RQ2: Can integrating multiple lunar environmental hazards and data sources into a unified forecasting and decision-support system improve operational usability?
+
+RQ3: Does the locked LIPAS hybrid improve prediction performance for selected lunar hazards relative to selected replicated public baselines and physics-only references?
 
 \section{Overview of current models}
 
@@ -50,7 +54,7 @@ The original LIPAS prototype was a browser-based application in which data proce
 
 \subsection{Hybrid forecasting and uncertainty architecture}
 
-The core forecasting model uses an 18-feature input representation that contains hazard-related, temporal, spatial, and space-weather variables. Rather than processing only current conditions, the model receives a 72-step temporal window. It produces six target outputs: solar activity, radiation, temperature, moonquake rate, micrometeorite flux, and dust density. The larger input representation allows information from one environmental channel to contribute to the prediction of another. The temporal trunk is based on a long short-term memory architecture (Hochreiter and Schmidhuber, 1997). A physics-estimation function first calculates a physically grounded value for each hazard. A subsequent refinement step combines that value with the neural-network output, allowing machine learning to provide a correction instead of learning the complete physical relationship. For hazard channel i, the resulting prediction is $\hat{Y}_{\mathrm{hybrid},i} = w_i\hat{Y}_{\mathrm{ML},i} + (1-w_i)\hat{Y}_{\mathrm{physics},i}$. (2) The weight is evaluated from the current space-weather regime and the neural network's uncertainty: $w_i = \max\{0,\ \min[1,\ (w_{\mathrm{base},i}+\Delta_{\mathrm{regime},i})\times\max(0.35,\ 1-1.6\sigma_{\mathrm{ML},i}/S_i)]\}$. (3) Here wbase,i is the baseline machine-learning weight, $\Delta_{\mathrm{regime},i}$ is an adjustment for the current storm posture, $\sigma_{\mathrm{ML},i}$ is the neural uncertainty estimate, and S i is the physical operating span of the channel. Uncertainty is estimated with Monte Carlo dropout: the network is evaluated repeatedly while a randomly selected subset of neural connections is disabled on each pass. Closely grouped outputs indicate a stable learned prediction, whereas a wider spread indicates greater uncertainty in the learned model.2 When $\sigma_{\mathrm{ML},i}$ rises, Eq. (3) reduces the neural contribution and shifts the forecast toward the physics baseline. Where physics provides a strong basis, LIPAS assigns greater weight to the physics path. In the locked production blend, temperature, moonquakes, micrometeorite flux, and dust are predominantly physics-led, while solar activity and radiation retain larger machine-learning weights. The backend also supports optional ensemble forecasts for uncertainty estimation, although the evaluated production path uses a single locked temporal model.
+The core forecasting model uses an 18-feature input representation that contains hazard-related, temporal, spatial, and space-weather variables. Rather than processing only current conditions, the model receives a 72-step temporal window. It produces six target outputs: solar activity, radiation, temperature, moonquake rate, micrometeorite flux, and dust density. The larger input representation allows information from one environmental channel to contribute to the prediction of another. The temporal trunk is based on a long short-term memory architecture (Hochreiter and Schmidhuber, 1997). A physics-estimation function first calculates a physically grounded value for each hazard. A subsequent refinement step combines that value with the neural-network output, allowing machine learning to provide a correction instead of learning the complete physical relationship. For hazard channel i, the resulting prediction is $\hat{Y}_{\mathrm{hybrid},i} = w_i\hat{Y}_{\mathrm{ML},i} + (1-w_i)\hat{Y}_{\mathrm{physics},i}$. (2) The weight is evaluated from the current space-weather regime and the neural network's uncertainty: $w_i = \max\{0,\ \min[1,\ (w_{\mathrm{base},i}+\Delta_{\mathrm{regime},i})\times\max(0.35,\ 1-1.6\sigma_{\mathrm{ML},i}/S_i)]\}$. (3) Here wbase,i is the baseline machine-learning weight, $\Delta_{\mathrm{regime},i}$ is an adjustment for the current storm posture, $\sigma_{\mathrm{ML},i}$ is the neural uncertainty estimate, and S i is the physical operating span of the channel. Uncertainty is estimated with Monte Carlo dropout: the network is evaluated repeatedly while a randomly selected subset of neural connections is disabled on each pass. Closely grouped outputs indicate a stable learned prediction, whereas a wider spread indicates greater uncertainty in the learned model.\footnote{This is the uncertainty that comes from the model, or from gaps in the training data.} When $\sigma_{\mathrm{ML},i}$ rises, Eq. (3) reduces the neural contribution and shifts the forecast toward the physics baseline. Where physics provides a strong basis, LIPAS assigns greater weight to the physics path. In the locked production blend, temperature, moonquakes, micrometeorite flux, and dust are predominantly physics-led, while solar activity and radiation retain larger machine-learning weights. The backend also supports optional ensemble forecasts for uncertainty estimation, although the evaluated production path uses a single locked temporal model.
 
 \subsection{Development of the hybrid framework}
 
@@ -58,9 +62,9 @@ The current LIPAS implementation uses HTML, CSS, and JavaScript for the front en
 
 \subsection{Data ingestion and pipeline orchestration}
 
-The backend handles real-time data streams through a modular ingestion pipeline that queries, cleans, and normalizes external APIs into the 18-feature representation. The pipeline joins CME events from DONKI, solar indices from the NOAA Space Weather Prediction Center, and interplanetary magnetic-field data from OMNI (NASA, 2023b; National Oceanic and Atmospheric Administration, 2023; NASA Goddard Space Flight Center, 2026; King and Papitashvili, 2005). These space-weather feeds are combined with LRO Diviner thermal maps, CRaTER radiation logs, and LADEE/LDEX dust measurements (NASA, 2023a,c; NASA Planetary Data System, 2015). Long-term baselines include Apollo PSE data, Apollo heat-flow measurements, MEM 3, and peer-reviewed micrometeorite-flux data. 2This is the uncertainty that comes from the model, or from gaps in the training data. LIPAS is a hybrid forecasting system in which machine learning is used only where it can improve on an established physics calculation. Where a physics relation already describes a hazard well, that relation remains the primary estimate, and the learned correction is downweighted or switched off (Section 3.2).
+The backend handles real-time data streams through a modular ingestion pipeline that queries, cleans, and normalizes external APIs into the 18-feature representation. The pipeline joins CME events from DONKI, solar indices from the NOAA Space Weather Prediction Center, and interplanetary magnetic-field data from OMNI (NASA, 2023b; National Oceanic and Atmospheric Administration, 2023; NASA Goddard Space Flight Center, 2026; King and Papitashvili, 2005). These space-weather feeds are combined with LRO Diviner thermal maps, CRaTER radiation logs, and LADEE/LDEX dust measurements (NASA, 2023a,c; NASA Planetary Data System, 2015). Long-term baselines include Apollo PSE data, Apollo heat-flow measurements, MEM 3, and peer-reviewed micrometeorite-flux data. LIPAS is a hybrid forecasting system in which machine learning is used only where it can improve on an established physics calculation. Where a physics relation already describes a hazard well, that relation remains the primary estimate, and the learned correction is downweighted or switched off (Section 3.2).
 
-\begin{figure*}[t]
+\begin{figure*}[!htbp]
 \centering
 \begin{minipage}{0.48\textwidth}
 \centering
@@ -70,22 +74,20 @@ The backend handles real-time data streams through a modular ingestion pipeline 
 \centering
 \includegraphics[width=\linewidth]{figures/fig_architecture_blend.png}
 \end{minipage}
-\caption{How data reach the forecast, and how physics and the learned correction are mixed. (a) Data path. (b) Locked mix: solar activity weight 0.4 and radiation 0.05; the other four hazards stay on the physics calculation.}
+\caption{How data reach the forecast, and how physics and the learned correction are mixed. (a)~Data path. Public feeds, lunar records, and the place and time become the 18 numbers the model reads. (b)~Locked mix. The learned correction is used for solar activity (weight 0.4) and radiation (0.05). The other four hazards stay on the physics calculation.}
 \label{fig:arch}
 \end{figure*}
 
 \subsection{Command-center dashboard and map visualization}
 
-The user interface was overhauled after the prototype limitations were identified. The resulting mission-control-style interface uses CSS Grid and Flexbox and consists of a dashboard, mission planner, and Cesium globe (Cesium GS, 2026; Chart.js Contributors, 2026). The dashboard includes more than 50 named lunar locations and a coordinate search interface for arbitrary sites. It provides topographic maps with hazard overlays, 30day outlooks, particle-flux visualizations, and warnings and recommendations for mission planning. Historical and predicted trends can be displayed as line, bar, or area charts. The missionplanning interface accepts mission parameters and duration targets. Based on available forecasts, it proposes EVA departure windows, assesses landingzone conditions, and generates an exportable mission plan. A Luna Assistant provides additional hazard information. These dashboard and planning views are the operator-facing surface of LIPAS. The Cesium page supplies an interactive two or threedimensional lunar map with time-dependent overlays for dust, radiation, and solar drivers. Together these views form the redesigned LIPAS operator interface used after the prototype migration. \begin{figure*}[t]
+The user interface was overhauled after the prototype limitations were identified. The resulting mission-control-style interface uses CSS Grid and Flexbox and consists of a dashboard, mission planner, and Cesium globe (Cesium GS, 2026; Chart.js Contributors, 2026). The dashboard includes more than 50 named lunar locations and a coordinate search interface for arbitrary sites. It provides topographic maps with hazard overlays, 30day outlooks, particle-flux visualizations, and warnings and recommendations for mission planning. Historical and predicted trends can be displayed as line, bar, or area charts. The missionplanning interface accepts mission parameters and duration targets. Based on available forecasts, it proposes EVA departure windows, assesses landingzone conditions, and generates an exportable mission plan. A Luna Assistant provides additional hazard information. These dashboard and planning views are the operator-facing surface of LIPAS. The Cesium page supplies an interactive two or threedimensional lunar map with time-dependent overlays for dust, radiation, and solar drivers. Together these views form the redesigned LIPAS operator interface used after the prototype migration. \begin{figure}[t]
 \centering
-\includegraphics[width=\textwidth]{figures/fig_operator_workflow_four_panel.png}
-\caption{Representative LIPAS operator workflow (dashboard, solar activity, mission planner, and globe views).}
+\includegraphics[width=\linewidth]{figures/fig_operator_workflow_four_panel.png}
+\caption{Representative LIPAS operator workflow. (a)~Site selection, coordinate search, and topographic hazard map. (b)~Forecast drivers, status, and diagnostics. (c)~Exportable mission report and risk summary. (d)~Interactive lunar globe and hazard overlays. Dashboard: \url{https://lipas.netlify.app}.}
 \label{fig:workflow}
-\end{figure*}
+\end{figure}
 
 Figure~\ref{fig:workflow} shows the operator interface in four panels: site selection, diagnostics, exportable mission reporting, and the Cesium globe. All quantitative window, mission, and ablation scores in this paper use the locked production model; the April prototype diagnostic remains separate.
-
-Panels: (a) site selection and hazard map; (b) forecast drivers and diagnostics; (c) exportable mission report; (d) Cesium globe. Dashboard: \url{https://lipas.netlify.app}
 
 \section{Methods}
 
@@ -95,15 +97,35 @@ The research was divided into three phases, each addressing one research questio
 
 \subsubsection{Phase 1: development of the hybrid model}
 
-The first phase examined the transition from the browser prototype to the hybrid system. It included a daytime prototype evaluation at 0$^\circ$N, 0$^\circ$E from 5 to 19 April 2026. The purpose was not to establish operational accuracy, but to identify weaknesses in the client-side machine-learning approach and determine which channels required a physics-based foundation. Treating all six hazards as machine-learning problems produced unstable results for strongly physics-constrained hazards. Consequently, temperature, moonquakes, dust, and micrometeorites were kept predominantly physics-based, while machine learning was given a larger role in solar activity and radiation. This phase also established the 18-feature input structure (hazard, time, place, and space-weather numbers), the 72-step temporal window, the physics\_estimate paths (Sections 3.2 and 4.4), and adaptive hybrid weighting (Eqs. (2)--(3)). These components were combined into the locked model used in the remaining phases. Continuous co-located measurements are unavailable for all six hazards, so comparison targets are called evaluation labels rather than ground truth unless a direct observation exists (Table 1). Performance used RMSE and MAE. Site geometry for Windows A and B is shown in Figure 3. Predictions in the locked windows were compared with persistence, physics-only references, and replicated public baselines (Section 4.4), replayed from archived OMNI, NOAA, GOES, and DONKI data.
+The first phase examined the transition from the browser prototype to the hybrid system. It included a daytime prototype evaluation at 0$^\circ$N, 0$^\circ$E from 5 to 19 April 2026. The purpose was not to establish operational accuracy, but to identify weaknesses in the client-side machine-learning approach and determine which channels required a physics-based foundation. Treating all six hazards as machine-learning problems produced unstable results for strongly physics-constrained hazards. Consequently, temperature, moonquakes, dust, and micrometeorites were kept predominantly physics-based, while machine learning was given a larger role in solar activity and radiation. This phase also established the 18-feature input structure (hazard, time, place, and space-weather numbers), the 72-step temporal window, the physics\_estimate paths (Sections 3.2 and 4.4), and adaptive hybrid weighting (Eqs. (2)--(3)). These components were combined into the locked model used in the remaining phases. Continuous co-located measurements are unavailable for all six hazards, so comparison targets are called evaluation labels rather than ground truth unless a direct observation exists (Table~\ref{tab:provenance}). Performance used RMSE and MAE. Site geometry for Windows A and B is shown in Figure~\ref{fig:sites}. Predictions in the locked windows were compared with persistence, physics-only references, and replicated public baselines (Section 4.4), replayed from archived OMNI, NOAA, GOES, and DONKI data.
 
 \subsection{Qualitative comparison criteria}
 
-Before the quantitative windows, LIPAS and selected agency models and archives are scored on nine ordered criteria. Labels run from None to Very High and are not converted into a numeric total or summed rank. Appendix B records the scoring rules; Table 2 summarizes the matrix. The locked-model RMSE and MAE studies remain the primary quantitative evidence for research question 3. Hazard coverage. None: no hazard addressed; Very Low: one hazard; Low: up to two hazards; Moderate: three to four hazards; High: five hazards; Very High: six or more integrated hazards. Data-fusion capability. None: one dataset; Low: multiple datasets without integration; Moderate: partial integration; High: integrated multi-source system; Very High: real-time dynamic multi-source fusion. Temporal forecasting ability. None: archival only; Low: event-driven alerts without a time horizon; Moderate: short-range estimates for a narrow domain; High: multi-day forecasting for one or more hazards; Very High: multi-day forecasting across all hazards. Spatial coverage. None: no spatial resolution; Very Low: specific historical sites; Low: one region or polar area; Moderate: broad regional coverage; High: global or near-global coverage; Very High: complete lunar-surface coverage with location selection.
+Before the quantitative windows, LIPAS and selected agency models and archives are scored on nine ordered criteria. Labels run from None to Very High and are not converted into a numeric total or summed rank. Appendix B records the scoring rules; Table~\ref{tab:qual} summarizes the matrix. The locked-model RMSE and MAE studies remain the primary quantitative evidence for research question 3. 
+\textit{Hazard coverage.} None: no hazard addressed; Very Low: one hazard; Low: up to two hazards; Moderate: three to four hazards; High: five hazards; Very High: six or more integrated hazards. 
+\textit{Data-fusion capability.} None: one dataset; Low: multiple datasets without integration; Moderate: partial integration; High: integrated multi-source system; Very High: real-time dynamic multi-source fusion. 
+\textit{Temporal forecasting ability.} None: archival only; Low: event-driven alerts without a time horizon; Moderate: short-range estimates for a narrow domain; High: multi-day forecasting for one or more hazards; Very High: multi-day forecasting across all hazards. 
+\textit{Spatial coverage.} None: no spatial resolution; Very Low: specific historical sites; Low: one region or polar area; Moderate: broad regional coverage; High: global or near-global coverage; Very High: complete lunar-surface coverage with location selection.
 
-Realtime operational capability. None: historical only; Low: archival access with significant delay; Moderate: near-real-time with limited updates; High: live feeds with regular updates; Very High: continuous real-time data with automated processing. Robustness and stability. Low: limited coverage or known gaps; Moderate: functional with notable external dependencies; High: well-validated and stable in a narrow domain; Very High: continuously calibrated mission-grade instrumentation with a long operational history. Validation strength. None: no comparison; Low: informal or limited comparison; Moderate: structured comparison over a limited period; High: peer-reviewed validation against direct measurements; Very High: direct physical measurement, self-validating by design. Usability and operational readiness. Very Low: raw scientific data requiring specialist processing; Low: technical interfaces; Moderate: accessible API or web portal; High: clear operational interface; Very High: interactive dashboard for non-specialist mission planners. Openness and accessibility. Low: restricted or proprietary; Moderate: archives requiring registration or processing; High: open API or published datasets; Very High: fully open browser-based access without setup. No aggregate result in this paper represents validation against simultaneous in-situ measurements of all six hazards across the lunar surface. An ablation analysis later replaces selected inputs with Window A means while holding the locked model fixed (no retraining). Baseline configurations and hazard-specific replication continue in Sections 4.3--4.4.
 
-Figure 3: Lunar locations used in the reported studies: the equatorial reference, Apollo 11, and Nobile Rim. Performance was evaluated primarily by root mean square error (RMSE) and mean absolute error (MAE): The Window B micrometeorite comparison used the MEM 3 seasonal background with American Meteor Society (AMS) shower modulation for LIPAS, while the replicated comparison omitted that additional shower term. This tests the effect of explicitly representing shower timing during the Perseid period, not general superiority over NASA's complete meteoroid-modeling framework. An ablation analysis removed selected inputs while holding the remaining conditions fixed. Conditions included the full hybrid model, removal of solar/storm drivers for radiation, removal of micrometeorite context for dust, an ML-only path, and a physics-only path. Resulting predictions were compared with the full system using RMSE and MAE.
+\textit{Realtime operational capability.} None: historical only; Low: archival access with significant delay; Moderate: near-real-time with limited updates; High: live feeds with regular updates; Very High: continuous real-time data with automated processing. 
+\textit{Robustness and stability.} Low: limited coverage or known gaps; Moderate: functional with notable external dependencies; High: well-validated and stable in a narrow domain; Very High: continuously calibrated mission-grade instrumentation with a long operational history. 
+\textit{Validation strength.} None: no comparison; Low: informal or limited comparison; Moderate: structured comparison over a limited period; High: peer-reviewed validation against direct measurements; Very High: direct physical measurement, self-validating by design. 
+\textit{Usability and operational readiness.} Very Low: raw scientific data requiring specialist processing; Low: technical interfaces; Moderate: accessible API or web portal; High: clear operational interface; Very High: interactive dashboard for non-specialist mission planners. 
+\textit{Openness and accessibility.} Low: restricted or proprietary; Moderate: archives requiring registration or processing; High: open API or published datasets; Very High: fully open browser-based access without setup. No aggregate result in this paper represents validation against simultaneous in-situ measurements of all six hazards across the lunar surface. An ablation analysis later replaces selected inputs with Window A means while holding the locked model fixed (no retraining). Baseline configurations and hazard-specific replication continue in Sections 4.3--4.4.
+
+
+\begin{figure*}[!htbp]
+\centering
+\fbox{\parbox{0.92\textwidth}{\centering\vspace{1.2em}
+\textbf{Study sites:} equatorial reference ($0^{\circ}$N, $0^{\circ}$E); Apollo~11; Nobile Rim.\\[0.4em]
+{\small Windows A and B use the same three sites (42 site-days each).}
+\vspace{1.2em}}}
+\caption{Lunar locations used in the reported studies: the equatorial reference, Apollo 11, and Nobile Rim.}
+\label{fig:sites}
+\end{figure*}
+
+Performance was evaluated primarily by root mean square error (RMSE) and mean absolute error (MAE). The Window B micrometeorite comparison used the MEM 3 seasonal background with American Meteor Society (AMS) shower modulation for LIPAS, while the replicated comparison omitted that additional shower term. This tests the effect of explicitly representing shower timing during the Perseid period, not general superiority over NASA's complete meteoroid-modeling framework. An ablation analysis removed selected inputs while holding the remaining conditions fixed. Conditions included the full hybrid model, removal of solar/storm drivers for radiation, removal of micrometeorite context for dust, an ML-only path, and a physics-only path. Resulting predictions were compared with the full system using RMSE and MAE.
 
 \subsubsection{Phase 2: operational mission evaluation}
 
@@ -111,23 +133,42 @@ The second phase examined whether integrating several environmental hazards coul
 
 \subsubsection{Phase 3: quantitative prediction evaluation}
 
-The third phase evaluated the locked hybrid system against physics-based and replicated NASA/NOAA reference approaches at three locations: 0$^\circ$N, 0$^\circ$E, Apollo 11, and Nobile Rim (Fig. 3). Window A covered 5--18 July 2026 (predominantly lunar night); Window B covered 22 July--4 August 2026 (predominantly lunar day). For Window B micrometeorites, LIPAS used MEM 3 with American Meteor Society (AMS) shower-calendar modulation, while the replicated comparison did not apply that AMS shower calendar. Results then report the studies in matching order: prototype diagnostics, qualitative comparison, fourteen-day windows, mission simulation, and input ablation.
+The third phase evaluated the locked hybrid system against physics-based and replicated NASA/NOAA reference approaches at three locations: 0$^\circ$N, 0$^\circ$E, Apollo 11, and Nobile Rim (Fig.~\ref{fig:sites}). Window A covered 5--18 July 2026 (predominantly lunar night); Window B covered 22 July--4 August 2026 (predominantly lunar day). For Window B micrometeorites, LIPAS used MEM 3 with American Meteor Society (AMS) shower-calendar modulation, while the replicated comparison did not apply that AMS shower calendar. Results then report the studies in matching order: prototype diagnostics, qualitative comparison, fourteen-day windows, mission simulation, and input ablation.
 
 \subsection{Baseline configurations and control environments}
 
-Reference predictions were obtained from public databases, peer-reviewed formulas, engineering-model exports, and agency documentation. In this paper, a replicated NASA/NOAA reference means an author-implemented reconstruction from those public materials; it does not mean that internal, proprietary, operational, or flight-certified agency software was executed. MEM 3 is treated separately because the comparison used an engineering-model export available to the project. Where an established product did not provide a direct multi-day lunar prediction for a study interval, the relevant public method was reproduced as closely as the documented equations and open data allowed. For every hazard, the study recorded the source, procedure, and whether the target was a direct measurement, engineering baseline, or physics proxy. In the mission simulation and ablation tests, coordinates and physical constants were held fixed while selected inputs were altered. The mission scenario used archived quiet conditions as a background and injected controlled changes, with status checked at fixed intervals. The ablation tests replaced selected driver or hazard inputs with their Window A means as sensitivity tests. Table 1 (next) summarizes provenance for each evaluation target. Section 4.4 then specifies how each hazard baseline was replicated for Windows A and B, including the physics\_estimate paths used when a public product did not already publish a multi-day lunar forecast for the study coordinates and dates. Where a channel mixes an engineering export with an author-added term (for example MEM 3 plus the AMS shower calendar), both pieces are stated explicitly so that a reader can replay the comparison without assuming access to internal agency software. Persistence and physics-only references share the same replay calendar and site list as the locked hybrid forecasts. Control environments therefore differ by which drivers are visible to each pathway, not by which dates or coordinates are evaluated. That separation is what lets the later Results tables attribute RMSE and MAE changes to the locked blend, the AMS term, or an ablated input rather than to a silent change of study geometry.
+Reference predictions were obtained from public databases, peer-reviewed formulas, engineering-model exports, and agency documentation. In this paper, a replicated NASA/NOAA reference means an author-implemented reconstruction from those public materials; it does not mean that internal, proprietary, operational, or flight-certified agency software was executed. MEM 3 is treated separately because the comparison used an engineering-model export available to the project. Where an established product did not provide a direct multi-day lunar prediction for a study interval, the relevant public method was reproduced as closely as the documented equations and open data allowed. For every hazard, the study recorded the source, procedure, and whether the target was a direct measurement, engineering baseline, or physics proxy. In the mission simulation and ablation tests, coordinates and physical constants were held fixed while selected inputs were altered. The mission scenario used archived quiet conditions as a background and injected controlled changes, with status checked at fixed intervals. The ablation tests replaced selected driver or hazard inputs with their Window A means as sensitivity tests. Table~\ref{tab:provenance} summarizes provenance for each evaluation target. Section 4.4 then specifies how each hazard baseline was replicated for Windows A and B, including the physics\_estimate paths used when a public product did not already publish a multi-day lunar forecast for the study coordinates and dates. Where a channel mixes an engineering export with an author-added term (for example MEM 3 plus the AMS shower calendar), both pieces are stated explicitly so that a reader can replay the comparison without assuming access to internal agency software. Persistence and physics-only references share the same replay calendar and site list as the locked hybrid forecasts. Control environments therefore differ by which drivers are visible to each pathway, not by which dates or coordinates are evaluated. That separation is what lets the later Results tables attribute RMSE and MAE changes to the locked blend, the AMS term, or an ablated input rather than to a silent change of study geometry.
 
-Table 1: Provenance and interpretation of the six quantitative evaluation targets. Channel Principal target construction What is directly observed Validation status Solar activity Archived OMNI/SWPC indices and DONKI event context mapped to the study's solar-activity label Solar-wind, field, flare, and geomagnetic drivers Constructed label from measured drivers Radiation CRaTER-calibrated background combined with archived solar and proton-event terms Orbital particle and space-weather measurements Observation-constrained lunar-surface proxy Temperature Diviner/Apollo-constrained thermal equations evaluated at each site and time Orbital temperature maps and historical heat-flow measurements Observation-constrained physics proxy Moonquakes Apollo PSE catalog rates with tidal, terminator, and location adjustments Historical Apollo seismic events Historical-catalog proxy Micrometeorites MEM 3 engineering output with a separately stated AMS shower-timing term MEM 3 output and terrestrial shower timing Engineering-model/shower proxy Dust LDEX-informed background with impact, local-time, and terminator terms Historical orbital dust detections Observation-informed physics proxy
+
+\begin{table*}[!htbp]
+\centering
+\caption{Provenance and interpretation of the six quantitative evaluation targets.}
+\label{tab:provenance}
+\scriptsize
+\begin{tabular}{@{}p{2.1cm}p{4.6cm}p{4.0cm}p{3.4cm}@{}}
+\toprule
+Channel & Principal target construction & What is directly observed & Validation status \\
+\midrule
+Solar activity & Archived OMNI/SWPC indices and DONKI event context mapped to the study's solar-activity label & Solar-wind, field, flare, and geomagnetic drivers & Constructed label from measured drivers \\
+Radiation & CRaTER-calibrated background combined with archived solar and proton-event terms & Orbital particle and space-weather measurements & Observation-constrained lunar-surface proxy \\
+Temperature & Diviner/Apollo-constrained thermal equations evaluated at each site and time & Orbital temperature maps and historical heat-flow measurements & Observation-constrained physics proxy \\
+Moonquakes & Apollo PSE catalog rates with tidal, terminator, and location adjustments & Historical Apollo seismic events & Historical-catalog proxy \\
+Micrometeorites & MEM 3 engineering output with a separately stated AMS shower-timing term & MEM 3 output and terrestrial shower timing & Engineering-model/shower proxy \\
+Dust & LDEX-informed background with impact, local-time, and terminator terms & Historical orbital dust detections & Observation-informed physics proxy \\
+\bottomrule
+\end{tabular}
+\end{table*}
+
 
 \subsection{Baseline replication and model specifications}
 
 \subsubsection{Temperature}
 
-Temperature baselines used lunar thermal physics constrained by Diviner observations and Apollo nightside measurements (Vasavada et al., 1999; Paige et al., 2010; Hayne et al., 2017; Williams et al., 2017; Langseth et al., 1972). On the dayside, surface temperature was computed from the Stefan-Boltzmann balance $T = \left(\frac{(1-\alpha) I_0 \cos\theta}{\epsilon\sigma}\right)^{1/4}$, (6) where I0 is solar irradiance adjusted for Earth-Sun distance, $\alpha$ is surface albedo3, $\epsilon$ is emissivity, $\sigma$ is the Stefan-Boltzmann constant, and $\theta$ is the local solar-incidence angle. Nightside temperatures were calculated with an Apollo-based cooling curve and adjusted for latitude and a small interior heat term. Site reflectivity, emissivity, terrain, and thermal inertia were taken from the LIPAS site data. Where available, Diviner observations could further constrain the estimate. The early prototype also used Eq. (1); the reported studies used Eq. (6) and the Apollo-based nightside model. An equivalent form used in the implementation is (1 -$\alpha$)Is = $\epsilon$$\sigma$T 4. (7)
+Temperature baselines used lunar thermal physics constrained by Diviner observations and Apollo nightside measurements (Vasavada et al., 1999; Paige et al., 2010; Hayne et al., 2017; Williams et al., 2017; Langseth et al., 1972). On the dayside, surface temperature was computed from the Stefan-Boltzmann balance $T = \left(\frac{(1-\alpha) I_0 \cos\theta}{\epsilon\sigma}\right)^{1/4}$, (6) where I0 is solar irradiance adjusted for Earth-Sun distance, $\alpha$ is surface albedo\footnote{Albedo is the fraction of incoming radiation reflected by a surface; emissivity describes how efficiently that surface emits thermal radiation.}, $\epsilon$ is emissivity, $\sigma$ is the Stefan-Boltzmann constant, and $\theta$ is the local solar-incidence angle. Nightside temperatures were calculated with an Apollo-based cooling curve and adjusted for latitude and a small interior heat term. Site reflectivity, emissivity, terrain, and thermal inertia were taken from the LIPAS site data. Where available, Diviner observations could further constrain the estimate. The early prototype also used Eq. (1); the reported studies used Eq. (6) and the Apollo-based nightside model. An equivalent form used in the implementation is (1 -$\alpha$)Is = $\epsilon$$\sigma$T 4. (7)
 
 \subsubsection{Solar activity and radiation}
 
-Solar and radiation baselines were built from public space-weather data rather than a direct lunar radiation forecast. Solar activity used OMNI2 and SWPC quantities including Kp, the 3Albedo is the fraction of incoming radiation reflected by a surface; emissivity describes how efficiently that surface emits thermal radiation. interplanetary magnetic-field component Bz4, solar-wind speed and density, and F10.7 where available. DONKI flare, CME, geomagnetic-storm, and SEP records were included for the study dates. The radiation path used a CRaTER-based galactic-cosmicray background of approximately 0.38 mSv day-1, converted to an hourly value and adjusted for solar activity (Spence et al., 2010; Schwadron et al., 2014; NASA, 2023c). Additional quiet, storm, and SEP terms used Kp, southward Bz, high solar-wind speed, GOES proton measurements, and solar activity. A small latitude adjustment was applied near the lunar poles. GOES X-ray and proton measurements were model inputs, not direct lunar-surface radiation measurements.
+Solar and radiation baselines were built from public space-weather data rather than a direct lunar radiation forecast. Solar activity used OMNI2 and SWPC quantities including Kp, the interplanetary magnetic-field component Bz\footnote{The interplanetary magnetic field is carried outward by the solar wind; a sustained southward Bz component can indicate stronger coupling with Earth's magnetic environment.}, solar-wind speed and density, and F10.7 where available. DONKI flare, CME, geomagnetic-storm, and SEP records were included for the study dates. The radiation path used a CRaTER-based galactic-cosmicray background of approximately 0.38 mSv day-1, converted to an hourly value and adjusted for solar activity (Spence et al., 2010; Schwadron et al., 2014; NASA, 2023c). Additional quiet, storm, and SEP terms used Kp, southward Bz, high solar-wind speed, GOES proton measurements, and solar activity. A small latitude adjustment was applied near the lunar poles. GOES X-ray and proton measurements were model inputs, not direct lunar-surface radiation measurements.
 
 \subsubsection{Micrometeorites}
 
@@ -139,53 +180,61 @@ plus shower modulation. This directly isolates the effect of meteor-shower timin
 
 \subsubsection{Dust}
 
-Dust baselines used LADEE/LDEX data rather than a live global forecast. The model combined a normal background with dust associated with micrometeorite impacts, enhanced dust near 4The interplanetary magnetic field is carried outward by the solar wind; a sustained southward Bz component can indicate stronger coupling with Earth's magnetic environment.
-
-terminators [5], an optional LDEX local time factor, and a small regolith depth effect [6] (Colwell et al., 2007; Horanyi et al., 2015; Stubbs et al., 2006). It is therefore a physics proxy based on LDEX observations, not a claim of continuous dust measurement at the Artemis sites.
+Dust baselines used LADEE/LDEX data rather than a live global forecast. The model combined a normal background with dust associated with micrometeorite impacts, enhanced dust near terminators\footnote{The lunar terminator is the moving boundary between illuminated day and darkness, where rapid electrical and thermal changes may affect dust behavior.}, an optional LDEX local time factor, and a small regolith depth effect\footnote{Regolith is the loose layer of fragmented rock and dust covering the lunar surface.} (Colwell et al., 2007; Horanyi et al., 2015; Stubbs et al., 2006). It is therefore a physics proxy based on LDEX observations, not a claim of continuous dust measurement at the Artemis sites.
 
 \subsubsection{Moonquakes}
 
-Moonquake baselines used the Apollo PSE catalog. The model combined deep, shallow, and thermal moonquake rates, enhanced activity near terminators, a small equatorial preference for deep events, and a weak regolith effect. No real-time lunar seismometer network was assumed. The output is a catalog-based physics proxy rather than a direct measurement of current activity at the study sites. Persistence baselines assumed that the latest known value remained constant. Physicsonly references were generated from the common replay data. RMSE and MAE were calculated for LIPAS against persistence, physics-only paths, and each replicated reference baseline. The mission simulation used common LIPAS outputs and baselines throughout the Apollo 17-length timeline, and the ablation study used the same replay data while removing selected inputs or pathways. [5] The lunar terminator is the moving boundary between illuminated day and darkness, where rapid electrical and thermal changes may affect dust behavior. [6] Regolith is the loose layer of fragmented rock and dust covering the lunar surface.
+Moonquake baselines used the Apollo PSE catalog. The model combined deep, shallow, and thermal moonquake rates, enhanced activity near terminators, a small equatorial preference for deep events, and a weak regolith effect. No real-time lunar seismometer network was assumed. The output is a catalog-based physics proxy rather than a direct measurement of current activity at the study sites. Persistence baselines assumed that the latest known value remained constant. Physicsonly references were generated from the common replay data. RMSE and MAE were calculated for LIPAS against persistence, physics-only paths, and each replicated reference baseline. The mission simulation used common LIPAS outputs and baselines throughout the Apollo 17-length timeline, and the ablation study used the same replay data while removing selected inputs or pathways.
 
 \section{Results}
 
 \subsection{Prototype diagnostics}
 
-The preliminary studies evaluated the browser prototype under daytime conditions at 0 deg N, 0 deg E from 5 to 19 April 2026. One study tracked all six hazards against weakly replicated NASA and NOAA baselines. Another compared temperature with a Diviner-style dayside relation. The aim was to see where the prototype failed under that weak-replica setup before the locked hybrid model was trained. \begin{figure}[t]
+The preliminary studies evaluated the browser prototype under daytime conditions at 0 deg N, 0 deg E from 5 to 19 April 2026. One study tracked all six hazards against weakly replicated NASA and NOAA baselines. Another compared temperature with a Diviner-style dayside relation. The aim was to see where the prototype failed under that weak-replica setup before the locked hybrid model was trained. \begin{figure*}[!htbp]
 \centering
 \includegraphics[width=\linewidth]{figures/fig_prototype_draft14.png}
 \caption{Preliminary LIPAS versus replica scores across six hazards (5 to 19 April 2026, daytime, 0$^{\circ}$N 0$^{\circ}$E).}
 \label{fig:proto}
-\end{figure}
+\end{figure*}
 
 Figure~\ref{fig:proto} summarizes that April diagnostic across six hazards. It is not the fourteen-day evaluation in Section 5.3. Temperature is the only hazard where the replica scores higher; the prototype is higher on radiation, micrometeorites, moonquakes, dust, and solar activity. The temperature miss is the actionable finding that motivated the physics-led temperature path in the locked model. Figure~\ref{fig:diviner} shows the same miss as a daytime temperature trace against a Diviner-style dayside estimate. Section 5.2 then scores LIPAS against selected agency models and archives on the nine qualitative criteria defined in Section 4.2.
 
 \subsubsection{April temperature trace}
 
-The same April days, at 0$^\circ$N, 0$^\circ$E, are plotted below against a Diviner-style dayside estimate. \begin{figure}[t]
+The same April days, at 0$^\circ$N, 0$^\circ$E, are plotted below against a Diviner-style dayside estimate. \begin{figure*}[!htbp]
 \centering
 \includegraphics[width=\linewidth]{figures/fig_lipas_vs_diviner.png}
 \caption{Daytime temperature at $0^{\circ}$N, $0^{\circ}$E, 5 to 19 April 2026. The prototype rises above the Diviner-style estimate near the warmest part of the day.}
 \label{fig:diviner}
-\end{figure}
+\end{figure*}
 
 Figure~\ref{fig:diviner} shows the same miss: the prototype overshoots the Diviner-style estimate near peak heating. Figures~\ref{fig:proto} and~\ref{fig:diviner} are the April check only; they are not repeated in Windows A and B.
 
 \subsection{Qualitative comparison}
 
-LIPAS and six reference systems were scored on the nine criteria in Section 4.2. DONKI monitors events, Diviner and LDEX archive measurements, Apollo PSE is a historical catalog, MEM 3 is a statistical engineering model, and GOES-18 is a real-time monitor used here from Earth orbit. Scores run from None to Very High and are not added up. VH = Very High; H = High; M = Moderate; L = Low; VL = Very Low; N = None. Specialist systems score high where they were built to be strong, and low on fusion and forecasting. LIPAS is scored high where the interface has to carry several hazards at once. The matrix is not a ranking, and it does not say that LIPAS is more accurate than a specialist archive. Table 2: Qualitative comparison of LIPAS with selected agency models and archives. Criteria follow Section 4.2. Labels are not summed. VH = Very High; H = High; M = Moderate; L = Low; VL = Very Low; N = None. Window A covers 5 to 18 July 2026 at 0$^\circ$N 0$^\circ$E, Apollo 11, and Nobile Rim (42 site-days). Local solar time was mostly night. The same blend and the same references are used at every site. \begin{figure}[t]
+LIPAS and six reference systems were scored on the nine criteria in Section 4.2. DONKI monitors events, Diviner and LDEX archive measurements, Apollo PSE is a historical catalog, MEM 3 is a statistical engineering model, and GOES-18 is a real-time monitor used here from Earth orbit. Scores run from None to Very High and are not added up. VH = Very High; H = High; M = Moderate; L = Low; VL = Very Low; N = None. Specialist systems score high where they were built to be strong, and low on fusion and forecasting. LIPAS is scored high where the interface has to carry several hazards at once. The matrix is not a ranking, and it does not say that LIPAS is more accurate than a specialist archive. 
+\begin{table*}[!htbp]
 \centering
-\includegraphics[width=\linewidth]{figures/fig_windowA_skill.png}
-\caption{Window A skill from per-site RMSE (5 to 18 July 2026; 42 site-days). E = $0^{\circ}$N $0^{\circ}$E; A = Apollo 11; N = Nobile Rim. Navy is LIPAS; orange is the replica.}
-\label{fig:winAskill}
-\end{figure}
+\caption{Qualitative comparison of LIPAS with selected agency models and archives. Criteria follow Section~4.2. Labels are not summed. VH = Very High; H = High; M = Moderate; L = Low; VL = Very Low; N = None.}
+\label{tab:qual}
+\scriptsize
+\setlength{\tabcolsep}{3.5pt}
+\begin{tabular}{@{}lccccccccc@{}}
+\toprule
+System & Hazard & Fusion & Forecast & Spatial & Real-time & Robust. & Valid. & Usability & Open \\
+\midrule
+LIPAS & VH & VH & H & H & H & M & M & VH & H \\
+DONKI & L & L & L & M & H & H & H & M & H \\
+Diviner & VL & L & L & VH & L & VH & VH & L & M \\
+LDEX & VL & L & N & L & N & M & H & VL & M \\
+Apollo PSE & VL & L & N & VL & N & H & VH & L & H \\
+MEM 3 & VL & L & M & H & L & H & H & L & M \\
+GOES-18 & L & M & M & M & VH & VH & VH & M & H \\
+\bottomrule
+\end{tabular}
+\end{table*}
 
-\begin{figure}[t]
-\centering
-\includegraphics[width=\linewidth]{figures/fig_windowA_radiation.png}
-\caption{Window A radiation. LIPAS, the GOES-plus-physics reference, and the evaluation labels.}
-\label{fig:winArad}
-\end{figure}
+Window A covers 5 to 18 July 2026 at 0$^\circ$N 0$^\circ$E, Apollo 11, and Nobile Rim (42 site-days). Local solar time was mostly night. The same blend and the same references are used at every site.
 
 \subsection{Fourteen-day evaluation}
 
@@ -193,46 +242,140 @@ LIPAS and six reference systems were scored on the nine criteria in Section 4.2.
 
 Solar activity shows a modest gain for the hybrid (RMSE 4.10 versus 4.66). Radiation RMSE stayed higher for the hybrid (0.119 versus 0.102). Temperature, moonquakes, and dust match because they share a physics path. The micrometeorite bars use blend weight zero and are not an independent win. Skill 96 = zero site RMSE, not a percent score. Replica stays closer to the labels than the hybrid here.
 
-Table 3: Window A RMSE, 5 to 18 July 2026, lunar-night dominant, 42 site-days. Hazard Hybrid Replica Outcome Solar activity 4.10 4.66 Hybrid lower by about 12\% Radiation (mSv) 0.119 0.102 Replica lower Temperature ($^\circ$C) 38.2 38.2 Tie, shared physics path Moonquakes / day 1.23 1.23 Tie, shared physics path Micrometeorites 0.0 0.624 Not an independent win Dust (g cm-3) 0.526 0.526 Tie, shared physics path Window B uses the same sites, blend, and metrics on 22 July to 4 August 2026 (42 site-days). About 95 percent of the site-days are on the dayside. For micrometeorites, LIPAS carries a shower-timing term, including the Perseids near 4 August, and the replica uses the seasonal MEM 3 envelope without that term. \begin{figure}[t]
+\begin{figure*}[!htbp]
 \centering
-\includegraphics[width=\linewidth]{figures/fig_windowB_skill.png}
-\caption{Window B skill from per-site RMSE (22 July to 4 August 2026; 42 site-days). Same site letters and replica as Window A.}
-\label{fig:winBskill}
-\end{figure}
+\includegraphics[width=\linewidth]{figures/fig_windowA_skill.png}
+\caption{Window A skill from per-site RMSE (5 to 18 July 2026; 42 site-days). E = $0^{\circ}$N $0^{\circ}$E; A = Apollo 11; N = Nobile Rim. Navy is LIPAS; orange is the replica.}
+\label{fig:winAskill}
+\end{figure*}
+
+\begin{figure*}[!htbp]
+\centering
+\includegraphics[width=\linewidth]{figures/fig_windowA_radiation.png}
+\caption{Window A radiation. LIPAS, the GOES-plus-physics reference, and the evaluation labels.}
+\label{fig:winArad}
+\end{figure*}
+
+
+
+\begin{table*}[!htbp]
+\centering
+\caption{Window A RMSE, 5 to 18 July 2026, lunar-night dominant, 42 site-days.}
+\label{tab:winA}
+\begin{tabular}{@{}lccc@{}}
+\toprule
+Hazard & Hybrid & Replica & Outcome \\
+\midrule
+Solar activity & 4.10 & 4.66 & Hybrid lower by about 12\% \\
+Radiation (mSv) & 0.119 & 0.102 & Replica lower \\
+Temperature ($^\circ$C) & 38.2 & 38.2 & Tie, shared physics path \\
+Moonquakes / day & 1.23 & 1.23 & Tie, shared physics path \\
+Micrometeorites & 0.0 & 0.624 & Not an independent win \\
+Dust (g\,cm$^{-3}$) & 0.526 & 0.526 & Tie, shared physics path \\
+\bottomrule
+\end{tabular}
+\end{table*}
+
+Window B uses the same sites, blend, and metrics on 22 July to 4 August 2026 (42 site-days). About 95 percent of the site-days are on the dayside. For micrometeorites, LIPAS carries a shower-timing term, including the Perseids near 4 August, and the replica uses the seasonal MEM 3 envelope without that term.
 
 \subsubsection{Window B, predominantly lunar day}
 
 Solar activity is again lower for the hybrid (4.99 versus 5.99). Radiation is not: in this quiet dayside window the replica is
 
-0.00266 and the hybrid is 0.0188. Temperature, moonquakes, and dust remain ties (Table 4).
+0.00266 and the hybrid is 0.0188. Temperature, moonquakes, and dust remain ties (Table~\ref{tab:winB}).
 
-Table 4: Window B RMSE, 22 July to 4 August 2026, lunar-day dominant, 42 site-days. Hazard Hybrid Replica Outcome Solar activity 4.99 5.99 Hybrid lower by about 17\% Radiation (mSv) 0.0188 0.00266 Replica lower (quiet dayside) Temperature ($^\circ$C) 25.5 25.5 Tie, shared physics path Moonquakes / day 0.695 0.695 Tie, shared physics path Micrometeorites 0.0 0.701 Shower term only Dust (g cm-3) 0.169 0.169 Tie, shared physics path \begin{figure}[t]
+\begin{figure*}[!htbp]
+\centering
+\includegraphics[width=\linewidth]{figures/fig_windowB_skill.png}
+\caption{Window B skill from per-site RMSE (22 July to 4 August 2026; 42 site-days). Same site letters and replica as Window A.}
+\label{fig:winBskill}
+\end{figure*}
+
+
+\begin{table*}[!htbp]
+\centering
+\caption{Window B RMSE, 22 July to 4 August 2026, lunar-day dominant, 42 site-days.}
+\label{tab:winB}
+\begin{tabular}{@{}lccc@{}}
+\toprule
+Hazard & Hybrid & Replica & Outcome \\
+\midrule
+Solar activity & 4.99 & 5.99 & Hybrid lower by about 17\% \\
+Radiation (mSv) & 0.0188 & 0.00266 & Replica lower (quiet dayside) \\
+Temperature ($^\circ$C) & 25.5 & 25.5 & Tie, shared physics path \\
+Moonquakes / day & 0.695 & 0.695 & Tie, shared physics path \\
+Micrometeorites & 0.0 & 0.701 & Shower term only \\
+Dust (g\,cm$^{-3}$) & 0.169 & 0.169 & Tie, shared physics path \\
+\bottomrule
+\end{tabular}
+\end{table*}
+\begin{figure*}[!htbp]
 \centering
 \includegraphics[width=\linewidth]{figures/fig_windowB_meteors.png}
 \caption{Window B study-site mean micrometeorite flux. LIPAS includes the shower-timing term. The comparison curve is MEM 3 without it.}
 \label{fig:meteors}
-\end{figure}
+\end{figure*}
 
 The label is the evaluation series, not a surface impact measurement.
 
 \subsection{Operational mission simulation}
 
-A radiation-focused EVA at the Apollo 11 site was simulated over 7 h 37 min, the duration of the second Apollo 17 EVA, to compare LIPAS warning times with those of separate public products. The same storm was injected on every path: a precursor at T+40, rising Kp and southward IMF Bz at T+55, and a GOES-like proton surge at T+70. Every path used the same thresholds, 0.095 mSv h-1 for caution and 0.15 mSv h-1 for no-go. The GOES-only path used proton flux alone, and the combined NASA path took the earlier of the proton warning and the geomagnetic or solar-driver warning. \begin{figure}[t]
+A radiation-focused EVA at the Apollo 11 site was simulated over 7 h 37 min, the duration of the second Apollo 17 EVA, to compare LIPAS warning times with those of separate public products. The same storm was injected on every path: a precursor at T+40, rising Kp and southward IMF Bz at T+55, and a GOES-like proton surge at T+70. Every path used the same thresholds, 0.095 mSv h-1 for caution and 0.15 mSv h-1 for no-go. The GOES-only path used proton flux alone, and the combined NASA path took the earlier of the proton warning and the geomagnetic or solar-driver warning. \begin{figure*}[!htbp]
 \centering
 \includegraphics[width=\linewidth]{figures/fig_mission_timeline.png}
 \caption{Mission-simulation decision timeline. Open circles are LIPAS, squares are GOES-only, and diamonds are the combined NASA path.}
 \label{fig:mission}
-\end{figure}
+\end{figure*}
 
 Figure~\ref{fig:mission}: dashed lines mark the precursor, geomagnetic change, and proton surge. LIPAS issued caution at T+45 and no-go at T+85. GOES alone reached caution at T+80 and no-go at T+105, and the combined path reached caution at T+55 and no-go at T+70. The earlier LIPAS caution came from upstream solar and geomagnetic drivers, not from an event the proton product could not see. The exercise is radiation-focused. It does not show that LIPAS is safer on every hazard, and it does not replace an operator or flight-certified products.
 
 \subsection{Input ablation}
 
-The ablation study keeps the locked model fixed and uses a relatively quiet portion of the Window A data. One input at a time, and two input pairs, are replaced with their Window A averages; the model is not retrained. Tables 5 and 6 report the resulting RMSE values. In the full-minus-case column, a negative value means that the altered configuration had a higher error than the full model. On the radiation channel, replacing the live solar input with its Window A average raised RMSE from 0.1020 to 0.1050 (about 2.9\%). Replacing any other single input left radiation RMSE essentially unchanged, and replacing solar and radiation together raised it further, to
+The ablation study keeps the locked model fixed and uses a relatively quiet portion of the Window A data. One input at a time, and two input pairs, are replaced with their Window A averages; the model is not retrained. Tables~\ref{tab:ablation-rad} and~\ref{tab:ablation-solar} report the resulting RMSE values. In the full-minus-case column, a negative value means that the altered configuration had a higher error than the full model. On the radiation channel, replacing the live solar input with its Window A average raised RMSE from 0.1020 to 0.1050 (about 2.9\%). Replacing any other single input left radiation RMSE essentially unchanged, and replacing solar and radiation together raised it further, to
 
 0.1068 (about 4.7\%).
 
-Table 5: Radiation-channel sensitivity results from input ablation. Changes are full-model RMSE minus configuration RMSE. Configuration RMSE Full minus case Relative change Full model 0.1020 0.0000 0.0\% Set solar to mean 0.1050 -0.0029 -2.9\% Set radiation to mean 0.1029 -0.0009 -0.9\% Set temperature to mean 0.1020 ~0 ~0\% Set moonquakes to mean 0.1020 ~0 ~0\% Set micrometeorites to mean 0.1020 ~0 ~0\% Set dust to mean 0.1020 ~0 ~0\% Set solar and radiation to mean 0.1068 -0.0048 -4.7\% Table 6: Solar-activity sensitivity results from input ablation. Changes are full-model RMSE minus configuration RMSE. Configuration RMSE Full minus case Relative change Full model 3.899 0.000 0.0\% Set micrometeorites to mean 3.984 -0.085 -2.2\% Set radiation to mean 3.933 -0.034 -0.9\% Set moonquakes to mean 3.931 -0.032 -0.8\% Set temperature to mean 3.916 -0.018 -0.5\% Set dust to mean 3.909 -0.011 -0.3\% Set solar to mean 3.290 +0.608 +15.6\% (lower RMSE) Set moonquakes and dust to mean 3.960 -0.061 -1.6\%
+
+\begin{table*}[!htbp]
+\centering
+\caption{Radiation-channel sensitivity results from input ablation. Changes are full-model RMSE minus configuration RMSE.}
+\label{tab:ablation-rad}
+\begin{tabular}{@{}lccc@{}}
+\toprule
+Configuration & RMSE & Full minus case & Relative change \\
+\midrule
+Full model & 0.1020 & 0.0000 & 0.0\% \\
+Set solar to mean & 0.1050 & $-0.0029$ & $-2.9\%$ \\
+Set radiation to mean & 0.1029 & $-0.0009$ & $-0.9\%$ \\
+Set temperature to mean & 0.1020 & ${\sim}0$ & ${\sim}0\%$ \\
+Set moonquakes to mean & 0.1020 & ${\sim}0$ & ${\sim}0\%$ \\
+Set micrometeorites to mean & 0.1020 & ${\sim}0$ & ${\sim}0\%$ \\
+Set dust to mean & 0.1020 & ${\sim}0$ & ${\sim}0\%$ \\
+Set solar and radiation to mean & 0.1068 & $-0.0048$ & $-4.7\%$ \\
+\bottomrule
+\end{tabular}
+\end{table*}
+
+\begin{table*}[!htbp]
+\centering
+\caption{Solar-activity sensitivity results from input ablation. Changes are full-model RMSE minus configuration RMSE.}
+\label{tab:ablation-solar}
+\begin{tabular}{@{}lccc@{}}
+\toprule
+Configuration & RMSE & Full minus case & Relative change \\
+\midrule
+Full model & 3.899 & 0.000 & 0.0\% \\
+Set micrometeorites to mean & 3.984 & $-0.085$ & $-2.2\%$ \\
+Set radiation to mean & 3.933 & $-0.034$ & $-0.9\%$ \\
+Set moonquakes to mean & 3.931 & $-0.032$ & $-0.8\%$ \\
+Set temperature to mean & 3.916 & $-0.018$ & $-0.5\%$ \\
+Set dust to mean & 3.909 & $-0.011$ & $-0.3\%$ \\
+Set solar to mean & 3.290 & $+0.608$ & $+15.6\%$ (lower RMSE) \\
+Set moonquakes and dust to mean & 3.960 & $-0.061$ & $-1.6\%$ \\
+\bottomrule
+\end{tabular}
+\end{table*}
+
 
 On the solar channel, the same replacement lowered RMSE from 3.899 to 3.290 (about 15.6\%). This is a sensitivity result for a quiet window and does not show that live solar data are generally harmful; Section 6 discusses possible explanations. The other single and paired replacements changed solar RMSE by 2.2\% or less.
 
@@ -276,7 +419,19 @@ This research examined whether machine learning can be integrated into a unified
 
 \section*{Acknowledgements}
 
-The author thanks Benjamin Irani-Fey for coding support during the NASA Space Apps Challenge. The author also thanks NASA, NOAA, and other space agencies and research organizations for the public lunarmission data and space-weather archives that made the project possible, and thanks Polygence research mentor Kyle Kennedy for support in redesigning and reevaluating the studies, methods, and conclusions. CRediT author statement Luka Takki: Conceptualization, Methodology, Software, Validation, Formal analysis, Investigation, Data curation, Visualization, Writing --- original draft, and Writing --- review and editing. This research received no specific grant from funding agencies in the public, commercial, or not-for-profit sectors. Declaration of competing interest The author declares that there are no known competing financial interests or personal relationships that could have appeared to influence the work reported in this paper. Data and code availability Public sources are listed in the references; numerical tables accompany the paper. Dashboard: \url{https://lipas.netlify.app}. Code: \url{https://github.com/Luka-bot-afk/LIPAS} (numerical tables in the papers/appendix\_numerical\_tables folder).
+The author thanks Benjamin Irani-Fey for coding support during the NASA Space Apps Challenge. The author also thanks NASA, NOAA, and other space agencies and research organizations for the public lunar-mission data and space-weather archives that made the project possible, and thanks Polygence research mentor Kyle Kennedy for support in redesigning and reevaluating the studies, methods, and conclusions.
+
+\subsection*{CRediT author statement}
+Luka Takki: Conceptualization, Methodology, Software, Validation, Formal analysis, Investigation, Data curation, Visualization, Writing: original draft, and Writing: review and editing.
+
+\subsection*{Funding}
+This research received no specific grant from funding agencies in the public, commercial, or not-for-profit sectors.
+
+\subsection*{Declaration of competing interest}
+The author declares that there are no known competing financial interests or personal relationships that could have appeared to influence the work reported in this paper.
+
+\subsection*{Data and code availability}
+Public sources are listed in the references; numerical tables accompany the paper. Dashboard: \url{https://lipas.netlify.app}. Code: \url{https://github.com/Luka-bot-afk/LIPAS} (numerical tables in the papers/appendix\_numerical\_tables folder).
 
 \section*{Declaration of generative AI and AI-assisted technologies in the manuscript preparation process}
 
@@ -284,31 +439,145 @@ During the preparation of this work, the author used Cursor and Google Gemini to
 
 \section*{References}
 
-American Meteor Society, 2026. Meteor shower calendar. URL: \url{https://www.amsmeteors.org/meteor-showers/meteor-shower-calendar}. Camporeale, E., 2019. The challenge of machine learning in space weather: Nowcasting and forecasting. Space Weather 17, 1166-1207. doi:10.1029/2018SW002061. Cesium GS, 2026. Cesiumjs 3d geospatial virtual globe engine. URL: \url{https://cesium.com}. Chart.js Contributors, 2026. Chart.js open-source canvas graphing toolset. URL: \url{https://www.chartjs.org}. Chollet, F., et al., 2015. Keras. URL: \url{https://keras.io/}. Colwell, J.E., Batiste, S., Horanyi, M., Robertson, S., Sture, S.,
+\subsection*{Literature overview and hybrid methods}
+Camporeale, E., 2019. The challenge of machine learning in space weather: Nowcasting and forecasting. Space Weather 17, 1166--1207. doi:10.1029/2018SW002061.
 
-2007. Lunar surface: Dust dynamics and regolith mechanics.
+Hochreiter, S., Schmidhuber, J., 1997. Long short-term memory. Neural Computation 9, 1735--1780. doi:10.1162/neco.1997.9.8.1735.
 
-Reviews of Geophysics 45, RG2006. doi:10.1029/2005RG 000184. Cucinotta, F.A., Hu, S., Schwadron, N.A., Kozarev, K., Townsend, L.W., Kim, M.H.Y., 2010. Space radiation risk limits and earth-moon-mars environmental models. Space Weather 8, S00E09. doi:10.1029/2010SW000572. Google TensorFlow Team, 2026. Tensorflow machine learning and deep learning ecosystem. URL: \url{https://www.tensorflow.org}. Hassler, D.M., et al., 2014. Mars' surface radiation environment measured with the mars science laboratory's curiosity rover. Science 343, 1244797. doi:10.1126/science.1244797. Hayne, P.O., Williams, J.P., Bandfield, J.L., Vasavada, A.R., Greenhagen, B.T., Siegler, M.A., Paige, D.A., Tyler, G.L.,
+Karpatne, A., et al., 2017. Theory-guided data science: A new paradigm for scientific discovery from data. IEEE Transactions on Knowledge and Data Engineering 29, 2318--2331. doi:10.1109/TKDE.2017.2720168.
 
-2017. Global regolith thermophysical properties of the moon
+Willard, J., Jia, X., Xu, S., Steinbach, M., Kumar, V., 2022. Integrating scientific knowledge with machine learning for engineering and environmental systems. ACM Computing Surveys 55, 1--37. doi:10.1145/3514228.
 
-from the lunar reconnaissance orbiter diviner radiometer. Journal of Geophysical Research: Planets 122, 2371-2400. doi:10.1002/2017JE005387. Hochreiter, S., Schmidhuber, J., 1997. Long short-term memory. Neural Computation 9, 1735-1780. doi:10.1162/neco.199 7.9.8.1735. Horanyi, M., Szalay, J.R., Kempf, S., Schmidt, J., Grun, E., Srama, R., Sternovsky, Z., 2015. A permanent, asymmetric dust cloud around the moon. Nature 522, 324-326. doi:10.1 038/nature14479. International Meteor Organization, 2026. Meteor shower calendar resources. URL: \url{https://www.imo.net/resources/calendar}. Karpatne, A., et al., 2017. Theory-guided data science: A new paradigm for scientific discovery from data. IEEE Transactions on Knowledge and Data Engineering 29, 2318-2331. doi:10.1109/TKDE.2017.2720168. Kawamura, T., Tanaka, S., Saito, Y., Horleston, A.C., Charalambous, C., Lognonne, P., Banerdt, W.B., Team, A.S., 2017. Re-analysis of apollo seismic data and implications for deep moonquakes. Journal of Geophysical Research: Planets 122, 114-132. doi:10.1002/2016JE005230. King, J.H., Papitashvili, N.E., 2005. Solar wind spatial scales in and comparisons of hourly wind and ace plasma and magnetic field data. Journal of Geophysical Research 110, A02104. doi:10.1029/2004JA010649. Lammlein, D.R., 1977. Lunar seismicity and tectonics. Physics of the Earth and Planetary Interiors 14, 224-273. Langseth, M.G., Keihm, S.J., Peters, K., 1972. Revised lunar heat-flow values, in: Proceedings of the Third Lunar Science Conference, MIT Press. pp. 3143-3171. Minow, J.I., et al., 2020. Space Weather Architecture Options to Support Human and Robotic Deep Space Exploration. Technical Report NASA/TM-20205000837. NASA. URL: \url{https://ntrs.nasa.gov/citations/20205000837}. Moorhead, A.V., Koehler, H.M., Cooke, W.J., 2020. NASA Meteoroid Engineering Model Release 3 (MEM 3). Technical Report. NASA. URL: \url{https://ntrs.nasa.gov/citations/20200001093}. Nakamura, Y., 2005. Farside deep moonquakes and deep interior of the moon. Journal of Geophysical Research: Planets 110, E01001. doi:10.1029/2004JE002332. NASA, 2020. Nasa's lunar exploration program overview. URL: \url{https://www.nasa.gov/specials/artemis/}. NASA, 2023a. Diviner lunar radiometer experiment data products. URL: \url{https://pds-geosciences.wustl.edu/lro/lro-l-dlre-4-rdr-v1.0/}. NASA, 2023b. Donki api documentation. URL: \url{https://api.nasa.gov/DONKI/}. NASA, 2023c. Lro crater data products. URL: \url{https://pds-geosciences.wustl.edu/missions/lro/crater.htm}. The reported experiments are reproduced in Supplementary Appendices A to D. Code and locked model files: \url{https://github.com/Luka-bot-afk/LIPAS}. Daily tables are in papers/appendix\_numerical\_tables/. 
+Cucinotta, F.A., Hu, S., Schwadron, N.A., Kozarev, K., Townsend, L.W., Kim, M.H.Y., 2010. Space radiation risk limits and earth-moon-mars environmental models. Space Weather 8, S00E09. doi:10.1029/2010SW000572.
 
-NASA Goddard Space Flight Center, 2026. Space physics data facility omni database. URL: \url{https://omniweb.gsfc.nasa.gov}. NASA Planetary Data System, 2015. Ladee ldex calibrated data. National Oceanic and Atmospheric Administration, 2023. Space weather prediction center datasets: Goes primary x-ray flux, integral protons, and planetary k-index. URL: \url{https://services.swpc.noaa.gov/}. Nunn, C., et al., 2020. Lunar seismology: A data and instrumentation review. Space Science Reviews 216, 89. doi:10.1007/s11214-020-00709-3. Onodera, K., 2024. Reanalysis of apollo seismic data reveals 22,000 previously undetected moonquakes. Journal of Geophysical Research: Planets 129, e2023JE008153. doi:10.1029/2023JE008153. Paige, D.A., et al., 2010. The lunar reconnaissance orbiter diviner lunar radiometer experiment. Space Science Reviews 150, 125-160. doi:10.1007/s11214-009-9529-2. Schwadron, N.A., et al., 2014. Does the worsening galactic cosmic radiation environment observed by crater preclude future manned deep-space exploration? Space Weather 12, 622-632. doi:10.1002/2014SW001084. Spence, H.E., et al., 2010. Crater: The cosmic ray telescope for the effects of radiation experiment on the lunar reconnaissance orbiter mission. Space Science Reviews 150, 243-284. doi:10 .1007/s11214-009-9584-8. Stubbs, T.J., Vondrak, R.R., Farrell, W.M., 2006. A dynamic fountain model for lunar dust. Advances in Space Research 37, 59-66. doi:10.1016/j.asr.2005.04.005. Szalay, J.R., Horanyi, M., 2015. Annual variation and synodic modulation of the sporadic meteoroid flux to the moon. Geophysical Research Letters 42, 10580-10584. doi:10.1002/ 2015GL066898. Vasavada, A.R., Paige, D.A., Wood, S.E., 1999. Near-surface temperatures on mercury and the moon and the stability of polar ice deposits. Icarus 141, 179-193. doi:10.1006/icar .1999.6175. Willard, J., Jia, X., Xu, S., Steinbach, M., Kumar, V., 2022. Integrating scientific knowledge with machine learning for engineering and environmental systems. ACM Computing Surveys 55, 1-37. doi:10.1145/3514228. Williams, J.P., Paige, D.A., Greenhagen, B.T., Sefton-Nash, E., 2017. The global surface temperatures of the moon as measured by the diviner lunar radiometer experiment. Icarus . Zeitlin, C., et al., 2013. Measurements of energetic particle radiation in transit to mars on the mars science laboratory. Science 340, 1080-1084. doi:10.1126/science.1235989.
+Hassler, D.M., et al., 2014. Mars' surface radiation environment measured with the mars science laboratory's curiosity rover. Science 343, 1244797. doi:10.1126/science.1244797.
+
+Minow, J.I., et al., 2020. Space Weather Architecture Options to Support Human and Robotic Deep Space Exploration. Technical Report NASA/TM-20205000837. NASA. URL: \url{https://ntrs.nasa.gov/citations/20205000837}.
+
+Zeitlin, C., et al., 2013. Measurements of energetic particle radiation in transit to mars on the mars science laboratory. Science 340, 1080--1084. doi:10.1126/science.1235989.
+
+\subsection*{Lunar hazard models and archives}
+Colwell, J.E., Batiste, S., Horanyi, M., Robertson, S., Sture, S., 2007. Lunar surface: Dust dynamics and regolith mechanics. Reviews of Geophysics 45, RG2006. doi:10.1029/2005RG000184.
+
+Hayne, P.O., Williams, J.P., Bandfield, J.L., Vasavada, A.R., Greenhagen, B.T., Siegler, M.A., Paige, D.A., Tyler, G.L., 2017. Global regolith thermophysical properties of the moon from the lunar reconnaissance orbiter diviner radiometer. Journal of Geophysical Research: Planets 122, 2371--2400. doi:10.1002/2017JE005387.
+
+Horanyi, M., Szalay, J.R., Kempf, S., Schmidt, J., Grun, E., Srama, R., Sternovsky, Z., 2015. A permanent, asymmetric dust cloud around the moon. Nature 522, 324--326. doi:10.1038/nature14479.
+
+Kawamura, T., Tanaka, S., Saito, Y., Horleston, A.C., Charalambous, C., Lognonne, P., Banerdt, W.B., Team, A.S., 2017. Re-analysis of apollo seismic data and implications for deep moonquakes. Journal of Geophysical Research: Planets 122, 114--132. doi:10.1002/2016JE005230.
+
+Lammlein, D.R., 1977. Lunar seismicity and tectonics. Physics of the Earth and Planetary Interiors 14, 224--273.
+
+Langseth, M.G., Keihm, S.J., Peters, K., 1972. Revised lunar heat-flow values, in: Proceedings of the Third Lunar Science Conference, MIT Press. pp. 3143--3171.
+
+Moorhead, A.V., Koehler, H.M., Cooke, W.J., 2020. NASA Meteoroid Engineering Model Release 3 (MEM 3). Technical Report. NASA. URL: \url{https://ntrs.nasa.gov/citations/20200001093}.
+
+Nakamura, Y., 2005. Farside deep moonquakes and deep interior of the moon. Journal of Geophysical Research: Planets 110, E01001. doi:10.1029/2004JE002332.
+
+Nunn, C., et al., 2020. Lunar seismology: A data and instrumentation review. Space Science Reviews 216, 89. doi:10.1007/s11214-020-00709-3.
+
+Onodera, K., 2024. Reanalysis of apollo seismic data reveals 22,000 previously undetected moonquakes. Journal of Geophysical Research: Planets 129, e2023JE008153. doi:10.1029/2023JE008153.
+
+Paige, D.A., et al., 2010. The lunar reconnaissance orbiter diviner lunar radiometer experiment. Space Science Reviews 150, 125--160. doi:10.1007/s11214-009-9529-2.
+
+Schwadron, N.A., et al., 2014. Does the worsening galactic cosmic radiation environment observed by crater preclude future manned deep-space exploration? Space Weather 12, 622--632. doi:10.1002/2014SW001084.
+
+Spence, H.E., et al., 2010. Crater: The cosmic ray telescope for the effects of radiation experiment on the lunar reconnaissance orbiter mission. Space Science Reviews 150, 243--284. doi:10.1007/s11214-009-9584-8.
+
+Stubbs, T.J., Vondrak, R.R., Farrell, W.M., 2006. A dynamic fountain model for lunar dust. Advances in Space Research 37, 59--66. doi:10.1016/j.asr.2005.04.005.
+
+Szalay, J.R., Horanyi, M., 2015. Annual variation and synodic modulation of the sporadic meteoroid flux to the moon. Geophysical Research Letters 42, 10580--10584. doi:10.1002/2015GL066898.
+
+Vasavada, A.R., Paige, D.A., Wood, S.E., 1999. Near-surface temperatures on mercury and the moon and the stability of polar ice deposits. Icarus 141, 179--193. doi:10.1006/icar.1999.6175.
+
+Williams, J.P., Paige, D.A., Greenhagen, B.T., Sefton-Nash, E., 2017. The global surface temperatures of the moon as measured by the diviner lunar radiometer experiment. Icarus.
+
+\subsection*{Public data products and agency sources}
+American Meteor Society, 2026. Meteor shower calendar. URL: \url{https://www.amsmeteors.org/meteor-showers/meteor-shower-calendar}.
+
+International Meteor Organization, 2026. Meteor shower calendar resources. URL: \url{https://www.imo.net/resources/calendar}.
+
+King, J.H., Papitashvili, N.E., 2005. Solar wind spatial scales in and comparisons of hourly wind and ace plasma and magnetic field data. Journal of Geophysical Research 110, A02104. doi:10.1029/2004JA010649.
+
+NASA, 2020. NASA's lunar exploration program overview. URL: \url{https://www.nasa.gov/specials/artemis/}.
+
+NASA, 2023a. Diviner lunar radiometer experiment data products. URL: \url{https://pds-geosciences.wustl.edu/lro/lro-l-dlre-4-rdr-v1.0/}.
+
+NASA, 2023b. DONKI API documentation. URL: \url{https://api.nasa.gov/DONKI/}.
+
+NASA, 2023c. LRO CRaTER data products. URL: \url{https://pds-geosciences.wustl.edu/missions/lro/crater.htm}.
+
+NASA Goddard Space Flight Center, 2026. Space physics data facility OMNI database. URL: \url{https://omniweb.gsfc.nasa.gov}.
+
+NASA Planetary Data System, 2015. LADEE LDEX calibrated data.
+
+National Oceanic and Atmospheric Administration, 2023. Space weather prediction center datasets: GOES primary X-ray flux, integral protons, and planetary K-index. URL: \url{https://services.swpc.noaa.gov/}.
+
+\subsection*{Software and tooling}
+Cesium GS, 2026. CesiumJS 3D geospatial virtual globe engine. URL: \url{https://cesium.com}.
+
+Chart.js Contributors, 2026. Chart.js open-source canvas graphing toolset. URL: \url{https://www.chartjs.org}.
+
+Chollet, F., et al., 2015. Keras. URL: \url{https://keras.io/}.
+
+Google TensorFlow Team, 2026. TensorFlow machine learning and deep learning ecosystem. URL: \url{https://www.tensorflow.org}.
+
+The reported experiments are reproduced in Supplementary Appendices A to D. Code and locked model files: \url{https://github.com/Luka-bot-afk/LIPAS}. Daily tables are in papers/appendix\_numerical\_tables/.
 
 \appendix
+\onecolumn
 \section{Numerical tables}
 
-The short RMSE tables for Windows A and B are in reported\_window\_rmse.md. The daily rows are in the numerical PDF. If the preview is blank, the Download option opens the file. April rows start after the cover page. Window A daily rows start at the fourteen-day lunar-night heading. Window B daily rows start at the first table dated 22 July. \url{https://github.com/Luka-bot-afk/LIPAS/blob/main/papers/appendix_numerical_tables/reported_window_rmse.md} \url{https://github.com/Luka-bot-afk/LIPAS/blob/main/papers/appendix_numerical_tables/LIPAS_appendix_numerical_tables_A_B_D_E.pdf} The model folder saved\_model is not in the public repository. The files above can be opened without that folder. A fresh copy of the repository can run the scripts only after that folder is on your machine and left unchanged.
+The short RMSE tables for Windows A and B are in \texttt{reported\_window\_rmse.md}. The daily rows are in the numerical PDF. If the preview is blank, the Download option opens the file. April rows start after the cover page. Window A daily rows start at the fourteen-day lunar-night heading. Window B daily rows start at the first table dated 22 July.
+
+\begin{itemize}
+\item \url{https://github.com/Luka-bot-afk/LIPAS/blob/main/papers/appendix_numerical_tables/reported_window_rmse.md}
+\item \url{https://github.com/Luka-bot-afk/LIPAS/blob/main/papers/appendix_numerical_tables/LIPAS_appendix_numerical_tables_A_B_D_E.pdf}
+\end{itemize}
+
+The model folder \texttt{saved\_model} is not in the public repository. The files above can be opened without that folder. A fresh copy of the repository can run the scripts only after that folder is on your machine and left unchanged.
 
 \section{Qualitative comparison framework}
 
-DONKI, Diviner, LDEX, Apollo PSE, MEM 3, GOES-18, and LIPAS are scored on the nine criteria. The labels run from None to Very High. Labels are not converted into numbers or summed. Scores can be compared with Table 2. The file also lists the documents used for each score. \url{https://github.com/Luka-bot-afk/LIPAS/blob/main/papers/appendix_numerical_tables/LIPAS_qualitative_comparison_framework.md} The nine criteria Hazard coverage, fusion across hazards, forecast lead, spatial detail, real-time use, robustness, validation, usability, and openness. Documents used NASA DONKI API documentation, \url{https://api.nasa.gov/DONKI/} NOAA SWPC data services, \url{https://services.swpc.noaa.gov/} Paige et al. (2010), Space Science Reviews, Diviner. Williams et al. (2017), Icarus, Diviner global temperatures. Horanyi et al. (2015), Nature, lunar dust and LDEX. Nakamura (2005), Journal of Geophysical Research, deep moonquakes. Nunn et al. (2020), Space Science Reviews, lunar seismology. Moorhead et al. (2020), NASA MEM 3 technical report. Spence et al. (2010) and Schwadron et al. (2014), CRaTER. King and Papitashvili (2005), OMNI solarwind scales.
+DONKI, Diviner, LDEX, Apollo PSE, MEM 3, GOES-18, and LIPAS are scored on the nine criteria. The labels run from None to Very High. Labels are not converted into numbers or summed. Scores can be compared with Table~\ref{tab:qual}. The file also lists the documents used for each score.
+
+\url{https://github.com/Luka-bot-afk/LIPAS/blob/main/papers/appendix_numerical_tables/LIPAS_qualitative_comparison_framework.md}
+
+\subsection*{The nine criteria}
+Hazard coverage, fusion across hazards, forecast lead, spatial detail, real-time use, robustness, validation, usability, and openness.
+
+\subsection*{Documents used}
+\begin{itemize}
+\item NASA DONKI API documentation, \url{https://api.nasa.gov/DONKI/}
+\item NOAA SWPC data services, \url{https://services.swpc.noaa.gov/}
+\item Paige et al. (2010), Space Science Reviews, Diviner.
+\item Williams et al. (2017), Icarus, Diviner global temperatures.
+\item Horanyi et al. (2015), Nature, lunar dust and LDEX.
+\item Nakamura (2005), Journal of Geophysical Research, deep moonquakes.
+\item Nunn et al. (2020), Space Science Reviews, lunar seismology.
+\item Moorhead et al. (2020), NASA MEM 3 technical report.
+\item Spence et al. (2010) and Schwadron et al. (2014), CRaTER.
+\item King and Papitashvili (2005), OMNI solar-wind scales.
+\end{itemize}
 
 \section{How the numbers are compared}
 
-Sites and windows Sites are 0$^\circ$N 0$^\circ$E (E), Apollo 11 (A), and Nobile Rim (N). Window A is 5 to 18 July 2026 and is mostly lunar night (42 site-days). Window B is 22 July to 4 August 2026 and is mostly lunar day (42 site-days). The hazards are solar activity, radiation, temperature, moonquakes, micrometeorites, and dust. What 96 means on the skill charts Skill is 96 times the positive part of 1 minus RMSE divided by a hazard scale. The scale for each hazard is the larger site error, so the worst site on that hazard is 0 and a perfect site is 96. Use the same scale for LIPAS and the replica. 96 is not a percent. The blend in this paper is solar 0.4, radiation 0.05, and 0 for temperature, moonquakes, micrometeorites, and dust.
+\subsection*{Sites and windows}
+Sites are $0^{\circ}$N $0^{\circ}$E (E), Apollo 11 (A), and Nobile Rim (N). Window A is 5 to 18 July 2026 and is mostly lunar night (42 site-days). Window B is 22 July to 4 August 2026 and is mostly lunar day (42 site-days). The hazards are solar activity, radiation, temperature, moonquakes, micrometeorites, and dust.
+
+\subsection*{What 96 means on the skill charts}
+Skill is 96 times the positive part of 1 minus RMSE divided by a hazard scale. The scale for each hazard is the larger site error, so the worst site on that hazard is 0 and a perfect site is 96. Use the same scale for LIPAS and the replica. 96 is not a percent.
+
+The blend in this paper is solar 0.4, radiation 0.05, and 0 for temperature, moonquakes, micrometeorites, and dust.
 
 \section{How to rerun each study}
 
-\url{https://github.com/Luka-bot-afk/LIPAS/blob/main/papers/appendix_numerical_tables/REPRODUCTION.md} Qualitative comparison (Table 2) The framework file linked in Appendix B records the scoring rules for the seven systems; labels can be compared with Table 2. April prototype (Figures 4 and 5) The numerical PDF contains the April rows. This daytime run at 0$^\circ$N, 0$^\circ$E is not the fourteen-day result. There is no separate script, and these rows do not belong in Table 3 or Table 4. Window A (Table 3, Figure 6) python scripts/run\_14day\_flagship\_study.py start 20260705 end 20260718 windowlabel A outdir logs/study\_14day\_window\_A\_night modeldir saved\_model csv data/ingested\_extended/extended\_training\_window\_B\_ready.csv. See logs/study\_14day\_window\_A\_night/summary.json. Solar RMSE should be about 4.10 versus 4.66. Radiation should be about 0.119 versus 0.102. Window B (Table 4, Figure 8) The same script, with start 20260722, end 20260804, and window label B. Solar RMSE should be about 4.99 versus 5.99. Radiation should be about 0.0188 versus 0.00266. Mission simulation (Figure 10) python scripts/run\_mission\_sim\_radiation\_eva.py outdir logs/study\_mission\_sim\_radiation\_eva. LIPAS caution is at T+45 and no-go is at T+85. Ablation (Tables 5 and 6) python scripts/run\_hazard\_ablation\_study.py outdir logs/study\_ablation\_window\_A. The model is not retrained. Replacing the live solar input with its Window A average raises radiation RMSE from 0.1020 to 0.1050 and lowers solar RMSE from 3.899 to 3.290.
+\url{https://github.com/Luka-bot-afk/LIPAS/blob/main/papers/appendix_numerical_tables/REPRODUCTION.md}
+
+\begin{enumerate}
+\item \textbf{Qualitative comparison (Table~\ref{tab:qual}).} The framework file linked in Appendix B records the scoring rules for the seven systems; labels can be compared with Table~\ref{tab:qual}.
+\item \textbf{April prototype (Figures~\ref{fig:proto} and~\ref{fig:diviner}).} The numerical PDF contains the April rows. This daytime run at $0^{\circ}$N, $0^{\circ}$E is not the fourteen-day result. There is no separate script, and these rows do not belong in Table~\ref{tab:winA} or Table~\ref{tab:winB}.
+\item \textbf{Window A (Table~\ref{tab:winA}, Figure~\ref{fig:winAskill}).} \texttt{python scripts/run\_14day\_flagship\_study.py --start 2026-07-05 --end 2026-07-18 --window-label A --out-dir logs/study\_14day\_window\_A\_night --model-dir saved\_model --csv data/ingested\_extended/extended\_training\_window\_B\_ready.csv}. See \texttt{logs/study\_14day\_window\_A\_night/summary.json}. Solar RMSE should be about 4.10 versus 4.66. Radiation should be about 0.119 versus 0.102.
+\item \textbf{Window B (Table~\ref{tab:winB}, Figure~\ref{fig:winBskill}).} The same script, with start 2026-07-22, end 2026-08-04, and window label B. Solar RMSE should be about 4.99 versus 5.99. Radiation should be about 0.0188 versus 0.00266.
+\item \textbf{Mission simulation (Figure~\ref{fig:mission}).} \texttt{python scripts/run\_mission\_sim\_radiation\_eva.py --out-dir logs/study\_mission\_sim\_radiation\_eva}. LIPAS caution is at T+45 and no-go is at T+85.
+\item \textbf{Ablation (Tables~\ref{tab:ablation-rad} and~\ref{tab:ablation-solar}).} \texttt{python scripts/run\_hazard\_ablation\_study.py --out-dir logs/study\_ablation\_window\_A}. The model is not retrained. Replacing the live solar input with its Window A average raises radiation RMSE from 0.1020 to 0.1050 and lowers solar RMSE from 3.899 to 3.290.
+\end{enumerate}
