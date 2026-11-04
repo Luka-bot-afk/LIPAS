@@ -6,7 +6,7 @@ This study addresses three research questions:
 
 RQ1: Can a hybrid lunar-forecasting system be developed by effectively combining machine-learning and physics-based approaches?
 
-RQ2: Can integrating multiple lunar environmental hazards and data sources into a unified forecasting and decision-support system improve operational usability?
+RQ2: Can integrating multiple lunar environmental hazards and data sources into a unified forecasting and decision-support system support operational decision-making alongside existing public products?
 
 RQ3: Does the locked LIPAS hybrid improve prediction performance for selected lunar hazards relative to selected replicated public baselines and physics-only references?
 
@@ -157,7 +157,7 @@ Before the quantitative windows, LIPAS and selected agency models and archives a
 \textit{Usability and operational readiness.} Very Low: raw scientific data requiring specialist processing; Low: technical interfaces; Moderate: accessible API or web portal; High: clear operational interface; Very High: interactive dashboard for non-specialist mission planners. 
 \textit{Openness and accessibility.} Low: restricted or proprietary; Moderate: archives requiring registration or processing; High: open API or published datasets; Very High: fully open browser-based access without setup. No aggregate result in this paper represents validation against simultaneous in-situ measurements of all six hazards across the lunar surface. An ablation analysis later replaces selected inputs with Window A means while holding the locked model fixed (no retraining). Baseline configurations and hazard-specific replication continue in Sections 4.3--4.4.
 
-Performance was evaluated primarily by root mean square error (RMSE) and mean absolute error (MAE). The Window B micrometeorite comparison used the MEM 3 seasonal background with American Meteor Society (AMS) shower modulation for LIPAS, while the replicated comparison omitted that additional shower term. This tests the effect of explicitly representing shower timing during the Perseid period, not general superiority over NASA's complete meteoroid-modeling framework. An ablation analysis removed selected inputs while holding the remaining conditions fixed. Conditions included the full hybrid model, removal of solar/storm drivers for radiation, removal of micrometeorite context for dust, an ML-only path, and a physics-only path. Resulting predictions were compared with the full system using RMSE and MAE.
+Performance was evaluated primarily by root mean square error (RMSE) and mean absolute error (MAE). The Window B micrometeorite comparison used the MEM 3 seasonal background with American Meteor Society (AMS) shower modulation for LIPAS, while the replicated comparison omitted that additional shower term. This tests the effect of explicitly representing shower timing during the Perseid period, not general superiority over NASA's complete meteoroid-modeling framework. An ablation analysis held the locked model fixed and replaced one input, or a selected pair of inputs, with its Window A mean. Radiation and solar-activity RMSE were then compared with the full model (Tables~\ref{tab:ablation-rad} and~\ref{tab:ablation-solar}). This is an input-sensitivity test, not an ML-only or physics-only pathway comparison.
 
 \subsubsection{Phase 2: operational mission evaluation}
 
@@ -216,7 +216,7 @@ Dust baselines used LADEE/LDEX data rather than a live global forecast. The mode
 
 \subsubsection{Moonquakes}
 
-Moonquake baselines used the Apollo PSE catalog. The model combined deep, shallow, and thermal moonquake rates, enhanced activity near terminators, a small equatorial preference for deep events, and a weak regolith effect. No real-time lunar seismometer network was assumed. The output is a catalog-based physics proxy rather than a direct measurement of current activity at the study sites. Persistence baselines assumed that the latest known value remained constant. Physicsonly references were generated from the common replay data. RMSE and MAE were calculated for LIPAS against persistence, physics-only paths, and each replicated reference baseline. The mission simulation used common LIPAS outputs and baselines throughout the Apollo 17-length timeline, and the ablation study used the same replay data while removing selected inputs or pathways.
+Moonquake baselines used the Apollo PSE catalog. The model combined deep, shallow, and thermal moonquake rates, enhanced activity near terminators, a small equatorial preference for deep events, and a weak regolith effect. No real-time lunar seismometer network was assumed. The output is a catalog-based physics proxy rather than a direct measurement of current activity at the study sites. Persistence baselines assumed that the latest known value remained constant. Physicsonly references were generated from the common replay data. RMSE and MAE were calculated for LIPAS against persistence, physics-only paths, and each replicated reference baseline. The mission simulation used common LIPAS outputs and baselines throughout the Apollo 17-length timeline, and the ablation study used the same replay data while replacing selected inputs with their Window A means.
 \section{Results}
 \subsection{Prototype diagnostics}
 
