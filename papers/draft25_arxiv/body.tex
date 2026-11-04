@@ -185,7 +185,7 @@ Dust & LDEX-informed background with impact, local-time, and terminator terms & 
 \label{tab:provenance}
 \end{center}
 
-\begin{multicols}{2}
+\begin{multicols*}{2}
 \subsection{Baseline replication and model specifications}
 
 \subsubsection{Temperature}
@@ -211,10 +211,9 @@ Dust baselines used LADEE/LDEX data rather than a live global forecast. The mode
 \subsubsection{Moonquakes}
 
 Moonquake baselines used the Apollo PSE catalog. The model combined deep, shallow, and thermal moonquake rates, enhanced activity near terminators, a small equatorial preference for deep events, and a weak regolith effect. No real-time lunar seismometer network was assumed. The output is a catalog-based physics proxy rather than a direct measurement of current activity at the study sites. Persistence baselines assumed that the latest known value remained constant. Physicsonly references were generated from the common replay data. RMSE and MAE were calculated for LIPAS against persistence, physics-only paths, and each replicated reference baseline. The mission simulation used common LIPAS outputs and baselines throughout the Apollo 17-length timeline, and the ablation study used the same replay data while removing selected inputs or pathways.
-\end{multicols}
-\section{Results}
-
-\begin{multicols}{2}
+\end{multicols*}
+\vspace{-0.6\baselineskip}
+\begin{multicols}{2}[\section{Results}]
 \subsection{Prototype diagnostics}
 
 The preliminary studies evaluated the browser prototype under daytime conditions at 0 deg N, 0 deg E from 5 to 19 April 2026. One study tracked all six hazards against weakly replicated NASA and NOAA baselines. Another compared temperature with a Diviner-style dayside relation. The aim was to see where the prototype failed under that weak-replica setup before the locked hybrid model was trained.
