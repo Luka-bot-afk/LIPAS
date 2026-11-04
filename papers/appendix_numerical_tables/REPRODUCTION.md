@@ -10,7 +10,7 @@ source .venv/bin/activate
 pip install -r requirements.txt
 ```
 
-Paper tables use blend weights solar 0.4, radiation 0.05, and 0 for temperature, moonquakes, micrometeorites, and dust. The model directory is `saved_model`. That folder is not in this public repository. Keep your local copy unchanged. You can still open every file linked below without it.
+Paper tables use blend weights solar 0.4, radiation 0.05, and 0 for temperature, moonquakes, micrometeorites, and dust. The locked train-2 weights ship in `papers/appendix_numerical_tables/locked_saved_model/`. Before running the study scripts, either copy that folder to `saved_model` at the repository root or pass `--model-dir papers/appendix_numerical_tables/locked_saved_model`. Leave the blend weights unchanged.
 
 ## 1. Qualitative comparison (Table 2)
 
