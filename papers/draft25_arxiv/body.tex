@@ -125,6 +125,8 @@ The research was divided into three phases, each addressing one research questio
 \subsubsection{Phase 1: development of the hybrid model}
 
 The first phase examined the transition from the browser prototype to the hybrid system. It included a daytime prototype evaluation at 0$^\circ$N, 0$^\circ$E from 5 to 19 April 2026. The purpose was not to establish operational accuracy, but to identify weaknesses in the client-side machine-learning approach and determine which channels required a physics-based foundation. Treating all six hazards as machine-learning problems produced unstable results for strongly physics-constrained hazards. Consequently, temperature, moonquakes, dust, and micrometeorites were kept predominantly physics-based, while machine learning was given a larger role in solar activity and radiation. This phase also established the 18-feature input structure (hazard, time, place, and space-weather numbers), the 72-step temporal window, the physics\_estimate paths (Sections 3.2 and 4.4), and adaptive hybrid weighting (Eqs. (2)--(3)). These components were combined into the locked model used in the remaining phases. Continuous co-located measurements are unavailable for all six hazards, so comparison targets are called evaluation labels rather than ground truth unless a direct observation exists (Table~\ref{tab:provenance}). Performance used RMSE and MAE. Site geometry for Windows A and B is shown in Figure~\ref{fig:sites}.
+
+Chronological separation was used to limit data leakage. For each site, rows were ordered by date and cut into training, validation, and test blocks (about 70\%, 15\%, and 15\%), so later dates never entered an earlier block. Feature scaling used means and standard deviations fitted on the training block only; those values were then applied to validation and test. The eighteen input features were fixed in the model design and were not chosen using the validation or test blocks. Each example uses the preceding 72 hourly steps as inputs and the hazard labels at the final step of that window as targets. Overlapping windows are formed with a stride of seven hours inside a split, but they do not cross the train, validation, or test date cuts, and later observations are not written into earlier inputs. The same multi-output split is used for all six hazards. Row counts and date ranges are listed in Appendix~\ref{app:splits}. Windows A and B are separate locked evaluation periods and are reported apart from that chronological hold-out test.
 \end{multicols}
 
 \begin{center}
@@ -312,6 +314,8 @@ Dust (g\,cm$^{-3}$) & 0.526 & 0.526 & Tie, shared physics path \\
 Window B uses the same sites, blend, and metrics on 22 July to 4 August 2026 (42 site-days). About 95 percent of the site-days are on the dayside. For micrometeorites, LIPAS carries a shower-timing term, including the Perseids near 4 August, and the replica uses the seasonal MEM 3 envelope without that term.
 
 Solar activity is again lower for the hybrid (4.99 versus 5.99). Radiation is not: in this quiet dayside window the replica is 0.00266 and the hybrid is 0.0188. Temperature, moonquakes, and dust remain ties (Table~\ref{tab:winB}). The label is the evaluation series, not a surface impact measurement.
+
+Both locked windows were relatively quiet for radiation and solar-storm activity. They do not support a statistically robust storm-period RMSE score. The mission simulation later injects one scripted storm for warning-time comparison only; it is not a storm-error study. Stronger evaluation under disturbed and storm regimes remains future work.
 \end{multicols}
 
 \begin{center}
@@ -549,7 +553,7 @@ Chollet, F., et al., 2015. Keras. URL: \url{https://keras.io/}.
 
 Google TensorFlow Team, 2026. TensorFlow machine learning and deep learning ecosystem. URL: \url{https://www.tensorflow.org}.
 
-The reported experiments are reproduced in Supplementary Appendices A to D. Code and locked model files: \url{https://github.com/Luka-bot-afk/LIPAS}. Daily tables are in papers/appendix\_numerical\_tables/.
+The reported experiments are reproduced in the Supplementary Appendices. Code and study scripts: \url{https://github.com/Luka-bot-afk/LIPAS}. Daily tables are in papers/appendix\_numerical\_tables/. Locked weights are local (\texttt{saved\_model}); see the reproduction appendix.
 \end{multicols}
 \appendix
 \onecolumn
@@ -563,8 +567,6 @@ The short RMSE tables for Windows A and B are in \texttt{reported\_window\_rmse.
 \item \url{https://github.com/Luka-bot-afk/LIPAS/blob/main/papers/appendix_numerical_tables/reported_window_rmse.md}
 \item \url{https://github.com/Luka-bot-afk/LIPAS/blob/main/papers/appendix_numerical_tables/LIPAS_appendix_numerical_tables_A_B_D_E.pdf}
 \end{itemize}
-
-The model folder \texttt{saved\_model} is not in the public repository. The files above can be opened without that folder. A fresh copy of the repository can run the scripts only after that folder is on your machine and left unchanged.
 
 \section{Qualitative comparison framework}
 
@@ -601,7 +603,11 @@ The blend in this paper is solar 0.4, radiation 0.05, and 0 for temperature, moo
 
 \section{How to rerun each study}
 
+Code, configuration, data-processing helpers, and evaluation scripts for the reported studies are in the public repository: \url{https://github.com/Luka-bot-afk/LIPAS}. Step-by-step commands for each study are collected in \texttt{REPRODUCTION.md}:
+
 \url{https://github.com/Luka-bot-afk/LIPAS/blob/main/papers/appendix_numerical_tables/REPRODUCTION.md}
+
+The locked TensorFlow weights and scaler live in a local \texttt{saved\_model} folder. That folder is not shipped in the public repository for size and licensing reasons. The numerical tables and framework files can be opened without it. To reproduce the Window A, Window B, mission-simulation, and ablation numbers, place an unchanged copy of \texttt{saved\_model} beside the scripts and leave the blend weights as reported (solar 0.4, radiation 0.05, and zero for temperature, moonquakes, micrometeorites, and dust). Expected RMSE values for each study are listed with the commands below.
 
 \begin{enumerate}
 \item \textbf{Qualitative comparison (Table~\ref{tab:qual}).} The framework file linked in Appendix B records the scoring rules for the seven systems; labels can be compared with Table~\ref{tab:qual}.
@@ -611,3 +617,37 @@ The blend in this paper is solar 0.4, radiation 0.05, and 0 for temperature, moo
 \item \textbf{Mission simulation (Figure~\ref{fig:mission}).} \texttt{python scripts/run\_mission\_sim\_radiation\_eva.py --out-dir logs/study\_mission\_sim\_radiation\_eva}. LIPAS caution is at T+45 and no-go is at T+85.
 \item \textbf{Ablation (Tables~\ref{tab:ablation-rad} and~\ref{tab:ablation-solar}).} \texttt{python scripts/run\_hazard\_ablation\_study.py --out-dir logs/study\_ablation\_window\_A}. The model is not retrained. Replacing the live solar input with its Window A average raises radiation RMSE from 0.1020 to 0.1050 and lowers solar RMSE from 3.899 to 3.290.
 \end{enumerate}
+
+\section{Train, validation, and test splits}
+\label{app:splits}
+
+Table~\ref{tab:splits} records the chronological split used for the locked second training run. Counts come from the locked-model metadata. Dates are the common per-site range after ordering each of the twelve training sites by time. The six hazards share one multi-output split; there is no separate hazard-specific cut. Windows A and B are locked evaluation sets reported in the Results and are not part of this training split.
+
+\begin{center}
+\begin{tabular}{@{}llrr@{}}
+\toprule
+Partition & Dates & Rows & Share \\
+\midrule
+Training & 1 Jan 1969 -- 12 Apr 2009 & 176\,544 & $\approx$70\% \\
+Validation & 13 Apr 2009 -- 28 Nov 2017 & 37\,824 & $\approx$15\% \\
+Chronological test & 29 Nov 2017 -- 16 Jul 2026 & 37\,824 & $\approx$15\% \\
+\midrule
+Total & 1 Jan 1969 -- 16 Jul 2026 & 252\,192 & 100\% \\
+\bottomrule
+\end{tabular}
+\captionof{table}{Chronological train, validation, and test split for the locked model (twelve sites; all six hazards).}
+\label{tab:splits}
+\end{center}
+
+\begin{center}
+\begin{tabular}{@{}lll@{}}
+\toprule
+Locked evaluation set & Dates & Size \\
+\midrule
+Window A & 5--18 Jul 2026 & 42 site-days \\
+Window B & 22 Jul--4 Aug 2026 & 42 site-days \\
+\bottomrule
+\end{tabular}
+\captionof{table}{Locked fourteen-day evaluation windows used in the Results.}
+\label{tab:evalwindows}
+\end{center}
