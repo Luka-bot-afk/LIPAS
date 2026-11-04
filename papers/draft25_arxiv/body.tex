@@ -211,9 +211,7 @@ Dust baselines used LADEE/LDEX data rather than a live global forecast. The mode
 \subsubsection{Moonquakes}
 
 Moonquake baselines used the Apollo PSE catalog. The model combined deep, shallow, and thermal moonquake rates, enhanced activity near terminators, a small equatorial preference for deep events, and a weak regolith effect. No real-time lunar seismometer network was assumed. The output is a catalog-based physics proxy rather than a direct measurement of current activity at the study sites. Persistence baselines assumed that the latest known value remained constant. Physicsonly references were generated from the common replay data. RMSE and MAE were calculated for LIPAS against persistence, physics-only paths, and each replicated reference baseline. The mission simulation used common LIPAS outputs and baselines throughout the Apollo 17-length timeline, and the ablation study used the same replay data while removing selected inputs or pathways.
-\end{multicols*}
-\vspace{-0.6\baselineskip}
-\begin{multicols}{2}[\section{Results}]
+\section{Results}
 \subsection{Prototype diagnostics}
 
 The preliminary studies evaluated the browser prototype under daytime conditions at 0 deg N, 0 deg E from 5 to 19 April 2026. One study tracked all six hazards against weakly replicated NASA and NOAA baselines. Another compared temperature with a Diviner-style dayside relation. The aim was to see where the prototype failed under that weak-replica setup before the locked hybrid model was trained.
@@ -223,7 +221,7 @@ Figure~\ref{fig:proto} summarizes that April diagnostic across six hazards. It i
 \subsubsection{April temperature trace}
 
 The same April days, at 0$^\circ$N, 0$^\circ$E, are plotted below against a Diviner-style dayside estimate. Figure~\ref{fig:diviner} shows the same miss: the prototype overshoots the Diviner-style estimate near peak heating. Figures~\ref{fig:proto} and~\ref{fig:diviner} are the April check only; they are not repeated in Windows A and B.
-\end{multicols}
+\end{multicols*}
 
 \begin{center}
 \centering
@@ -318,7 +316,7 @@ Solar activity is again lower for the hybrid (4.99 versus 5.99). Radiation is no
 
 \begin{center}
 \centering
-\includegraphics[width=\textwidth,height=0.30\textheight,keepaspectratio]{figures/fig_windowB_skill.png}
+\includegraphics[width=\textwidth,height=0.24\textheight,keepaspectratio]{figures/fig_windowB_skill.png}
 \captionof{figure}{Window B skill from per-site RMSE (22 July to 4 August 2026; 42 site-days). Same site letters and replica as Window A.}
 \label{fig:winBskill}
 \end{center}
@@ -340,13 +338,14 @@ Dust (g\,cm$^{-3}$) & 0.169 & 0.169 & Tie, shared physics path \\
 \captionof{table}{Window B RMSE, 22 July to 4 August 2026, lunar-day dominant, 42 site-days.}
 \label{tab:winB}
 \end{center}
-
+\vspace{0.35em}
 \begin{center}
 \centering
-\includegraphics[width=\textwidth,height=0.26\textheight,keepaspectratio]{figures/fig_windowB_meteors.png}
+\includegraphics[width=\textwidth,height=0.18\textheight,keepaspectratio]{figures/fig_windowB_meteors.png}
 \captionof{figure}{Window B study-site mean micrometeorite flux. LIPAS includes the shower-timing term. The comparison curve is MEM 3 without it.}
 \label{fig:meteors}
 \end{center}
+\vspace{-0.85\baselineskip}
 
 \begin{multicols}{2}
 \subsection{Operational mission simulation}
@@ -554,6 +553,8 @@ The reported experiments are reproduced in Supplementary Appendices A to D. Code
 \end{multicols}
 \appendix
 \onecolumn
+\section*{Appendices}
+\addcontentsline{toc}{section}{Appendices}
 \section{Numerical tables}
 
 The short RMSE tables for Windows A and B are in \texttt{reported\_window\_rmse.md}. The daily rows are in the numerical PDF. If the preview is blank, the Download option opens the file. April rows start after the cover page. Window A daily rows start at the fourteen-day lunar-night heading. Window B daily rows start at the first table dated 22 July.
