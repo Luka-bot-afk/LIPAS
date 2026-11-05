@@ -69,7 +69,7 @@
   },
   "blend_weights": [
     0.4,
-    0.05,
+    0.0,
     0.0,
     0.0,
     0.0,
@@ -77,11 +77,11 @@
   ],
   "channel_ml_blend_weights": {
     "solar_activity": 0.4,
-    "radiation_mSv": 0.05,
+    "radiation_mSv": 0.0,
     "temperature_C": 0.0,
     "moonquakes_per_day": 0.0,
     "meteor_flux_1e15": 0.0,
     "dust_g_cm3": 0.0
   },
-  "blend_policy_note": "2026-07-21 Window A serve-time fix (no LSTM retrain): temp physics-only; solar ML 0.40; meteor MEM3/physics (not persistence); dust/quakes physics; radiation 0.05. Backup: blend_weights_pre_study_fix.npy"
+  "blend_policy_note": "Locked train-2 Keras weights unchanged. Serve policy: baseline blend solar 0.40, radiation 0.0 (was 0.05), others 0. Storm-aware adaptive gating zeros solar/radiation ML when regime is storm or live radiation input >= 0.20 mSv. Reported windows: logs/overnight_improve/final_v3/."
 }
