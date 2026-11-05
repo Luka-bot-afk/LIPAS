@@ -996,18 +996,29 @@ def load_train2_capability(refresh=False):
             pass
     return None
 def adaptive_channel_blend_weights(base_weights, physics_dict, ml_std=None, inputs=None, local_time=None):
+    """Per-hazard adaptive ML weights.
+
+    Empirically (Windows A/B/C + long summer 2026 sweeps): LSTM solar/radiation
+    skill collapses in strong storms while physics stays closer to constructed
+    labels, so storm regime *reduces* ML weight on those channels rather than
+    increasing it. Quiet windows keep the locked base weights (train-2/3 solar
+    blend around 0.4).
+    """
     w = [float(x) for x in base_weights]
     regime = (physics_dict or {}).get('regime') or {}
     level = regime.get('level', 'quiet')
     if level == 'storm':
-        w[0] = min(1.0, w[0] + 0.12)
-        w[1] = min(1.0, w[1] + 0.08)
+        # Full physics for solar/radiation in storms: locked LSTM overshoots
+        # extreme geomagnetic intervals (Windows C / A_long radiation spike).
+        w[0] = 0.0
+        w[1] = 0.0
         w[2] = max(0.0, w[2] - 0.05)
         w[4] = max(0.0, w[4] - 0.04)
         w[5] = max(0.0, w[5] - 0.04)
     elif level == 'unsettled':
-        w[0] = min(1.0, w[0] + 0.05)
-        w[1] = min(1.0, w[1] + 0.04)
+        # Partially trust solar ML; keep radiation on physics.
+        w[0] = max(0.0, w[0] * 0.25)
+        w[1] = 0.0
     if local_time is not None:
         try:
             hour = float(local_time) % 24.0
@@ -1040,6 +1051,17 @@ def adaptive_channel_blend_weights(base_weights, physics_dict, ml_std=None, inpu
             pass
     if inputs is not None and len(inputs) > 1 and float(inputs[1]) > 0.25:
         w[1] = min(w[1], 0.35)
+    # Input-radiation gate: physics-regime scores can miss SEP/storm intervals
+    # when physics radiation is smoother than the live radiation input.
+    # Do not gate on solar alone — quiet windows can have high F10.7-like solar
+    # without a radiation storm, and solar ML still helps there.
+    if inputs is not None and len(inputs) > 1:
+        try:
+            if float(inputs[1]) >= 0.20:
+                w[0] = 0.0
+                w[1] = 0.0
+        except Exception:
+            pass
     return w
 def refine_prediction(inputs, lat=None, lon=None, local_time=None, physics_weight=DEFAULT_ML_BLEND_WEIGHT, use_ensemble=False, extra=None, day_of_year=None, fast=False):
     extra = dict(extra or {})

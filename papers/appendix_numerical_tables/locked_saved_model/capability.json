@@ -1,5 +1,5 @@
 {
-  "generated_at_utc": "2026-08-18T19:36:47.423419+00:00",
+  "generated_at_utc": "2026-11-05T00:03:08.382383+00:00",
   "model_generation": "train2",
   "model_dir": "saved_model",
   "schema": "extended_18_feature",
@@ -21,7 +21,7 @@
   "serve_policy_locked": true,
   "channel_ml_blend_weights": [
     0.4,
-    0.05,
+    0.0,
     0.0,
     0.0,
     0.0,
@@ -29,13 +29,13 @@
   ],
   "channel_ml_blend_labels": {
     "solar_activity": 0.4,
-    "radiation_mSv": 0.05,
+    "radiation_mSv": 0.0,
     "temperature_C": 0.0,
     "moonquakes_per_day": 0.0,
     "meteor_flux_1e15": 0.0,
     "dust_g_cm3": 0.0
   },
-  "serve_policy_note": "2026-07-21 Window A serve-time fix (no LSTM retrain): temp physics-only; solar ML 0.40; meteor MEM3/physics (not persistence); dust/quakes physics; radiation 0.05. Backup: blend_weights_pre_study_fix.npy",
+  "serve_policy_note": "Locked train-2 LSTM with overnight serve-policy upgrade: solar ML weight 0.40; radiation ML weight 0 (physics-only) after per-hazard sweeps; storm-aware adaptive blending zeros solar/radiation ML when regime is storm or live radiation input >=0.20 mSv.",
   "held_out_chronological_test": {
     "hybrid_rmse": 4.9685004789450655,
     "persistence_rmse": 13.662870918955756,
@@ -48,88 +48,12 @@
       "hybrid_mae": 1.2845888137817383,
       "skill_vs_persistence_pct": 63.6,
       "rows_test": 37824,
-      "note": "Full extended re-eval omitted at serve-time \u2014 training run already scored 37824-row chronological holdout; flagship Window B study confirms serve blend."
+      "note": "Full extended re-eval omitted at serve-time \u2014 training run already scored the chronological holdout."
     }
   },
-  "flagship_comparison_14day_window_b": {
-    "study": "LIPAS 14-day flagship comparison Window B",
-    "window": {
-      "start": "2026-07-05",
-      "end": "2026-07-18",
-      "label": "B"
-    },
-    "normalized_rmse": {
-      "persistence": 1.0,
-      "physics": 0.7977,
-      "ml": 2.1704,
-      "flagship": 0.7953,
-      "hybrid": 0.7947
-    },
-    "per_channel": {
-      "solar_activity": {
-        "hybrid_beats_flagship": true,
-        "tie": false,
-        "hybrid_rmse": 4.010606093166283,
-        "flagship_rmse": 4.662343223419445,
-        "improvement_pct": 13.978746287476588
-      },
-      "radiation_mSv": {
-        "hybrid_beats_flagship": false,
-        "tie": false,
-        "hybrid_rmse": 0.11948154997307175,
-        "flagship_rmse": 0.10220383262847325,
-        "improvement_pct": -16.905156000759458
-      },
-      "temperature_C": {
-        "hybrid_beats_flagship": false,
-        "tie": true,
-        "hybrid_rmse": 34.265293404799465,
-        "flagship_rmse": 34.265293404799465,
-        "improvement_pct": 0.0
-      },
-      "moonquakes_per_day": {
-        "hybrid_beats_flagship": false,
-        "tie": true,
-        "hybrid_rmse": 1.2282092973885386,
-        "flagship_rmse": 1.2282092973885386,
-        "improvement_pct": 0.0
-      },
-      "meteor_flux_1e15": {
-        "hybrid_beats_flagship": true,
-        "tie": false,
-        "hybrid_rmse": 0.010941224492850852,
-        "flagship_rmse": 0.1094122449285086,
-        "improvement_pct": 90.0
-      },
-      "dust_g_cm3": {
-        "hybrid_beats_flagship": false,
-        "tie": true,
-        "hybrid_rmse": 0.16230453253008859,
-        "flagship_rmse": 0.16230453253008859,
-        "improvement_pct": 0.0
-      }
-    },
-    "hybrid_beats_or_ties_flagship_pooled": true
-  },
-  "vs_nasa_flagship_summary": {
-    "beats_flagship": [
-      "solar_activity",
-      "meteor_flux_1e15"
-    ],
-    "ties_flagship": [
-      "temperature_C",
-      "moonquakes_per_day",
-      "dust_g_cm3"
-    ],
-    "hybrid_worse_than_flagship": [
-      "radiation_mSv"
-    ],
-    "pooled_normalized_rmse_hybrid": 0.7947,
-    "pooled_normalized_rmse_flagship": 0.7953
-  },
   "max_capability_for_train2": {
-    "statement": "Train 2 LIPAS is at maximum serve-time capability: the frozen LSTM, Window A per-channel blend policy, physics calibration (Diviner/MEM3/Apollo), live NOAA/OMNI/DONKI drivers, ops gating, and plausibility scoring are fully applied. On the 14-day Window B flagship study, hybrid pooled skill matches NASA flagship replicas (normalized RMSE ~0.795 vs ~0.795) while beating them on solar and micrometeorites. Held-out chronological test hybrid RMSE is 4.97 vs persistence 13.66 (63.6% skill gain). Further accuracy gains require a new training run (train 3+), not additional serve-time tuning of train 2.",
-    "further_gains_require": "new_training_run",
-    "serve_tuning_saturated": true
+    "statement": "Live hybrid ML+physics with NOAA/OMNI/DONKI drivers. Held-out chronological test hybrid RMSE is 4.97 vs persistence 13.66 (63.6% skill gain).",
+    "further_gains_require": "stronger_lstm_retrain_on_gpu_or_kaggle",
+    "serve_tuning_saturated": false
   }
 }

@@ -83,5 +83,11 @@
     "meteor_flux_1e15": 0.0,
     "dust_g_cm3": 0.0
   },
-  "blend_policy_note": "Locked train-2 Keras weights unchanged. Serve policy: baseline blend solar 0.40, radiation 0.0 (was 0.05), others 0. Storm-aware adaptive gating zeros solar/radiation ML when regime is storm or live radiation input >= 0.20 mSv. Reported windows: logs/overnight_improve/final_v3/."
+  "blend_policy_note": "Locked train-2 LSTM with overnight serve-policy upgrade: solar ML weight 0.40; radiation ML weight 0 (physics-only) after per-hazard sweeps; storm-aware adaptive blending zeros solar/radiation ML when regime is storm or live radiation input >=0.20 mSv.",
+  "improvement_source": "train2_weights_plus_blend_and_adaptive_storm_gate",
+  "study_windows_overnight": {
+    "A": "2026-06-17..2026-07-14",
+    "B": "2026-07-18..2026-08-14",
+    "C": "2024-05-04..2024-05-17"
+  }
 }
