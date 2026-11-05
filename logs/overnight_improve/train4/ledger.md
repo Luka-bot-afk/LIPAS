@@ -21,3 +21,12 @@ Format: `timestamp | change | retrain? Y/N | heldout_rmse | A_wins 0-6 | B_wins 
 | 2026-11-05T23:02Z | ORDER LOCKED: (1) full T4a→T4b→T4c pick best (2) serve/blend fine-tune (3) windows+mission+ablation (4) paper later | N | - | - | - | - | - | keep | climb |
 | 2026-11-05T23:02Z | Waiting for in-flight T4a gate (or starting T4a) | Y | pending | - | - | - | - | running | |
 | 2026-11-05T23:15Z | HEARTBEAT: T4a ALIVE Epoch 38/80 Metal GPU PID7009 etime=19:01; companion go-night-full waiting; no restart needed | Y | pending | - | - | - | - | running | continue T4b→T4c after gate |
+| 2026-11-05T23:19Z | T4a DONE test_rmse=55.12861604140471 beats_train2=False | Y | 55.12861604140471 | - | - | - | - | discard | T4b residual |
+| 2026-11-05T23:19Z | T4b START residual solar+rad | Y | pending | - | - | - | - | running | |
+| 2026-11-05T23:20Z | T4a DONE test_rmse=55.12861604140471 beats=False | Y | 55.12861604140471 | - | - | - | - | record | always continue T4b |
+| 2026-11-05T23:20Z | T4b START residual solar+rad (always; no early stop) | Y | pending | - | - | - | - | running | |
+| 2026-11-05T23:22Z | T4a DONE test_rmse=55.1286 beats=False (temp RMSE=134 dominates; norm=20.18 vs pers=19.91); blend wrote w>0; fit_blend load quirk nonfatal; legacy T4b crashed distutils | Y | 55.1286 | - | - | - | - | discard | fix distutils; start T4b residual then T4c |
+| 2026-11-05T23:22Z | ORDER LOCKED: (1) full T4a→T4b→T4c pick best (2) serve/blend fine-tune (3) windows+mission+ablation (4) paper later | N | - | - | - | - | - | keep | climb |
+| 2026-11-05T23:22Z | T4a DONE test_rmse=55.12861604140471 beats=False | Y | 55.12861604140471 | - | - | - | - | record | always continue T4b |
+| 2026-11-05T23:22Z | T4b START residual solar+rad (always; no early stop) | Y | pending | - | - | - | - | running | |
+| 2026-11-05T23:23Z | T4b START residual solar+rad (90 ep) after distutils sitecustomize fix; T4a discarded 55.13 | Y | pending | - | - | - | - | running | then T4c always |
