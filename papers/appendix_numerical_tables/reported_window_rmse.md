@@ -1,46 +1,29 @@
-# Reported window RMSE (manuscript window tables)
+# Reported window RMSE (draft 27)
 
-Source: locked train-2 model with serve blend solar 0.4, radiation 0.0, and adaptive gating:
+Locked blend `[0.4, 0.0, 0, 0, 0, 0]` with storm-aware adaptive gating. Train-2 weights unchanged.
 
-`logs/overnight_improve/final_v3/window_A/summary.json`
+## Summer Window S — 17 Jun – 4 Aug 2026 (138 site-days)
 
-`logs/overnight_improve/final_v3/window_B/summary.json`
-
-`logs/overnight_improve/final_v3/window_C/summary.json`
-
-## Window A (17 June to 14 July 2026, predominantly mixed, 84 site-days)
+Combined former Windows A (17 Jun–14 Jul) and B (18 Jul–4 Aug). Excludes 15–17 Jul gap. Source: `logs/overnight_improve/final_v3/window_AB/summary.json`.
 
 | Hazard | Hybrid | Replica | Outcome |
-|--------|-------:|--------:|---------|
-| Solar activity | 14.15 | 14.17 | Hybrid lower by about 0.2% |
-| Radiation (mSv) | 1.264 | 1.259 | Replica lower |
-| Temperature (C) | 39.869 | 39.869 | Tie (shared physics) |
-| Moonquakes (day^-1) | 1.320 | 1.320 | Tie (shared physics) |
-| Micrometeorite flux (x10^-15) | 0.0 | 0.606 | Circular under blend weight 0 |
-| Dust (g cm^-3) | 0.543 | 0.543 | Tie (shared physics) |
+|---|---:|---:|---|
+| Solar activity | 11.46 | 11.62 | Hybrid lower ≈1.4% |
+| Radiation (mSv) | 0.987 | 0.982 | Replica lower |
+| Temperature (°C) | 34.73 | 34.73 | Tie (physics) |
+| Moonquakes / day | 1.139 | 1.139 | Tie (physics) |
+| Micrometeorites | 0.0 | 0.629 | Not independent (shower term) |
+| Dust (g cm⁻³) | 0.436 | 0.436 | Tie (physics) |
 
-## Window B (18 July to 14 August 2026, lunar-day dominant, 84 site-days)
+## Storm Window C — 1–28 May 2024 (84 site-days)
 
-| Hazard | Hybrid | Replica | Outcome |
-|--------|-------:|--------:|---------|
-| Solar activity | 4.928 | 5.711 | Hybrid lower by about 13.7% |
-| Radiation (mSv) | 0.0259 | 0.0040 | Replica lower (dayside window) |
-| Temperature (C) | 24.711 | 24.711 | Tie (shared physics) |
-| Moonquakes (day^-1) | 0.776 | 0.776 | Tie (shared physics) |
-| Micrometeorite flux (x10^-15) | 0.0 | 0.663 | Circular under blend weight 0 |
-| Dust (g cm^-3) | 0.167 | 0.167 | Tie (shared physics) |
-
-## Window C (4 to 17 May 2024, disturbed historical interval, 42 site-days)
+One-month disturbed historical interval. Source: `logs/overnight_improve/final_v3/window_C28/summary.json`.
 
 | Hazard | Hybrid | Replica | Outcome |
-|--------|-------:|--------:|---------|
-| Solar activity | 18.623 | 18.623 | Tie (adaptive gate to physics) |
-| Radiation (mSv) | 0.214 | 0.194 | Replica lower (disturbed interval) |
-| Temperature (C) | 44.337 | 44.337 | Tie (shared physics) |
-| Moonquakes (day^-1) | 1.287 | 1.287 | Tie (shared physics) |
-| Micrometeorite flux (x10^-15) | 0.0 | 0.622 | Circular under blend weight 0 |
-| Dust (g cm^-3) | 0.549 | 0.549 | Tie (shared physics) |
-
-## Holdout (train-2 chronological)
-
-Hybrid RMSE about 4.97 versus persistence about 13.66.
+|---|---:|---:|---|
+| Solar activity | 14.65 | 14.65 | Tie (adaptive gate → physics) |
+| Radiation (mSv) | 0.199 | 0.182 | Replica lower |
+| Temperature (°C) | 40.72 | 40.72 | Tie (physics) |
+| Moonquakes / day | 1.309 | 1.309 | Tie (physics) |
+| Micrometeorites | 0.0 | 0.604 | Not independent (shower term) |
+| Dust (g cm⁻³) | 0.546 | 0.546 | Tie (physics) |
