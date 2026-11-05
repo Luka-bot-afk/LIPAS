@@ -8,3 +8,4 @@ Format: `timestamp | change | retrain? Y/N | heldout_rmse | A_wins 0-6 | B_wins 
 |---|---|---|---|---|---|---|---|---|---|
 | 2026-11-05T20:59Z | Baseline verify: appendix locked_saved_model == saved_model_train2_locked; test_rmse=4.9685; serve blend=[0.4,0,0,0,0,0] (rad=0 — must restore) | N | 4.9685 | - | - | - | - | keep baseline | Kaggle auth OK; pack T4a |
 | 2026-11-05T20:58Z | Prior art: train6=7.11, train7=6.92 — both miss bar on GPU rematch | N | 6.92–7.11 | - | - | - | - | discard priors | Climb T4a ladder (channel_norm + solar/rad priority) |
+| 2026-11-05T21:08Z | BLOCKER: Kaggle GPU unavailable — enable_gpu/machine_shape=NvidiaTeslaT4 accepted but nvidia-smi missing, TF GPUs=[]; T4a v1–v3 + gpu-probe all ERROR. Refused CPU fallback. | N | - | - | - | - | - | STOP | User must restore Kaggle GPU quota/access |
