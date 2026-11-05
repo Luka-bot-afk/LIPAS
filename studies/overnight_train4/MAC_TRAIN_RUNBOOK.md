@@ -15,8 +15,10 @@ User authorized Mac after Kaggle GPU failed (CUDA never attached). Quality OK �
 4. **Cheap checks first** (no full retrain): `ALLOW_TRAIN4=1 python scripts/train4_kaggle.py --stage cheap`
 5. **T4a** retrain: `ALLOW_TRAIN4=1 python scripts/train4_kaggle.py --stage t4a`
 6. If held-out misses → **T4b** residual (solar+rad) → **T4c** capacity
-7. On beat: blend sweep all `w>0`, Window A summer grid, Window B storm grid, promote, then paper number patches only
-8. Log every row in `logs/overnight_improve/train4/ledger.md`
+7. On beat: blend sweep all `w>0`, Window A summer grid, Window B storm grid, promote
+8. **After promote (required before paper):** re-run mission sim + ablation + final Window A/B studies; push artifacts/ledger
+9. Paper draft 30 only **after** those new numbers exist (cloud/paper agent) — never from old draft25 numbers alone
+10. Log every row in `logs/overnight_improve/train4/ledger.md`
 
 ## Honesty
 Do not claim NASA wins via circular labels (label ≈ physics). Fix residual/features first.
