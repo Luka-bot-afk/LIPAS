@@ -30,3 +30,4 @@ Format: `timestamp | change | retrain? Y/N | heldout_rmse | A_wins 0-6 | B_wins 
 | 2026-11-05T23:22Z | T4a DONE test_rmse=55.12861604140471 beats=False | Y | 55.12861604140471 | - | - | - | - | record | always continue T4b |
 | 2026-11-05T23:22Z | T4b START residual solar+rad (always; no early stop) | Y | pending | - | - | - | - | running | |
 | 2026-11-05T23:23Z | T4b START residual solar+rad (90 ep) after distutils sitecustomize fix; T4a discarded 55.13 | Y | pending | - | - | - | - | running | then T4c always |
+| 2026-11-05T23:42Z | HEARTBEAT: T4b ALIVE Epoch 43/90 Metal PID8533 etime=20:25; T4a discarded 55.13; T4c queued | Y | pending | - | - | - | - | running | then T4c |
