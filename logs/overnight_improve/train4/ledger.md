@@ -17,3 +17,4 @@ Format: `timestamp | change | retrain? Y/N | heldout_rmse | A_wins 0-6 | B_wins 
 | 2026-11-05T22:54Z | T4a crash: missing flask (import space_weather_model); installed deps; restarting ladder | Y | - | - | - | - | - | discard crash | restart T4a |
 | 2026-11-05T22:54Z | T4a START Mac Metal (80 ep, channel_norm, solar/rad priority) | Y | pending | - | - | - | - | running | wait held-out |
 | 2026-11-05T22:56Z | T4a START Mac Metal (80 ep) after deps fix | Y | pending | - | - | - | - | running | wait held-out |
+| 2026-11-05T23:02Z | USER ORDER LOCKED overnight: (1) full T4a→b→c no early stop pick best (2) serve/blend/Diviner fine-tune (3) windows+mission+ablation (4) draft30 paper only after real numbers | N | - | - | - | - | - | keep | companion runner armed |
