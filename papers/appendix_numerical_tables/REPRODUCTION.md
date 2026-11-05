@@ -64,11 +64,11 @@ Go to [run_mission_sim_radiation_eva.py](../../scripts/run_mission_sim_radiation
 python scripts/run_mission_sim_radiation_eva.py --out-dir logs/study_mission_sim_radiation_eva
 ```
 
-Compare caution and no-go times with Section 6.4. LIPAS caution is at T+45 and no-go is at T+85. This run is not an RMSE result.
+Compare caution and no-go times with Section 6.4. LIPAS caution is at T+65 and no-go is at T+90. This run is not an RMSE result.
 
 ## 7. Ablation (Tables 5 and 6)
 
-Quiet subset 5--18 July 2026 (42 site-days within Window A). Go to [run_hazard_ablation_study.py](../../scripts/run_hazard_ablation_study.py).
+Quiet interval 5--18 July 2026 (42 site-days; overlaps late Window A and early Window B). Go to [run_hazard_ablation_study.py](../../scripts/run_hazard_ablation_study.py).
 
 ```
 python scripts/run_hazard_ablation_study.py --start 2026-07-05 --end 2026-07-18 --out-dir logs/overnight_improve/ablation_A_quiet
