@@ -18,3 +18,6 @@ Format: `timestamp | change | retrain? Y/N | heldout_rmse | A_wins 0-6 | B_wins 
 | 2026-11-05T22:54Z | T4a START Mac Metal (80 ep, channel_norm, solar/rad priority) | Y | pending | - | - | - | - | running | wait held-out |
 | 2026-11-05T22:56Z | T4a START Mac Metal (80 ep) after deps fix | Y | pending | - | - | - | - | running | wait held-out |
 | 2026-11-05T23:02Z | USER ORDER LOCKED overnight: (1) full T4a→b→c no early stop pick best (2) serve/blend/Diviner fine-tune (3) windows+mission+ablation (4) draft30 paper only after real numbers | N | - | - | - | - | - | keep | companion runner armed |
+| 2026-11-05T23:02Z | ORDER LOCKED: (1) full T4a→T4b→T4c pick best (2) serve/blend fine-tune (3) windows+mission+ablation (4) paper later | N | - | - | - | - | - | keep | climb |
+| 2026-11-05T23:02Z | Waiting for in-flight T4a gate (or starting T4a) | Y | pending | - | - | - | - | running | |
+| 2026-11-05T23:15Z | HEARTBEAT: T4a ALIVE Epoch 38/80 Metal GPU PID7009 etime=19:01; companion go-night-full waiting; no restart needed | Y | pending | - | - | - | - | running | continue T4b→T4c after gate |
