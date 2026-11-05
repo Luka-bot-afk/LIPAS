@@ -11,5 +11,6 @@ Use this folder with the manuscript.
 | `LIPAS_qualitative_comparison_framework.md` | Full qualitative rubric, Table 2 scores, and references |
 | `LIPAS_appendix_numerical_tables_A_B_D_E.pdf` | Daily numerical rows for prototype April tables and Window A / B site-days |
 | `figures/` | Extra locked skill exports used when rebuilding charts |
+| `locked_saved_model/` | Locked train-2 TensorFlow weights, scaler, and blend weights for the reported studies |
 
-For reproduction commands, see `../../studies/README.md` and manuscript Appendix E.
+For reproduction commands, see [REPRODUCTION.md](REPRODUCTION.md), `../../studies/README.md`, and manuscript Appendix D.
