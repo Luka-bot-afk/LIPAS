@@ -1601,7 +1601,7 @@ def augment_training_df(df: pd.DataFrame, target_rows: int = 128, seed: int = 42
     if n_existing == 0:
         return df
     while sum(len(r) for r in rows) < target_rows:
-        samp = base.sample(min(len(base), max(1, n_existing
+        samp = base.sample(min(len(base), max(1, n_existing)), replace=True).copy()
         noise = _np.random.normal(scale=0.05, size=(len(samp),))
         samp['solar_activity'] = (samp['solar_activity'] * (1.0 + noise)).clip(lower=0.0)
         samp['radiation_mSv'] = (samp['radiation_mSv'] * (1.0 + noise * 0.5) + (samp['solar_activity'] - samp['target_solar_activity']) * 0.001).clip(lower=0.0)

@@ -1,33 +1,29 @@
-# Reported window RMSE (manuscript Tables 3 and 4)
+# Reported window RMSE (draft 27)
 
-Source: locked `saved_model` reruns in
+Locked blend `[0.4, 0.0, 0, 0, 0, 0]` with storm-aware adaptive gating. Train-2 weights unchanged.
 
-`logs/study_14day_window_A_night/summary.json`
+## Summer Window S — 17 Jun – 4 Aug 2026 (138 site-days)
 
-`logs/study_14day_window_B_day/summary.json`
-
-## Window A (5 to 18 July 2026, lunar-night dominant, 42 site-days)
+Combined former Windows A (17 Jun–14 Jul) and B (18 Jul–4 Aug). Excludes 15–17 Jul gap. Source: `logs/overnight_improve/final_v3/window_AB/summary.json`.
 
 | Hazard | Hybrid | Replica | Outcome |
-|--------|-------:|--------:|---------|
-| Solar activity | 4.10 | 4.66 | Hybrid lower by about 12% |
-| Radiation (mSv) | 0.119 | 0.102 | Replica lower |
-| Temperature (C) | 38.2 | 38.2 | Tie (shared physics) |
-| Moonquakes (day^-1) | 1.23 | 1.23 | Tie (shared physics) |
-| Micrometeorite flux (x10^-15) | 0.0 | 0.624 | Circular under blend weight 0 |
-| Dust (g cm^-3) | 0.526 | 0.526 | Tie (shared physics) |
+|---|---:|---:|---|
+| Solar activity | 11.46 | 11.62 | Hybrid lower ≈1.4% |
+| Radiation (mSv) | 0.987 | 0.982 | Replica lower |
+| Temperature (°C) | 34.73 | 34.73 | Tie (physics) |
+| Moonquakes / day | 1.139 | 1.139 | Tie (physics) |
+| Micrometeorites | 0.0 | 0.629 | Not independent (shower term) |
+| Dust (g cm⁻³) | 0.436 | 0.436 | Tie (physics) |
 
-## Window B (22 July to 4 August 2026, lunar-day dominant, 42 site-days)
+## Storm Window C — 1–28 May 2024 (84 site-days)
+
+One-month disturbed historical interval. Source: `logs/overnight_improve/final_v3/window_C28/summary.json`.
 
 | Hazard | Hybrid | Replica | Outcome |
-|--------|-------:|--------:|---------|
-| Solar activity | 4.99 | 5.99 | Hybrid lower by about 17% |
-| Radiation (mSv) | 0.0188 | 0.00266 | Replica lower (quiet dayside) |
-| Temperature (C) | 25.5 | 25.5 | Tie (shared physics) |
-| Moonquakes (day^-1) | 0.695 | 0.695 | Tie (shared physics) |
-| Micrometeorite flux (x10^-15) | 0.0 | 0.701 | Circular under blend weight 0 |
-| Dust (g cm^-3) | 0.169 | 0.169 | Tie (shared physics) |
-
-## Holdout (train-2 chronological)
-
-Hybrid RMSE about 4.97 versus persistence about 13.66.
+|---|---:|---:|---|
+| Solar activity | 14.65 | 14.65 | Tie (adaptive gate → physics) |
+| Radiation (mSv) | 0.199 | 0.182 | Replica lower |
+| Temperature (°C) | 40.72 | 40.72 | Tie (physics) |
+| Moonquakes / day | 1.309 | 1.309 | Tie (physics) |
+| Micrometeorites | 0.0 | 0.604 | Not independent (shower term) |
+| Dust (g cm⁻³) | 0.546 | 0.546 | Tie (physics) |

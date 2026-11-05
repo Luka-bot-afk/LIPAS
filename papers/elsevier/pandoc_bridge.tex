@@ -1,0 +1,27 @@
+\documentclass[12pt]{article}
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{amsmath,amssymb}
+\usepackage{booktabs,graphicx,enumitem,hyperref,xurl}
+\usepackage{times}
+\title{Building and evaluating a cross-hazard machine-learning approach to unified lunar forecasting}
+\author{Luka Takki}
+\date{}
+\begin{document}
+\maketitle
+
+\begin{abstract}
+LIPAS (Lunar Impact and Predictive Analysis System) is a hybrid forecasting and decision-support system that combines machine learning with physics-based models for six lunar hazards: temperature, radiation, dust, micrometeorites, solar activity, and moonquakes. Public NASA and NOAA products, OMNI telemetry, and lunar archives feed a temporal long short-term memory network constrained by physics baselines, with results shown in a web interface for selectable lunar coordinates. Heliophysics feeds are treated as inputs adapted from solar and heliospheric measurements, not as a third forecasting method beside physics and learning.
+This study aims to address three research questions: whether such a hybrid system can be developed; whether integrating hazards into one decision-support interface can improve operational usability in a simulated mission setting; and whether the locked hybrid improves predictive performance relative to replicated public baselines. Locked studies over two 14-day windows show modest solar gains (Window A RMSE 4.10 versus 4.66; Window B 4.99 versus 5.99) while radiation does not beat the replica (0.119 versus 0.102; 0.0188 versus 0.00266). Temperature, moonquakes, and dust remain physics ties; micrometeorite skill is circular under blend weight zero. LIPAS is best treated as consultative support alongside agency products.
+\end{abstract}
+
+\input{sections/introduction}
+\input{sections/methods_brief}
+\input{sections/results}
+\input{sections/discussion}
+\input{sections/future_work}
+\input{sections/conclusion}
+\input{sections/declarations}
+\input{sections/appendices}
+
+\end{document}

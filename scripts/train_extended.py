@@ -22,7 +22,7 @@ def main():
     arch = cfg.get('architecture', {})
     train_cfg = cfg.get('training', {})
     parser = argparse.ArgumentParser()
-    parser.add_argument('--config', type=str, default=None, help=                                )
+    parser.add_argument('--config', type=str, default=None, help='Optional hybrid_training_config.json path')
     parser.add_argument('--csv', type=str, default=None, help='Extended-schema training CSV (defaults to newest in data/ingested_extended/)')
     parser.add_argument('--model-dir', type=str, default='saved_model_extended')
     parser.add_argument('--epochs', type=int, default=int(train_cfg.get('epochs', 60)))
@@ -74,6 +74,9 @@ def main():
         model_kwargs['channel_priority'] = list(train_cfg['channel_priority'])
     if args.channel_priority:
         model_kwargs['channel_priority'] = [float(x) for x in args.channel_priority.split(',')]
+    # Channel priority / boost-radiation only affect channel_normalized_huber.
+    if model_kwargs.get('boost_radiation_priority') or model_kwargs.get('channel_priority') is not None:
+        model_kwargs.setdefault('loss_type', 'channel_normalized_huber')
     if args.lstm_units:
         model_kwargs['lstm_units'] = tuple(int(x) for x in args.lstm_units.split(','))
     if args.dense_units:
@@ -106,7 +109,7 @@ def main():
             csv_path=csv_path,
             model_dir=args.model_dir,
             n_models=args.n_ensemble,
-            epochs=max(30, args.epochs
+            epochs=max(30, args.epochs),
             batch_size=args.batch_size,
             sequence_length=args.sequence_length,
             window_stride=args.window_stride,
