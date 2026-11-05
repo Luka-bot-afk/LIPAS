@@ -6,10 +6,10 @@ Use this folder with the manuscript.
 
 | File | Go here for |
 |------|-------------|
-| `reported_window_rmse.md` | Locked Window A / Window B RMSE that must match the paper tables |
+| `reported_window_rmse.md` | Locked Window A / B / C RMSE that must match the paper tables |
 | `QUANTITATIVE_COMPARISON_FRAMEWORK.md` | How hybrid vs replica RMSE and skill were defined, plus prototype note |
 | `LIPAS_qualitative_comparison_framework.md` | Full qualitative rubric, Table 2 scores, and references |
-| `LIPAS_appendix_numerical_tables_A_B_D_E.pdf` | Daily numerical rows for prototype April tables and Window A / B site-days |
+| `LIPAS_appendix_numerical_tables_A_B_D_E.pdf` | Daily numerical rows for prototype April tables and Windows A / B / C site-days |
 | `figures/` | Extra locked skill exports used when rebuilding charts |
 | `locked_saved_model/` | Locked train-2 TensorFlow weights, scaler, and blend weights for the reported studies |
 
