@@ -1179,13 +1179,49 @@ def apply_archive_priors_to_hybrid(hybrid, physics_dict, lat=None, lon=None, loc
             t = t + float(delta)
             meta['seasonal_delta_C'] = float(delta)
         # Optional night/day additive bias (hybrid-only).
+        # NOTE: R3t night_add=+ killed — Window A hybrid is cold by day / hot by night.
         if local_time is not None:
             try:
                 hour = float(local_time) % 24.0
-                if 6.0 <= hour < 18.0:
+                day0 = float(temp_cfg.get('day_start_hour', 6.0) or 6.0)
+                day1 = float(temp_cfg.get('day_end_hour', 18.0) or 18.0)
+                if day0 <= hour < day1:
                     t += float(temp_cfg.get('day_add_C', 0.0) or 0.0)
                 else:
                     t += float(temp_cfg.get('night_add_C', 0.0) or 0.0)
+            except Exception:
+                pass
+        # LST piecewise bins (hybrid-only) — finer than day/night; R4 temp family.
+        lst_bias = temp_cfg.get('lst_bins') or priors.get('lst_temp_bias') or {}
+        if local_time is not None and (lst_bias.get('enabled', False) or isinstance(temp_cfg.get('lst_bins'), list)):
+            try:
+                hour = float(local_time) % 24.0
+                bins = lst_bias.get('bins') if isinstance(lst_bias, dict) else None
+                if bins is None and isinstance(temp_cfg.get('lst_bins'), list):
+                    bins = temp_cfg.get('lst_bins')
+                scale = float((lst_bias.get('scale', 1.0) if isinstance(lst_bias, dict) else 1.0) or 1.0)
+                for bn in bins or []:
+                    lo = float(bn.get('start', 0.0) or 0.0)
+                    hi = float(bn.get('end', 24.0) or 24.0)
+                    if lo <= hour < hi:
+                        t += scale * float(bn.get('add', 0.0) or 0.0)
+                        meta['lst_temp_bin'] = f'{lo}-{hi}'
+                        break
+            except Exception:
+                pass
+        # Asymmetric pull toward physics: warm cold-days / cool hot-nights without ML.
+        phys_pull = temp_cfg.get('physics_pull') or {}
+        if phys_pull.get('enabled', False):
+            try:
+                p = float(physics_dict.get('temperature', t))
+                alpha_up = float(phys_pull.get('alpha_up', phys_pull.get('alpha', 0.0)) or 0.0)
+                alpha_dn = float(phys_pull.get('alpha_down', phys_pull.get('alpha', 0.0)) or 0.0)
+                if t < p and alpha_up > 0:
+                    t = t + alpha_up * (p - t)
+                    meta['temp_physics_pull_up'] = float(alpha_up)
+                elif t > p and alpha_dn > 0:
+                    t = t - alpha_dn * (t - p)
+                    meta['temp_physics_pull_down'] = float(alpha_dn)
             except Exception:
                 pass
         out['temperature'] = float(clamp(t, -230.0, 130.0, t))
