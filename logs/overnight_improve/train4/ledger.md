@@ -111,3 +111,4 @@ Format: `timestamp | change | retrain? Y/N | heldout_rmse | A_wins 0-6 | B_wins 
   "score": 61
 } T4c_heldout=44.19 | N | 44.19 | see | see | - | - | keep | |
 | 2026-11-06T01:28Z | BAR HIT L20_may_dust_l16 WindowA=6/6 WindowB_storm=5/6 (miss=solar storm only); rad ML=0.15>0; T4c held-out=44.19 secondary miss | Y | 44.19 | 6 | 5 | all 6 | all but solar | PROMOTE hybrid package | mission+ablation |
+| 2026-11-06T01:33Z | MISSION+ABLATION done for L20_may_dust_l16 (A6/B5 bar) | Y | 44.19 | 6 | 5 | - | - | keep package | paper numbers ready |
