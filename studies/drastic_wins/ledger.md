@@ -75,3 +75,9 @@
 | 2026-11-06T18:53Z | R5a2_couple_ew | 6 | 5 | nogo=60;caution=0 |
 | 2026-11-06T18:56Z | R5m_mq_lat | 5 | 5 | nogo=60;caution=0 |
 | 2026-11-06T18:58Z | R5t_lst_48 | 6 | 5 | nogo=65;caution=0 |
+| 2026-11-06T19:01Z | R5t2_lst35_div03 | 6 | 6 | nogo=60;caution=0 |
+| 2026-11-06T19:04Z | R5w_solar45 | 6 | 5 | nogo=65;caution=0 |
+| 2026-11-06T19:06Z | R5w2_rad18 | 6 | 6 | nogo=65;caution=30 |
+| 2026-11-06T19:09Z | R5w3_solar45_rad18 | 6 | 5 | nogo=60;caution=5 |
+| 2026-11-06T19:11Z | R5x_combo_mission | 5 | 5 | nogo=60;caution=0 |
+| 2026-11-06T19:11Z | WAVE R5 DONE | - | - | - | see studies/drastic_wins/R5_FINAL.md |
