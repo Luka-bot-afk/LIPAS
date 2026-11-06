@@ -2,7 +2,8 @@
 # Wave R1: regime-rulebook hybrid-only priors on frozen train-2 LSTM (L20 blend base).
 # Mac/cloud: score Window A + storm B only. No mission/ablation/paper.
 set -euo pipefail
-ROOT="$(cd "$(dirname "$0")/../../.." && pwd)"
+# scripts/drastic_wins/ -> repo root is ../..
+ROOT="$(cd "$(dirname "$0")/../.." && pwd)"
 cd "$ROOT"
 if [[ -f .venv/bin/activate ]]; then
   # shellcheck disable=SC1091
