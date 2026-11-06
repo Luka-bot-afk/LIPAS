@@ -38,9 +38,7 @@ NASA's Meteoroid Engineering Model (MEM 3) estimates meteoroid collision rates (
 
 \subsection{GOES-18 radiation context}
 
-NOAA's Geostationary Operational Environmental Satellite~18 (GOES-18) continuously monitors solar X-ray flux and
-
-energetic-particle counts (National Oceanic and Atmospheric Administration, 2023). GOES measurements are made in Earth orbit and must be adapted for lunar-surface conditions because the Moon lacks a global magnetosphere. GOES-18 does not provide a dedicated multi-day lunar radiation forecast and was not designed specifically for lunar missions.
+NOAA's Geostationary Operational Environmental Satellite~18 (GOES-18) continuously monitors solar X-ray flux and energetic-particle counts (National Oceanic and Atmospheric Administration, 2023). GOES measurements are made in Earth orbit and must be adapted for lunar-surface conditions because the Moon lacks a global magnetosphere. GOES-18 does not provide a dedicated multi-day lunar radiation forecast and was not designed specifically for lunar missions.
 
 \subsection{Summary}
 
@@ -222,13 +220,13 @@ Moonquake baselines used the Apollo PSE catalog. The model combined deep, shallo
 
 The preliminary studies evaluated the browser prototype under daytime conditions at 0$^\circ$N, 0$^\circ$E from 5 to 19 April 2026. The aim was to see where the client-side model failed before the locked hybrid was trained. That prototype used weakly replicated NASA and NOAA baselines, so early multi-hazard ``wins'' against those replicas are diagnostic rather than evidence of locked-model skill and are not pooled with Windows~A and~B.
 
-Figure~\ref{fig:proto} shows the same April interval as a temperature line against a Diviner-style dayside estimate, with the other hazard channels drawn on the same axes. Temperature and the solar and radiation traces remain on scale; the remaining channels (moonquakes, micrometeorites, and dust) run off chart, which is the actionable instability that motivated keeping those channels predominantly physics-led. Section 5.2 then scores LIPAS against selected agency models and archives on the nine qualitative criteria defined in Section 4.2.
+Figure~\ref{fig:proto} shows the same April interval on one chart: the Diviner-style dayside temperature estimate and the prototype temperature, together with the prototype solar, radiation, moonquake, micrometeorite, and dust series. Relative to the temperature scale those other LIPAS prototype channels run far off chart---the actionable instability that motivated keeping temperature, moonquakes, micrometeorites, and dust predominantly physics-led in the locked hybrid. Section 5.2 then scores LIPAS against selected agency models and archives on the nine qualitative criteria defined in Section 4.2.
 \end{multicols*}
 
 \begin{center}
 \centering
-\includegraphics[width=\textwidth,height=0.34\textheight,keepaspectratio]{figures/fig_prototype_offchart.png}
-\captionof{figure}{April prototype daytime diagnostic at $0^{\circ}$N, $0^{\circ}$E (5--19 April 2026). Temperature is plotted with the Diviner-style dayside estimate; solar and radiation remain on scale, while the other hazard channels go off chart under the weak-replica prototype setup.}
+\includegraphics[width=\textwidth,height=0.30\textheight,keepaspectratio]{figures/fig_prototype_offchart.png}
+\captionof{figure}{April prototype daytime diagnostic at $0^{\circ}$N, $0^{\circ}$E (5--19 April 2026). One chart: Diviner-style dayside reference and prototype temperature on scale; prototype solar, radiation, moonquakes, micrometeorites, and dust run far off that scale under the weak-replica client setup.}
 \label{fig:proto}
 \end{center}
 
@@ -266,49 +264,55 @@ GOES-18 & L & M & M & M & VH & VH & VH & M & H \\
 
 Window A covers 1 June to 4 August 2026 at 0$^\circ$N 0$^\circ$E, Apollo 11, and Nobile Rim (195 site-days). The interval is the locked summer/quiet--mixed operational window selected under R6c\_caution\_cap090 (longest 6/6 among the ASR grid; longer $\ge$90-day candidates were 5/6 on dust). The R6c serve blend, adaptive gating rules, archive priors, and references are used at every site.
 
-Hybrid RMSE is lower than the replica on all six hazards (6/6). Solar activity improves (9.532 versus 9.889). Radiation improves (0.798 versus 0.829) with ML share 0.15. Temperature improves (25.90 versus 27.35). Moonquakes and dust improve by tiny residuals (1.166 versus 1.167; 0.445 versus 0.445) and remain physics-dominated / near-circular. Micrometeorite RMSE is 0.015 versus 0.643, but evaluation labels are shower-augmented physics (circular construction), so this is reported as a shower-timing/physics illustration rather than an independent forecast win. Figures~\ref{fig:winAsolar}--\ref{fig:winAdust} show per-hazard line charts (evaluation label, LIPAS, NASA/replica).
+Hybrid RMSE is lower than the replica on all six hazards (6/6). Solar activity improves (9.532 versus 9.889). Radiation improves (0.798 versus 0.829) with ML share 0.15. Temperature improves (25.90 versus 27.35). Moonquakes and dust improve by tiny residuals (1.166 versus 1.167; 0.445 versus 0.445) and remain physics-dominated / near-circular. Micrometeorite RMSE is 0.015 versus 0.643, but evaluation labels are shower-augmented physics (circular construction), so this is reported as a shower-timing/physics illustration rather than an independent forecast win. Figures~\ref{fig:winAsolar}--\ref{fig:winAdust} show per-hazard line charts at two-column width (evaluation label, LIPAS, NASA/replica; site lines for both LIPAS and NASA where location matters).
 \end{multicols}
 
 \begin{center}
 \centering
-\includegraphics[width=\textwidth,height=0.24\textheight,keepaspectratio]{figures/fig_windowA_solar_activity.png}
-\captionof{figure}{Window A solar activity (1 June--4 August 2026). Evaluation label, LIPAS hybrid, and NASA/replica.}
+\begin{minipage}[t]{0.48\textwidth}
+\centering
+\includegraphics[width=\linewidth,height=0.18\textheight,keepaspectratio]{figures/fig_windowA_solar_activity.png}
+\captionof{figure}{Window A solar. LIPAS RMSE $\sim$3.6\% lower than the NASA/replica.}
 \label{fig:winAsolar}
-\end{center}
-
-\begin{center}
+\end{minipage}\hfill
+\begin{minipage}[t]{0.48\textwidth}
 \centering
-\includegraphics[width=\textwidth,height=0.24\textheight,keepaspectratio]{figures/fig_windowA_radiation_mSv.png}
-\captionof{figure}{Window A radiation (1 June--4 August 2026). Evaluation label, LIPAS hybrid, and NASA/replica.}
+\includegraphics[width=\linewidth,height=0.18\textheight,keepaspectratio]{figures/fig_windowA_radiation_mSv.png}
+\captionof{figure}{Window A radiation. LIPAS RMSE $\sim$3.7\% lower (ML share 0.15).}
 \label{fig:winArad}
+\end{minipage}
 \end{center}
 
 \begin{center}
 \centering
-\includegraphics[width=\textwidth,height=0.24\textheight,keepaspectratio]{figures/fig_windowA_temperature_C.png}
-\captionof{figure}{Window A temperature (1 June--4 August 2026). Evaluation label, LIPAS hybrid, and NASA/replica.}
+\begin{minipage}[t]{0.48\textwidth}
+\centering
+\includegraphics[width=\linewidth,height=0.18\textheight,keepaspectratio]{figures/fig_windowA_temperature_C.png}
+\captionof{figure}{Window A temperature. LIPAS RMSE $\sim$5.3\% lower; site lines where locations diverge.}
 \label{fig:winAtemp}
-\end{center}
-
-\begin{center}
+\end{minipage}\hfill
+\begin{minipage}[t]{0.48\textwidth}
 \centering
-\includegraphics[width=\textwidth,height=0.24\textheight,keepaspectratio]{figures/fig_windowA_moonquakes_per_day.png}
-\captionof{figure}{Window A moonquakes (1 June--4 August 2026). Evaluation label, LIPAS hybrid, and NASA/replica.}
+\includegraphics[width=\linewidth,height=0.18\textheight,keepaspectratio]{figures/fig_windowA_moonquakes_per_day.png}
+\captionof{figure}{Window A moonquakes. Tiny residual edge; physics-dominated.}
 \label{fig:winAmoon}
+\end{minipage}
 \end{center}
 
 \begin{center}
 \centering
-\includegraphics[width=\textwidth,height=0.24\textheight,keepaspectratio]{figures/fig_windowA_meteor_flux_1e15.png}
-\captionof{figure}{Window A micrometeorites (1 June--4 August 2026). Evaluation label, LIPAS hybrid, and NASA/replica (circular shower-label illustration).}
+\begin{minipage}[t]{0.48\textwidth}
+\centering
+\includegraphics[width=\linewidth,height=0.18\textheight,keepaspectratio]{figures/fig_windowA_meteor_flux_1e15.png}
+\captionof{figure}{Window A micrometeorites. Circular shower-label illustration, not an independent win.}
 \label{fig:winAmeteor}
-\end{center}
-
-\begin{center}
+\end{minipage}\hfill
+\begin{minipage}[t]{0.48\textwidth}
 \centering
-\includegraphics[width=\textwidth,height=0.24\textheight,keepaspectratio]{figures/fig_windowA_dust_g_cm3.png}
-\captionof{figure}{Window A dust (1 June--4 August 2026). Evaluation label, LIPAS hybrid, and NASA/replica.}
+\includegraphics[width=\linewidth,height=0.18\textheight,keepaspectratio]{figures/fig_windowA_dust_g_cm3.png}
+\captionof{figure}{Window A dust. Near-circular / physics-dominated; site lines for LIPAS and NASA.}
 \label{fig:winAdust}
+\end{minipage}
 \end{center}
 
 \begin{center}
@@ -332,21 +336,55 @@ Dust (g\,cm$^{-3}$) & 0.445 & 0.445 & Near-circular / physics-dominated \\
 \begin{multicols}{2}
 \subsubsection{Window B, disturbed / storm}
 
-Window B covers 20 April to 20 May 2024 at the same three sites (93 site-days). Space-weather drivers are elevated relative to the quietest 2026 intervals. Hybrid RMSE is lower than the replica on all six hazards (6/6). Solar activity improves substantially (11.22 versus 13.79). Radiation improves strongly (0.071 versus 0.172). Temperature and moonquakes show residual gains (38.56 versus 40.35; 1.263 versus 1.269). Micrometeorites again reflect circular shower-label construction (0.012 versus 0.564). Dust shows a measured edge (0.147 versus 0.163) that remains physics-dominated / near-circular. Figures~\ref{fig:winBsolar} and~\ref{fig:winBrad} focus on the ML-driven solar and radiation channels. The mission simulation later injects one scripted storm for warning-time comparison only; it is not a substitute for this disturbed window.
+Window B covers 20 April to 20 May 2024 at the same three sites (93 site-days). Space-weather drivers are elevated relative to the quietest 2026 intervals. Hybrid RMSE is lower than the replica on all six hazards (6/6). Solar activity improves substantially (11.22 versus 13.79). Radiation improves strongly (0.071 versus 0.172). Temperature and moonquakes show residual gains (38.56 versus 40.35; 1.263 versus 1.269). Micrometeorites again reflect circular shower-label construction (0.012 versus 0.564). Dust shows a measured edge (0.147 versus 0.163) that remains physics-dominated / near-circular. Figures~\ref{fig:winBsolar}--\ref{fig:winBdust} show the same two-column per-hazard layout as Window~A. The mission simulation later injects one scripted storm for warning-time comparison only; it is not a substitute for this disturbed window.
 \end{multicols}
 
 \begin{center}
 \centering
-\includegraphics[width=\textwidth,height=0.28\textheight,keepaspectratio]{figures/fig_windowB_solar_activity.png}
-\captionof{figure}{Window B solar activity (20 April--20 May 2024). Evaluation label, LIPAS hybrid, and NASA/replica.}
+\begin{minipage}[t]{0.48\textwidth}
+\centering
+\includegraphics[width=\linewidth,height=0.18\textheight,keepaspectratio]{figures/fig_windowB_solar_activity.png}
+\captionof{figure}{Window B solar. LIPAS RMSE $\sim$18.6\% lower than the NASA/replica.}
 \label{fig:winBsolar}
+\end{minipage}\hfill
+\begin{minipage}[t]{0.48\textwidth}
+\centering
+\includegraphics[width=\linewidth,height=0.18\textheight,keepaspectratio]{figures/fig_windowB_radiation_mSv.png}
+\captionof{figure}{Window B radiation. LIPAS RMSE $\sim$58.7\% lower (ML share 0.15).}
+\label{fig:winBrad}
+\end{minipage}
 \end{center}
 
 \begin{center}
 \centering
-\includegraphics[width=\textwidth,height=0.28\textheight,keepaspectratio]{figures/fig_windowB_radiation_mSv.png}
-\captionof{figure}{Window B radiation (20 April--20 May 2024). Evaluation label, LIPAS hybrid, and NASA/replica.}
-\label{fig:winBrad}
+\begin{minipage}[t]{0.48\textwidth}
+\centering
+\includegraphics[width=\linewidth,height=0.18\textheight,keepaspectratio]{figures/fig_windowB_temperature_C.png}
+\captionof{figure}{Window B temperature. LIPAS RMSE $\sim$4.4\% lower; site lines where locations diverge.}
+\label{fig:winBtemp}
+\end{minipage}\hfill
+\begin{minipage}[t]{0.48\textwidth}
+\centering
+\includegraphics[width=\linewidth,height=0.18\textheight,keepaspectratio]{figures/fig_windowB_moonquakes_per_day.png}
+\captionof{figure}{Window B moonquakes. Tiny residual edge; physics-dominated.}
+\label{fig:winBmoon}
+\end{minipage}
+\end{center}
+
+\begin{center}
+\centering
+\begin{minipage}[t]{0.48\textwidth}
+\centering
+\includegraphics[width=\linewidth,height=0.18\textheight,keepaspectratio]{figures/fig_windowB_meteor_flux_1e15.png}
+\captionof{figure}{Window B micrometeorites. Circular shower-label illustration, not an independent win.}
+\label{fig:winBmeteor}
+\end{minipage}\hfill
+\begin{minipage}[t]{0.48\textwidth}
+\centering
+\includegraphics[width=\linewidth,height=0.18\textheight,keepaspectratio]{figures/fig_windowB_dust_g_cm3.png}
+\captionof{figure}{Window B dust. Near-circular / physics-dominated; site lines for LIPAS and NASA.}
+\label{fig:winBdust}
+\end{minipage}
 \end{center}
 
 \begin{center}
@@ -392,8 +430,8 @@ NASA combined (physics rad + GOES) & T+55 min (0h 55m) & T+70 min (1h 10m) \\
 
 \begin{center}
 \centering
-\includegraphics[width=\textwidth,height=0.22\textheight,keepaspectratio]{figures/fig_mission_timeline.png}
-\captionof{figure}{Mission-simulation decision timeline for the same measured events as Table~\ref{tab:mission}.}
+\includegraphics[width=\textwidth,height=0.26\textheight,keepaspectratio]{figures/fig_mission_timeline.png}
+\captionof{figure}{Mission-simulation caution and no-go timeline (R6c measured): LIPAS, GOES-only, and combined replica, with precursor (T+40), geomagnetic change (T+55), and proton surge (T+70). Same events as Table~\ref{tab:mission}.}
 \label{fig:mission}
 \end{center}
 
