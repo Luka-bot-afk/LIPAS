@@ -1,0 +1,89 @@
+{
+  "enabled": true,
+  "rad_gcr_prior": {
+    "enabled": true,
+    "scale": 1.18,
+    "add_mSv": 0.018
+  },
+  "dust_ldex_prior": {
+    "enabled": true,
+    "scale": 1.0,
+    "add_g_cm3": 0.0,
+    "may_trough": {
+      "enabled": true,
+      "doy_start": 121,
+      "doy_end": 151,
+      "scale": 0.975,
+      "add_g_cm3": -0.03
+    }
+  },
+  "seasonal_temp": {
+    "enabled": true,
+    "diviner_pull": 0.0,
+    "seasonal_scale": 0.0,
+    "day_add_C": 0.0,
+    "night_add_C": 0.0,
+    "lst_bins": {
+      "enabled": true,
+      "scale": 0.4,
+      "bins": [
+        {"start": 0, "end": 5, "add": -4.5},
+        {"start": 5, "end": 11, "add": 15.0},
+        {"start": 11, "end": 14, "add": -1.0},
+        {"start": 14, "end": 17, "add": -14.0},
+        {"start": 17, "end": 18, "add": 20.0},
+        {"start": 18, "end": 24, "add": -11.0}
+      ]
+    }
+  },
+  "regime_rules": {
+    "enabled": true,
+    "flare_rise": {
+      "solar": {"scale": 1.1, "add": 0.28},
+      "radiation": {
+        "scale": 1.04,
+        "add": 0.0,
+        "couple_from_solar": 0.015,
+        "couple_max_add": 0.04
+      }
+    },
+    "storm": {
+      "solar": {"scale": 1.2, "add": 0.65},
+      "radiation": {
+        "scale": 1.08,
+        "add": 0.0,
+        "couple_from_solar": 0.03,
+        "couple_max_add": 0.06
+      }
+    },
+    "sep_like": {
+      "solar": {"scale": 1.14, "add": 0.45},
+      "radiation": {
+        "scale": 1.1,
+        "add": 0.005,
+        "couple_from_solar": 0.04,
+        "couple_max_add": 0.07
+      }
+    }
+  },
+  "soft_regime_mix": {
+    "enabled": true,
+    "score_lo": 0.5,
+    "score_hi": 2.0,
+    "solar_add_at_hi": 2.0,
+    "rad_add_at_hi": 0.07
+  },
+  "early_warning_rad": {
+    "enabled": true,
+    "levels": ["flare_rise", "storm", "sep_like", "unsettled"],
+    "score_gain": 0.02,
+    "add_cap": 0.05,
+    "input_solar_gain": 0.003,
+    "input_solar_cap": 0.03
+  },
+  "false_alarm_guard": {
+    "enabled": true,
+    "levels": ["quiet"],
+    "quiet_rad_cap": 0.09
+  }
+}

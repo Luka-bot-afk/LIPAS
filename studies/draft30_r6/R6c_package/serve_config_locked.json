@@ -1,0 +1,21 @@
+{
+  "package_id": "R6c_caution_cap090",
+  "promote": "READY_R6",
+  "base": "R5s2_soft_plus_ew",
+  "tip_source": "38bd171 cursor/lastshot-r6-wall-1d4f",
+  "lstm_source": "papers/appendix_numerical_tables/locked_saved_model (train-2)",
+  "blend_weights": {
+    "order": [
+      "solar_activity",
+      "radiation_mSv",
+      "temperature_C",
+      "moonquakes_per_day",
+      "meteor_flux_1e15",
+      "dust_g_cm3"
+    ],
+    "values": [0.4, 0.15, 0.02, 0.02, 0.03, 0.01],
+    "radiation_ml_share": 0.15,
+    "radiation_ml_gt_0": true
+  },
+  "paper_note": "Hybrid-only serve package on frozen train-2 LSTM; archive priors = R5s2 + false_alarm_guard quiet_rad_cap=0.090."
+}
