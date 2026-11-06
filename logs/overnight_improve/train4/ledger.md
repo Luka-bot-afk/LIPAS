@@ -39,3 +39,4 @@ Format: `timestamp | change | retrain? Y/N | heldout_rmse | A_wins 0-6 | B_wins 
 | 2026-11-06T00:06Z | T4b DONE test_rmse=44.0111486009156 beats=False | Y | 44.0111486009156 | - | - | - | - | record | always continue T4c |
 | 2026-11-06T00:06Z | T4c START capacity (always; no early stop) | Y | pending | - | - | - | - | running | |
 | 2026-11-06T00:07Z | T4c START capacity (100 ep, larger LSTM) after distutils re-pin per stage; climbing despite T4a/T4b misses | Y | pending | - | - | - | - | running | pick best after |
+| 2026-11-06T00:26Z | HEARTBEAT: T4c ALIVE Epoch 12/100 Metal PID9799 etime=19:19; autopsy prep: train-2 used CSV extended_training_1784310247 not train7 — likely root of temp blow-up mismatch | Y | pending | - | - | - | - | running | on miss: serve on train-2 + targeted retrain on train2 CSV |
