@@ -45,9 +45,13 @@ def _wins_from_summary(summary: dict) -> tuple[int, dict]:
 
 def run_flagship(csv: str, model_dir: str, start: str, end: str, label: str, out_dir: Path) -> dict:
     out_dir.mkdir(parents=True, exist_ok=True)
+    # Mac TF 2.16 / Py3.12 needs cpu_tf_bootstrap (distutils shim + CPU-only).
+    cpu = ROOT / "logs/overnight_improve/train4/run_on_cpu.py"
+    script = ROOT / "scripts/run_14day_flagship_study.py"
     cmd = [
         sys.executable,
-        str(ROOT / "scripts/run_14day_flagship_study.py"),
+        str(cpu if cpu.exists() else script),
+        *([str(script)] if cpu.exists() else []),
         "--csv",
         csv,
         "--model-dir",
@@ -82,18 +86,19 @@ def run_flagship(csv: str, model_dir: str, start: str, end: str, label: str, out
 
 
 def summer_candidates(df: pd.DataFrame) -> list[tuple[str, str, int]]:
-    """Long summer spans ending at CSV max (~2026-07-16). Prefer ~90+ days."""
+    """Long summer spans (~3mo+) ending at CSV max (window_B_ready → 2026-08-04)."""
     dmax = df["date"].max()
-    # Prefer April→July (~3 months) if covered; else May→July; else June→July.
+    # Prefer April/May → Aug for ≥~90 days when data allow.
     starts = [
         "2026-04-01",
         "2026-04-15",
         "2026-05-01",
+        "2026-05-07",
         "2026-05-15",
         "2026-06-01",
         "2026-06-17",  # L20 legacy short
     ]
-    end = str(pd.Timestamp(min(dmax, pd.Timestamp("2026-07-16"))).date())
+    end = str(pd.Timestamp(min(dmax, pd.Timestamp("2026-08-04"))).date())
     out = []
     for s in starts:
         if pd.Timestamp(s) > dmax:

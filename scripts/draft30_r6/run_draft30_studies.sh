@@ -19,28 +19,32 @@ CSV_FALLBACK=data/ingested_extended/train7_training_locked_y_ext_drivers.csv
 if [[ -f "$CSV_PREF" ]]; then CSV="$CSV_PREF"; else CSV="$CSV_FALLBACK"; fi
 echo "CSV=$CSV MODEL=$MODEL OUT=$OUT"
 
+# All TF study scripts must go through cpu bootstrap (Py3.12 distutils + CPU-only).
+CPU_PY=(python logs/overnight_improve/train4/run_on_cpu.py)
+PLAIN_PY=(python)
+
 bash scripts/draft30_r6/pack_R6c_model_dir.sh \
   papers/appendix_numerical_tables/locked_saved_model "$MODEL"
 
 mkdir -p "$OUT" "$STUDIES/window_grid" "$STUDIES/figures" "$STUDIES/mission_sim" "$STUDIES/ablation"
 
 echo "=== Window A summer grid (pick best ≥~90d where data allows) ==="
-python scripts/draft30_r6/select_windows_and_run.py \
+"${CPU_PY[@]}" scripts/draft30_r6/select_windows_and_run.py \
   --csv "$CSV" --model-dir "$MODEL" --out-root "$OUT" \
   --studies-dir "$STUDIES"
 
 echo "=== Mission sim ==="
-python scripts/run_mission_sim_radiation_eva.py \
+"${CPU_PY[@]}" scripts/run_mission_sim_radiation_eva.py \
   --model-dir "$MODEL" \
   --out-dir "$OUT/mission_sim" \
   2>&1 | tee "$OUT/mission_sim_run.log"
 cp -R "$OUT/mission_sim/." "$STUDIES/mission_sim/" 2>/dev/null || true
 
-echo "=== Ablation (use chosen Window A span from selection json) ==="
-A_START=$(python -c "import json;print(json.load(open('$STUDIES/SELECTED_WINDOWS.json'))['A']['start'])")
-A_END=$(python -c "import json;print(json.load(open('$STUDIES/SELECTED_WINDOWS.json'))['A']['end'])")
-# Ablation uses a quieter mid-window fortnight if A is long
-python scripts/run_hazard_ablation_study.py \
+echo "=== Ablation (quiet mid-summer fortnight inside chosen Window A) ==="
+A_START=$("${PLAIN_PY[@]}" -c "import json;print(json.load(open('$STUDIES/SELECTED_WINDOWS.json'))['A']['start'])")
+A_END=$("${PLAIN_PY[@]}" -c "import json;print(json.load(open('$STUDIES/SELECTED_WINDOWS.json'))['A']['end'])")
+# Default quiet fortnight; override via env if selection wants otherwise.
+"${CPU_PY[@]}" scripts/run_hazard_ablation_study.py \
   --csv "$CSV" --model-dir "$MODEL" \
   --start "${ABLATION_START:-2026-06-17}" --end "${ABLATION_END:-2026-06-30}" \
   --out-dir "$OUT/ablation" \
@@ -48,12 +52,12 @@ python scripts/run_hazard_ablation_study.py \
 cp -R "$OUT/ablation/." "$STUDIES/ablation/" 2>/dev/null || true
 
 echo "=== Build draft30 figures ==="
-python scripts/draft30_r6/build_draft30_figures.py \
+"${CPU_PY[@]}" scripts/draft30_r6/build_draft30_figures.py \
   --studies-dir "$STUDIES" --out-dir "$STUDIES/figures" \
   --model-dir "$MODEL" --csv "$CSV"
 
 echo "=== READY_FOR_PAPER summary ==="
-python - <<PY
+"${PLAIN_PY[@]}" - <<PY
 import json
 from pathlib import Path
 s = Path('$STUDIES')
