@@ -15,3 +15,11 @@
 | 2026-11-06T15:26Z | R2a_wsolar_50 | 5 | 5 | solarB=False |
 | 2026-11-06T15:27Z | R2b_wrad_20 | 6 | 4 | solarB=False |
 | 2026-11-06T15:27Z | WAVE R1 DONE | - | - | - | see cpu_levers/drastic_R1_summary.json |
+| 2026-11-06T16:00Z | WAVE R2 START | - | - | - | merge R1a2 solar + R1c rad; no mq tidal |
+| 2026-11-06T16:01Z | R2m_a2_c | 6 | 5 | solarB=True |
+| 2026-11-06T16:02Z | R2m2_solar115_rad | 6 | 6 | solarB=True |
+| 2026-11-06T16:03Z | R2m3_rad_hard | 6 | 5 | solarB=True |
+| 2026-11-06T16:05Z | R2m4_solar118 | 6 | 5 | solarB=True |
+| 2026-11-06T16:06Z | R2m5_solar_add_hard | 6 | 5 | solarB=True |
+| 2026-11-06T16:07Z | R2t_merge_temp_mild | 5 | 5 | solarB=True |
+| 2026-11-06T16:47Z | R2u_unsettled_soft | 6 | 5 | solarB=True |
