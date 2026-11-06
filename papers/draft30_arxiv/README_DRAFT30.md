@@ -1,3 +1,5 @@
-# Draft 30 arXiv — SCAFFOLD ONLY
-Copied from draft25 for overnight build readiness.
-**Do not treat numbers/figures as draft30 science** until Mac ART-28 promote-worthy results are patched in.
+# Draft 30 arXiv — L20 morning package
+
+Base: draft 25 structure/voice.
+Science: `L20_may_dust_l16` serve/physics/archive package on train-2 LSTM.
+No full rewrite — result-driven patches only.
