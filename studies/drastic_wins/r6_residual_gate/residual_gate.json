@@ -1,0 +1,164 @@
+{
+  "n_rows_used": 100000,
+  "channels": {
+    "target_solar_activity": {
+      "corr_label_vs_physics_x": 0.9307208888279647,
+      "ridge_skill": 0.01691179026425982,
+      "ridge_rmse": 2.9973518113135253,
+      "gbm_skill": 0.21424337351867728,
+      "gbm_rmse": 2.3957047031094865,
+      "physics_residual_rmse": 3.048914412389536,
+      "circular_risk": false,
+      "residual_has_skill": true,
+      "proposed_global_add": 0.0016853454560242255,
+      "proposed_lst_bins": [
+        {
+          "start": 0,
+          "end": 6,
+          "add": -0.013814209197392907
+        },
+        {
+          "start": 6,
+          "end": 12,
+          "add": 0.01617548860037202
+        },
+        {
+          "start": 12,
+          "end": 18,
+          "add": -0.014182277097902098
+        },
+        {
+          "start": 18,
+          "end": 24,
+          "add": 0.02
+        }
+      ]
+    },
+    "target_radiation_mSv": {
+      "corr_label_vs_physics_x": 0.9476463978820392,
+      "ridge_skill": 0.001704081351576292,
+      "ridge_rmse": 0.05874017951304087,
+      "gbm_skill": 0.0436579740006563,
+      "gbm_rmse": 0.05627159365644007,
+      "physics_residual_rmse": 0.05884044842391846,
+      "circular_risk": false,
+      "residual_has_skill": true,
+      "proposed_global_add": 1.1266293976242123e-05,
+      "proposed_lst_bins": [
+        {
+          "start": 0,
+          "end": 6,
+          "add": 0.00011523078843215201
+        },
+        {
+          "start": 6,
+          "end": 12,
+          "add": 1.4819299213616823e-05
+        },
+        {
+          "start": 12,
+          "end": 18,
+          "add": -0.0001052470241133611
+        },
+        {
+          "start": 18,
+          "end": 24,
+          "add": 3.825776407462914e-05
+        }
+      ]
+    },
+    "target_temperature_C": {
+      "corr_label_vs_physics_x": 0.9513963164393667,
+      "ridge_skill": 0.05896982993020139,
+      "ridge_rmse": 31.19366347068496,
+      "gbm_skill": 0.8026163535510153,
+      "gbm_rmse": 6.542956047296125,
+      "physics_residual_rmse": 33.148420170600104,
+      "circular_risk": false,
+      "residual_has_skill": true,
+      "proposed_global_add": -0.010382288628732434,
+      "proposed_lst_bins": [
+        {
+          "start": 0,
+          "end": 6,
+          "add": 3.0
+        },
+        {
+          "start": 6,
+          "end": 12,
+          "add": 3.0
+        },
+        {
+          "start": 12,
+          "end": 18,
+          "add": -3.0
+        },
+        {
+          "start": 18,
+          "end": 24,
+          "add": -3.0
+        }
+      ]
+    }
+  },
+  "abort_metal_retrain": true,
+  "allow_residual_correct": {
+    "solar": false,
+    "radiation": true,
+    "temperature": true
+  },
+  "residual_correct_prior": {
+    "enabled": true,
+    "radiation": {
+      "add": 1.1266293976242123e-05,
+      "lst_bins": [
+        {
+          "start": 0,
+          "end": 6,
+          "add": 0.00011523078843215201
+        },
+        {
+          "start": 6,
+          "end": 12,
+          "add": 1.4819299213616823e-05
+        },
+        {
+          "start": 12,
+          "end": 18,
+          "add": -0.0001052470241133611
+        },
+        {
+          "start": 18,
+          "end": 24,
+          "add": 3.825776407462914e-05
+        }
+      ]
+    },
+    "temperature": {
+      "add": -0.010382288628732434,
+      "lst_bins": [
+        {
+          "start": 0,
+          "end": 6,
+          "add": 3.0
+        },
+        {
+          "start": 6,
+          "end": 12,
+          "add": 3.0
+        },
+        {
+          "start": 12,
+          "end": 18,
+          "add": -3.0
+        },
+        {
+          "start": 18,
+          "end": 24,
+          "add": -3.0
+        }
+      ]
+    }
+  },
+  "abort_reason": "T4b residual LSTM held-out RMSE 44.0 vs train2 4.97; do not retrain. Serve residual_correct only if allow_* and window does not regress."
+}
