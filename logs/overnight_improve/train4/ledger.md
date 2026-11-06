@@ -40,3 +40,4 @@ Format: `timestamp | change | retrain? Y/N | heldout_rmse | A_wins 0-6 | B_wins 
 | 2026-11-06T00:06Z | T4c START capacity (always; no early stop) | Y | pending | - | - | - | - | running | |
 | 2026-11-06T00:07Z | T4c START capacity (100 ep, larger LSTM) after distutils re-pin per stage; climbing despite T4a/T4b misses | Y | pending | - | - | - | - | running | pick best after |
 | 2026-11-06T00:26Z | HEARTBEAT: T4c ALIVE Epoch 12/100 Metal PID9799 etime=19:19; autopsy prep: train-2 used CSV extended_training_1784310247 not train7 — likely root of temp blow-up mismatch | Y | pending | - | - | - | - | running | on miss: serve on train-2 + targeted retrain on train2 CSV |
+| 2026-11-06T00:30Z | USER REINFORCE: not train-only — physics/archive/calendar/serve levers to beat NASA replicas; keep climbing; credit-smart; draft30 only after promote+mission+ablation | N | - | - | - | - | - | keep | Mac apply runbook; cloud standby |

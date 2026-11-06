@@ -2,35 +2,48 @@
 
 User authorized Mac after Kaggle GPU failed (CUDA never attached). Quality OK — train-2 best was Mac.
 
+## Mission (locked)
+**Beat the NASA/replica baselines we evaluate against** on as many hazards as possible (bar ≥5/6, 1 miss OK). Radiation ML share **> 0**. Held-out clearly better than train-2 **4.9685** when locking a new LSTM; serve/physics wins must be real and honest (no circular labels).
+
+**Not train-only.** LSTM retrain is one lever. Also invent/adapt:
+- Physics knobs (Diviner blend, MEM shower amplitude, CRaTER/GCR scale, KP/Bz gains)
+- Calendar / archive priors (e.g. seasonal temp rise, Perseids/meteor showers, known storm climatology) so the hybrid *knows* expected structure without needing ML to rediscover it
+- Blend / adaptive gates (all channels `w>0`; storm-aware, not radiation→0 “fix”)
+- Residual / calibration heads on physics (temp vs Diviner especially)
+- Feature emphasis from archives already on disk (Diviner climatology, MEM3, OMNI)
+
+Work **credit-smart**: cheap serve/physics probes before another full retrain; don’t burn epochs if a physics+calendar fix wins the window scores.
+
 ## Win bar
-- Held-out RMSE **< 4.9685** (target ≤ ~4.0)
+- Held-out RMSE **< 4.9685** (target ≤ ~4.0) for any **promoted LSTM**
 - ≥5/6 hazards beat NASA/replica on chosen summer Window A + storm Window B (1 miss OK)
-- Radiation ML blend **> 0** always (never zero as a “fix”)
-- No paper rewrite; result patches only after promote
+- Radiation ML blend **> 0** always
+- Temp may beat Diviner via **physics residual / archive climatology**, not only a better LSTM
+- No paper rewrite; draft30 only after real results + mission sim + ablation redo
 
 ## Credit-smart order
 1. Locate repo → checkout `cursor/go-night-train4-e2f9`
-2. Ensure CSV: `data/ingested_extended/train7_training_locked_y_ext_drivers.csv` (download from Kaggle dataset `lukatakki/lipas-train4` if missing)
-3. Restore baseline: copy `papers/appendix_numerical_tables/locked_saved_model/` → `saved_model_train2_locked/` + `saved_model/`
-4. **Cheap checks first** (no full retrain): `ALLOW_TRAIN4=1 python scripts/train4_kaggle.py --stage cheap`
-5. **T4a** retrain: `ALLOW_TRAIN4=1 python scripts/train4_kaggle.py --stage t4a`
-6. If held-out misses → **T4b** residual (solar+rad) → **T4c** capacity
-7. On beat: blend sweep all `w>0`, Window A summer grid, Window B storm grid, promote
-8. **After promote (required before paper):** re-run mission sim + ablation + final Window A/B studies; push artifacts/ledger
-9. Paper draft 30 only **after** those new numbers exist (cloud/paper agent) — never from old draft25 numbers alone
+2. CSV: prefer fair locked-Y train7 / train2 pin (avoid label-drift CSV as Y)
+3. Restore baseline: `locked_saved_model` → `saved_model_train2_locked/` + `saved_model/`
+4. **Cheap checks** (no full retrain): residual ridge, blend grid, physics knobs, calendar priors
+5. Ladder: **T4a → T4b → T4c** (and further arms like T4d train2-CSV if coded) — do not quit after one miss
+6. **Parallel / after ladder:** serve+physics+archive fine-tune on best available weights (even if held-out miss — for window skill); keep rad `w>0`
+7. If a package beats windows ≥5/6 **and** (held-out win **or** documented hybrid refinement with no fake circular wins): promote candidate
+8. **After promote (required before paper):** mission sim + ablation + final Window A/B
+9. Paper draft 30 only after those numbers exist
 10. Log every row in `logs/overnight_improve/train4/ledger.md`
 
 ## Honesty
-Do not claim NASA wins via circular labels (label ≈ physics). Fix residual/features first.
+Do not claim NASA wins via circular labels (meteor/dust corr≈1). Prefer independent physics/calendar contrast or residual-on-honest-proxy.
 Do not stop after one failed retrain.
 
 ## Commands (repo root)
 ```bash
 export ALLOW_TRAIN4=1
 export TF_CPP_MIN_LOG_LEVEL=2
-python3 -m venv .venv && source .venv/bin/activate
-pip install -r requirements.txt
-# + tensorflow-macos / tensorflow-metal if Apple Silicon and not already present
+# Prefer companion scripts if present:
+#   logs/overnight_improve/train4/run_mac_overnight_full.sh
+#   logs/overnight_improve/train4/run_mac_climb_continue.sh
 python scripts/train4_kaggle.py --stage cheap
-python scripts/train4_kaggle.py --stage t4a
+python scripts/train4_kaggle.py --stage t4a   # then t4b / t4c as needed
 ```
