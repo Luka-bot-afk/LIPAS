@@ -1447,6 +1447,91 @@ def apply_archive_priors_to_hybrid(hybrid, physics_dict, lat=None, lon=None, loc
             except Exception:
                 pass
 
+    # --- R5: quiet-only solar prior (do not touch storm) ---
+    qsol = priors.get('quiet_solar_prior') or {}
+    if qsol.get('enabled', False) and level == 'quiet':
+        out['solar'] = _apply_channel_scale_add(
+            out.get('solar', physics_dict.get('solar', 5.0)),
+            qsol, 0.0, 80.0, float(out.get('solar', 5.0)),
+        )
+        meta['quiet_solar_prior'] = True
+
+    # --- R5: early-warning radiation (mission NO-GO lead) ---
+    # Ramp hybrid rad with continuous regime score / flare_rise so caution/NO-GO fires earlier
+    # without rewriting the LSTM. Cap to avoid quiet false alarms.
+    ewr = priors.get('early_warning_rad') or {}
+    if ewr.get('enabled', False):
+        apply_levels = ewr.get('levels') or ['flare_rise', 'storm', 'sep_like', 'unsettled']
+        if level in apply_levels:
+            try:
+                r0 = float(out.get('radiation', physics_dict.get('radiation', 0.05)))
+                gain = float(ewr.get('score_gain', 0.02) or 0.02)
+                floor = float(ewr.get('add_floor', 0.0) or 0.0)
+                cap = float(ewr.get('add_cap', 0.08) or 0.08)
+                add = float(clamp(floor + gain * max(0.0, score - float(ewr.get('score0', 0.8) or 0.8)), 0.0, cap, 0.0))
+                # Optional couple from live solar input (precursor) for earlier rise than physics rad.
+                if inputs is not None and len(inputs) > 0 and ewr.get('input_solar_gain', 0):
+                    sa = float(inputs[0])
+                    sa0 = float(ewr.get('input_solar0', 10.0) or 10.0)
+                    add += float(clamp(
+                        float(ewr.get('input_solar_gain', 0.0)) * max(0.0, sa - sa0),
+                        0.0, float(ewr.get('input_solar_cap', 0.05) or 0.05), 0.0,
+                    ))
+                out['radiation'] = float(clamp(r0 + add, 0.01, 10.0, r0))
+                meta['early_warning_rad_add'] = float(add)
+            except Exception:
+                pass
+
+    # --- R5: soft continuous regime mix (score-weighted storm solar/rad overlay) ---
+    soft = priors.get('soft_regime_mix') or {}
+    if soft.get('enabled', False):
+        try:
+            s_lo = float(soft.get('score_lo', 0.8) or 0.8)
+            s_hi = float(soft.get('score_hi', 2.2) or 2.2)
+            w = float(clamp((score - s_lo) / max(1e-6, s_hi - s_lo), 0.0, 1.0, 0.0))
+            sol_add = w * float(soft.get('solar_add_at_hi', 0.0) or 0.0)
+            rad_add = w * float(soft.get('rad_add_at_hi', 0.0) or 0.0)
+            if sol_add:
+                s0 = float(out.get('solar', 5.0))
+                out['solar'] = float(clamp(s0 + sol_add, 0.0, 80.0, s0))
+            if rad_add:
+                r0 = float(out.get('radiation', 0.05))
+                out['radiation'] = float(clamp(r0 + rad_add, 0.01, 10.0, r0))
+            meta['soft_regime_w'] = float(w)
+        except Exception:
+            pass
+
+    # --- R5: moonquake latitude prior (no tidal — R1f tidal was KILL) ---
+    mq_lat = priors.get('mq_lat_prior') or {}
+    if mq_lat.get('enabled', False) and lat is not None:
+        try:
+            mq = float(out.get('moonquakes', physics_dict.get('moonquakes', 20.0)))
+            abs_lat = abs(float(lat))
+            # Prefer equatorial thermal-moonquake proxy slightly vs polar.
+            add = float(mq_lat.get('equator_add', 0.4) or 0.4) * (1.0 - abs_lat / 90.0)
+            add -= float(mq_lat.get('polar_sub', 0.2) or 0.2) * (abs_lat / 90.0)
+            out['moonquakes'] = float(clamp(mq + add, 12.0, 80.0, mq))
+            meta['mq_lat_prior'] = True
+        except Exception:
+            pass
+
+    # --- R5: hybrid-only physics-formula scale (proxy for lunar_physics knobs) ---
+    pform = priors.get('physics_formula_scale') or {}
+    if pform.get('enabled', False):
+        for key, bounds in (
+            ('solar', (0.0, 80.0)),
+            ('radiation', (0.01, 10.0)),
+            ('temperature', (-230.0, 130.0)),
+            ('moonquakes', (12.0, 80.0)),
+        ):
+            cfg = pform.get(key) or {}
+            if cfg:
+                out[key] = _apply_channel_scale_add(
+                    out.get(key, physics_dict.get(key, 0.0)),
+                    cfg, bounds[0], bounds[1], float(out.get(key, 0.0)),
+                )
+                meta[f'pform_{key}'] = True
+
     return out, meta
 
 

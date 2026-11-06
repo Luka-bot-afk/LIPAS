@@ -1,56 +1,44 @@
-# Drastic wins — Mac handoff (`bc-9b4346a4` resume; old `bc-d6c08fcb` offline)
+# Drastic wins — Mac handoff
 
 **Branch:** `cursor/drastic-wins-regime-ff97`  
-**Cloud owner:** `bc-a48cf0e9` (implements hooks / cloud probes)  
-**Mac owner:** you — Metal/CPU window sweeps  
-**Hard rules:** no paper edits; no mission/ablation studies package yet. Window A + storm B RMSE probes only. Keep rad ML share > 0. LSTM stays train-2 locked weights.  
-**User lock:** do **not** READY until wins are drastically better (ASR would care). R2m2-class = still climb.
+**R5 owner (ONLY):** `bc-4bbf4026-216b-5188-a1db-7401a698f86f` on worker `2414b5dd`  
+**Stand down:** `bc-9b4346a4` — do **not** run a second R5 tmux if `bc-4bbf4026` is sweeping. One R5 session only (`lipas-r5-sweep`).  
+**Cloud:** `bc-a48cf0e9` — hooks/scripts; no invent; no paper.
 
-## Sync note (cloud `bc-a48cf0e9`)
+## Current lock
 
-Pulled `origin/cursor/drastic-wins-regime-ff97` — was go-night tip `fc4dde6` (no Mac lever commit yet). Cloud is pushing hooks + R1 solar-first cands on this branch. **Mac: `git pull --ff-only` then run wave R1.** Prefer starting with `R1s_*` solar climatology cands (your first lever).
+- READY baseline to beat: **`R4l2_lst_bins_40`** (A6/B6; solar B 15.83; rad B 0.097; temp A 19.83)
+- User lock: climb R5 **new families** until clear beat **or** honest **EXHAUSTED_AT_R4l2**
+- Full mission/ablation studies package = later (user). R5 still scores **cheap mission lead proxy** + stress window C + keeps solar↔rad couple (ablation-aware).
 
-## What landed in code
+## R5 hooks (hybrid-only)
 
-`space_weather_model.apply_archive_priors_to_hybrid` now supports hybrid-only:
+In `apply_archive_priors_to_hybrid`:
+- `quiet_solar_prior` — quiet level only
+- `early_warning_rad` — score/input-solar rad add for earlier caution/NO-GO
+- `soft_regime_mix` — continuous score→solar/rad add
+- `mq_lat_prior` — lat band (no tidal; R1f tidal was KILL)
+- `physics_formula_scale` — hybrid proxy for physics knobs
+- Plus R4l2 base (regime solar/rad couple + LST bins 0.40)
 
-- **`solar_storm_climatology`** — pull hybrid solar toward storm-day target with per-level blend (flare_rise/storm/sep_like); optional DOY amp
-- `regime_rules.enabled` + per-level (`quiet` / `unsettled` / `flare_rise` / `storm` / `sep_like`) channel `{scale, add}` for solar/radiation/temperature/moonquakes/(dust/micrometeorites)
-- radiation `couple_from_solar` (uses hybrid solar − physics solar)
-- `moonquake_prior` (scale/add + terminator bump + tidal sinusoid)
-- `seasonal_temp.day_add_C` / `night_add_C`
-- `physics_band_clip` (pull hybrid toward physics±band)
-
-L20 baseline priors still work. Regime rules are **additive** JSON — Mac can sweep without further code if hooks are pulled.
-
-## How to sweep
+## Run (owner only)
 
 ```bash
-cd /Users/lukatakki/Documents/GitHub/LIPAS   # or your LIPAS checkout
+cd /Users/lukatakki/Documents/GitHub/LIPAS
 git fetch origin cursor/drastic-wins-regime-ff97
 git checkout cursor/drastic-wins-regime-ff97
 git pull --ff-only origin cursor/drastic-wins-regime-ff97
 source .venv/bin/activate
 export ALLOW_TRAIN4=1 TF_CPP_MIN_LOG_LEVEL=2 PYTHONUNBUFFERED=1
-bash scripts/drastic_wins/run_wave_R1.sh
+# If sibling session exists, kill it first — one R5 only:
+# tmux kill-session -t lipas-r5-sweep 2>/dev/null || true
+bash scripts/drastic_wins/run_wave_R5.sh
 ```
 
-Script builds `R1_*` cands under `logs/overnight_improve/train4/cpu_levers/cands/`, scores Window A + B_storm, appends `logs/overnight_improve/train4/drastic_wins_ledger.md`, writes `cpu_levers/drastic_R1_summary.json`.
+Push interim `studies/drastic_wins/R5_INTERIM_latest.json` / ledger often; end with `R5_FINAL.md` + `R5_FINAL.json`.
 
-## Priority chase order
+## Wall / promote
 
-1. Break **storm B solar tie** (hybrid-only solar storm/flare_rise scale/add)
-2. Grow **radiation** A+B margins (GCR v2 + storm couple) without quiet false-alarm blowups
-3. **Temp** via day/night add or diviner_pull — never raise ML
-4. **Moonquakes** via tidal/terminator prior — never raise ML
-5. Selective `w_solar` / `w_rad` only after rules move the needle
-
-## Coordination
-
-- Push cand results + ledger rows to this branch often
-- If you invent a new prior key the code lacks, note it in ledger and ping via git commit message `NEED HOOK: ...` — cloud will implement
-- Do not promote / paper until cloud+Mac agree margins are drastic vs L20
-
-## Mac fix (2026-11-06)
-
-`run_wave_R1.sh` ROOT was `../../..` (landed outside LIPAS). Fixed to `../..`. First Mac attempt null-scored; re-run after fix.
+- **READY_R5** only if beat R4l2 on temp/solar/rad **or** ≥25 min NO-GO lead vs GOES with A6/B6 held
+- Else **EXHAUSTED_AT_R4l2**
+- **No paper** until user greenlights
