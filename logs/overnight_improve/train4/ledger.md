@@ -43,3 +43,4 @@ Format: `timestamp | change | retrain? Y/N | heldout_rmse | A_wins 0-6 | B_wins 
 | 2026-11-06T00:30Z | USER REINFORCE: not train-only — physics/archive/calendar/serve levers to beat NASA replicas; keep climbing; credit-smart; draft30 only after promote+mission+ablation | N | - | - | - | - | - | keep | Mac apply runbook; cloud standby |
 | 2026-11-06T00:31Z | TIMING LOCK: run physics/archive/serve CPU levers NOW in parallel with Metal T4c/T4d — do not wait for ladder end | N | - | - | - | - | - | keep | Mac overlap serve science |
 | 2026-11-06T00:32Z | USER REINFORCE: window NASA/replica wins PRIMARY; after T4c do serve/Diviner/MEM/blend levers BEFORE T4d epochs; T4c still Epoch 17/100 | N | pending | - | - | - | - | keep | continue waiter re-armed serve-first |
+| 2026-11-06T00:35Z | GOODNIGHT timing: CPU Diviner/MEM/blend/archive levers STARTED NOW parallel Metal T4c (not waiting) | N | - | pending | pending | - | - | running | score Window A+B storm ASAP |
