@@ -1,0 +1,13 @@
+{
+  "test_rmse": 44.0111486009156,
+  "test_rmse_normalized": 202.56471252441406,
+  "test_rmse_per_channel": {
+    "solar_activity": 6.6064300537109375,
+    "radiation_mSv": 0.23924300074577332,
+    "temperature_C": 107.5960922241211,
+    "moonquakes_per_day": 1.1251376867294312,
+    "meteor_flux_1e15": 0.008669671602547169,
+    "dust_g_cm3": 0.0006157491006888449
+  },
+  "beats_train2": false
+}

@@ -31,3 +31,11 @@ Format: `timestamp | change | retrain? Y/N | heldout_rmse | A_wins 0-6 | B_wins 
 | 2026-11-05T23:22Z | T4b START residual solar+rad (always; no early stop) | Y | pending | - | - | - | - | running | |
 | 2026-11-05T23:23Z | T4b START residual solar+rad (90 ep) after distutils sitecustomize fix; T4a discarded 55.13 | Y | pending | - | - | - | - | running | then T4c always |
 | 2026-11-05T23:42Z | HEARTBEAT: T4b ALIVE Epoch 43/90 Metal PID8533 etime=20:25; T4a discarded 55.13; T4c queued | Y | pending | - | - | - | - | running | then T4c |
+| 2026-11-06T00:05Z | T4b DONE test_rmse=44.0111486009156 beats=False | Y | 44.0111486009156 | - | - | - | - | record | always continue T4c |
+| 2026-11-06T00:05Z | T4c START capacity (always; no early stop) | Y | pending | - | - | - | - | running | |
+| 2026-11-06T00:06Z | T4b DONE test_rmse=44.011 beats=False (solar improved 6.61; temp still 107.6; residual eval not comparable 1:1); blend w>0; T4c crashed distutils — restarting | Y | 44.011 | - | - | - | - | discard | T4c capacity now |
+| 2026-11-06T00:06Z | ORDER LOCKED: (1) full T4a→T4b→T4c pick best (2) serve/blend fine-tune (3) windows+mission+ablation (4) paper later | N | - | - | - | - | - | keep | climb |
+| 2026-11-06T00:06Z | T4a DONE test_rmse=55.12861604140471 beats=False | Y | 55.12861604140471 | - | - | - | - | record | always continue T4b |
+| 2026-11-06T00:06Z | T4b DONE test_rmse=44.0111486009156 beats=False | Y | 44.0111486009156 | - | - | - | - | record | always continue T4c |
+| 2026-11-06T00:06Z | T4c START capacity (always; no early stop) | Y | pending | - | - | - | - | running | |
+| 2026-11-06T00:07Z | T4c START capacity (100 ep, larger LSTM) after distutils re-pin per stage; climbing despite T4a/T4b misses | Y | pending | - | - | - | - | running | pick best after |

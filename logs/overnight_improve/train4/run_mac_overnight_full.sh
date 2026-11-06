@@ -42,7 +42,9 @@ if [[ ! -f saved_model_train4a/train4_gate.json ]]; then
     sleep 5
   fi
   if [[ ! -f saved_model_train4a/train4_gate.json ]]; then
-    python scripts/train4_kaggle.py --stage t4a 2>&1 | tee "$OUT/t4a_run.log"
+    pip install -q --force-reinstall 'setuptools==69.5.1'
+export SETUPTOOLS_USE_DISTUTILS=local
+python scripts/train4_kaggle.py --stage t4a 2>&1 | tee "$OUT/t4a_run.log"
   fi
 fi
 # If legacy ladder is still chaining T4b/T4c, wait it out before we fill gaps
@@ -55,7 +57,9 @@ logrow "T4a DONE test_rmse=${RMSE_A} beats=${BEAT_A} | Y | ${RMSE_A} | - | - | -
 # --- Always run T4b (residual) — do not stop early ---
 if [[ ! -f saved_model_train4b/train4_gate.json ]]; then
   logrow "T4b START residual solar+rad (always; no early stop) | Y | pending | - | - | - | - | running | |"
-  python scripts/train4_kaggle.py --stage t4b 2>&1 | tee "$OUT/t4b_run.log"
+  pip install -q --force-reinstall 'setuptools==69.5.1'
+export SETUPTOOLS_USE_DISTUTILS=local
+python scripts/train4_kaggle.py --stage t4b 2>&1 | tee "$OUT/t4b_run.log"
 fi
 RMSE_B=$(python -c "import json; print(json.load(open('saved_model_train4b/train4_gate.json')).get('test_rmse','?'))")
 BEAT_B=$(python -c "import json; print(json.load(open('saved_model_train4b/train4_gate.json')).get('beats_train2',False))")
@@ -64,7 +68,9 @@ logrow "T4b DONE test_rmse=${RMSE_B} beats=${BEAT_B} | Y | ${RMSE_B} | - | - | -
 # --- Always run T4c (capacity) ---
 if [[ ! -f saved_model_train4c/train4_gate.json ]]; then
   logrow "T4c START capacity (always; no early stop) | Y | pending | - | - | - | - | running | |"
-  python scripts/train4_kaggle.py --stage t4c 2>&1 | tee "$OUT/t4c_run.log"
+  pip install -q --force-reinstall 'setuptools==69.5.1'
+export SETUPTOOLS_USE_DISTUTILS=local
+python scripts/train4_kaggle.py --stage t4c 2>&1 | tee "$OUT/t4c_run.log"
 fi
 RMSE_C=$(python -c "import json; print(json.load(open('saved_model_train4c/train4_gate.json')).get('test_rmse','?'))")
 BEAT_C=$(python -c "import json; print(json.load(open('saved_model_train4c/train4_gate.json')).get('beats_train2',False))")
