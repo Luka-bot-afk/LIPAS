@@ -1247,6 +1247,37 @@ def apply_archive_priors_to_hybrid(hybrid, physics_dict, lat=None, lon=None, loc
         out['dust'] = float(clamp(d, 0.5, 6.0, d))
         meta['dust_ldex_scale'] = scale
 
+    # --- Persistence / driver pull for solar (hybrid-only; inputs[0] = lagged SA) ---
+    # When ML is storm-gated, hybrid≈physics under-predicts; blend toward live/lagged SA.
+    sol_persist = priors.get('solar_persist_pull') or {}
+    if sol_persist.get('enabled', False) and inputs is not None and len(inputs) > 0:
+        apply_levels = sol_persist.get('levels') or ['storm', 'flare_rise', 'sep_like']
+        if level in apply_levels:
+            try:
+                s0 = float(out.get('solar', physics_dict.get('solar', 5.0)))
+                sa = float(inputs[0])
+                alpha = float(sol_persist.get('alpha', 0.35) or 0.35)
+                level_a = (sol_persist.get('alpha_by_level') or {}).get(level)
+                if level_a is not None:
+                    alpha = float(level_a)
+                alpha = float(clamp(alpha, 0.0, 1.0, 0.35))
+                # Only pull up when driver SA is above hybrid (avoid Jul quiet overshoot).
+                if sol_persist.get('up_only', True):
+                    if sa > s0:
+                        uplift = min(float(sol_persist.get('cap', 12.0) or 12.0), alpha * (sa - s0))
+                        s1 = s0 + uplift
+                    else:
+                        s1 = s0
+                else:
+                    s1 = (1.0 - alpha) * s0 + alpha * sa
+                    if sol_persist.get('cap') is not None:
+                        s1 = s0 + float(clamp(s1 - s0, -float(sol_persist['cap']), float(sol_persist['cap']), 0.0))
+                out['solar'] = float(clamp(s1, 0.0, 80.0, s0))
+                meta['solar_persist_pull'] = True
+                meta['solar_persist_alpha'] = float(alpha)
+            except Exception:
+                pass
+
     # --- Solar storm climatology morph (hybrid-only; Mac first lever) ---
     # Pull hybrid solar toward a storm-day target with blend weight when regime matches.
     sol_clim = priors.get('solar_storm_climatology') or {}
