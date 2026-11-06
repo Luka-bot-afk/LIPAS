@@ -322,7 +322,8 @@ def train_extended_model(
         if use_cosine_decay and epochs > 1:
             try:
                 schedule = tf.keras.optimizers.schedules.CosineDecay(
-                    initial_learning_rate=lr, decay_steps=max(1, epochs * max(1, len(Xs_fit)
+                    initial_learning_rate=lr,
+                    decay_steps=max(1, epochs * max(1, len(Xs_fit) // max(1, batch_size))),
                     alpha=0.05,
                 )
                 opt = tf.keras.optimizers.Adam(learning_rate=schedule, **opt_kwargs)

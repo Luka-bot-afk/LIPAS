@@ -1,0 +1,124 @@
+{
+  "Window_A_2026-06-17_to_2026-07-14": {
+    "window": {
+      "start": "2026-06-17",
+      "end": "2026-07-14",
+      "label": "A"
+    },
+    "blend_weights": [
+      0.4,
+      0.15,
+      0.02,
+      0.02,
+      0.03,
+      0.01
+    ],
+    "model_dir": "logs/overnight_improve/train4/cpu_levers/cands/L20_may_dust_l16",
+    "rows": [
+      {
+        "hazard": "solar_activity",
+        "hybrid_rmse": 14.146468118427498,
+        "flagship_rmse": 14.17480448804094,
+        "delta_hybrid_minus_flagship": -0.028336369613441548,
+        "hybrid_beats_flagship": true
+      },
+      {
+        "hazard": "radiation_mSv",
+        "hybrid_rmse": 1.255031696108609,
+        "flagship_rmse": 1.258971509140414,
+        "delta_hybrid_minus_flagship": -0.003939813031804906,
+        "hybrid_beats_flagship": true
+      },
+      {
+        "hazard": "temperature_C",
+        "hybrid_rmse": 22.209442506427692,
+        "flagship_rmse": 22.31846947638105,
+        "delta_hybrid_minus_flagship": -0.10902696995335859,
+        "hybrid_beats_flagship": true
+      },
+      {
+        "hazard": "moonquakes_per_day",
+        "hybrid_rmse": 1.3134766939096632,
+        "flagship_rmse": 1.3202763298736608,
+        "delta_hybrid_minus_flagship": -0.0067996359639976856,
+        "hybrid_beats_flagship": true
+      },
+      {
+        "hazard": "meteor_flux_1e15",
+        "hybrid_rmse": 0.013120576743190195,
+        "flagship_rmse": 0.6059550779385455,
+        "delta_hybrid_minus_flagship": -0.5928345011953553,
+        "hybrid_beats_flagship": true
+      },
+      {
+        "hazard": "dust_g_cm3",
+        "hybrid_rmse": 0.5428230161571752,
+        "flagship_rmse": 0.5428343117403359,
+        "delta_hybrid_minus_flagship": -1.1295583160708667e-05,
+        "hybrid_beats_flagship": true
+      }
+    ],
+    "source_summary": "logs/overnight_improve/train4/cpu_levers/windows_L20_may_dust_l16/A/summary.json"
+  },
+  "Storm_B_2024-05-04_to_2024-05-17": {
+    "window": {
+      "start": "2024-05-04",
+      "end": "2024-05-17",
+      "label": "C"
+    },
+    "blend_weights": [
+      0.4,
+      0.15,
+      0.02,
+      0.02,
+      0.03,
+      0.01
+    ],
+    "model_dir": "logs/overnight_improve/train4/cpu_levers/cands/L20_may_dust_l16",
+    "rows": [
+      {
+        "hazard": "solar_activity",
+        "hybrid_rmse": 18.6232705988475,
+        "flagship_rmse": 18.6232705988475,
+        "delta_hybrid_minus_flagship": 0.0,
+        "hybrid_beats_flagship": false
+      },
+      {
+        "hazard": "radiation_mSv",
+        "hybrid_rmse": 0.19009682378083395,
+        "flagship_rmse": 0.19351511570659424,
+        "delta_hybrid_minus_flagship": -0.0034182919257602917,
+        "hybrid_beats_flagship": true
+      },
+      {
+        "hazard": "temperature_C",
+        "hybrid_rmse": 26.99375362366431,
+        "flagship_rmse": 27.189674022803636,
+        "delta_hybrid_minus_flagship": -0.19592039913932524,
+        "hybrid_beats_flagship": true
+      },
+      {
+        "hazard": "moonquakes_per_day",
+        "hybrid_rmse": 1.2870119176199268,
+        "flagship_rmse": 1.2870512480975975,
+        "delta_hybrid_minus_flagship": -3.933047767068487e-05,
+        "hybrid_beats_flagship": true
+      },
+      {
+        "hazard": "meteor_flux_1e15",
+        "hybrid_rmse": 0.012357195882667362,
+        "flagship_rmse": 0.622335987852696,
+        "delta_hybrid_minus_flagship": -0.6099787919700286,
+        "hybrid_beats_flagship": true
+      },
+      {
+        "hazard": "dust_g_cm3",
+        "hybrid_rmse": 0.5443039450369191,
+        "flagship_rmse": 0.548780642361896,
+        "delta_hybrid_minus_flagship": -0.004476697324976908,
+        "hybrid_beats_flagship": true
+      }
+    ],
+    "source_summary": "logs/overnight_improve/train4/cpu_levers/windows_L20_may_dust_l16/B_storm/summary.json"
+  }
+}

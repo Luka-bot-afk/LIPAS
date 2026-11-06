@@ -4,30 +4,30 @@
 \subsection{Prototype study and why early wins were large}
 \label{sec:prototype}
 
-The first quantitative pass ran in the client-side V1 stack against relatively weak replicas of Diviner-class temperature, radiation, dust, meteor, solar, and seismic products. Under that setup the mean skill across hazards favored LIPAS (Fig.~\ref{fig:proto}). Those early wins are not evidence that the locked hybrid beats mature agency models.
+The first quantitative pass ran in the browser prototype against relatively weak replicas of Diviner-class temperature, radiation, dust, meteor, solar, and seismic products. Under that setup the mean skill across hazards favored LIPAS (Fig.~\ref{fig:proto}). Those early wins are not evidence that the locked hybrid beats mature agency models: the prototype appeared stronger on five hazards largely because it was scored against weak replicas rather than full agency products.
 
-Three design choices drove the spread. First, the client V1 model and scoring path differ from the locked train-2 blend in Eq.~\eqref{eq:blend}. Second, several replica baselines were thin proxies rather than full operational models, so the comparison favored the integrated client. Third, some hazard scores used circular or proxy targets, which inflate apparent skill without independent surface truth. The prototype is therefore treated as an engineering checkpoint only. The locked windows below replace it for accuracy claims.
+Three design choices drove the spread. First, the browser-prototype model and scoring path differ from the locked blend in Eq.~\eqref{eq:blend}. Second, several replica baselines were thin proxies rather than full operational models, so the comparison favored the integrated prototype. Third, some hazard scores used circular or proxy targets, which inflate apparent skill without independent surface truth. The prototype is therefore treated as an engineering checkpoint only. The locked windows below replace it for accuracy claims.
 
 \begin{figure}[t]
 \centering
 \includegraphics[width=0.72\linewidth]{fig_prototype_lipas_vs_flagship.png}
-\caption{Prototype study mean skill: LIPAS (client V1) versus a single flagship-replica aggregate. Two bars only, same within-hazard skill definition as Windows~A and~B. The early lead reflects weak replicas and a different model/scoring path, not the locked train-2 result.}
+\caption{Prototype study mean skill: LIPAS (browser prototype) versus a weakly replicated public baseline aggregate. The early lead reflects weak replicas and a different model/scoring path, not the locked production result.}
 \label{fig:proto}
 \end{figure}
 
 \subsection{LIPAS versus Diviner-class temperature (prototype path)}
 \label{sec:diviner}
 
-Figure~\ref{fig:diviner} shows an early daytime temperature comparison at $(0^\circ\mathrm{N},\ 0^\circ\mathrm{E})$ before temperature was locked to the physics path. The early client overshoots the Diviner-class reference and the observed proxy near peak heating. That failure is part of why the locked blend sets temperature weight to zero and why Windows~A and~B report temperature as a physics tie rather than an ML win. The figure belongs to the prototype evaluation era. After this checkpoint the paper moves to the locked studies.
+Figure~\ref{fig:diviner} shows an early daytime temperature comparison at $(0^\circ\mathrm{N},\ 0^\circ\mathrm{E})$ before temperature was locked to the physics path. The browser prototype overshoots the Diviner-class reference and the observed proxy near peak heating. That failure is part of why the locked blend sets temperature weight to zero and why Windows~A and~B report temperature as a physics tie rather than an ML win. The figure belongs to the prototype evaluation era. After this checkpoint the paper moves to the locked studies.
 
 \begin{figure}[t]
 \centering
 \includegraphics[width=0.92\linewidth]{fig_lipas_vs_diviner.png}
-\caption{LIPAS versus Diviner-class temperature reference on the prototype daytime path at $0^\circ\mathrm{N}$, $0^\circ\mathrm{E}$. Early client temperature overshoots the reference near peak heating. Prototype-era figure; locked windows use physics-led temperature under blend weight zero.}
+\caption{LIPAS versus Diviner-class temperature reference on the prototype daytime path at $0^\circ\mathrm{N}$, $0^\circ\mathrm{E}$. Prototype temperature overshoots the reference near peak heating. Locked windows use physics-led temperature under blend weight zero.}
 \label{fig:diviner}
 \end{figure}
 
-\noindent\textit{Reading Fig.~\ref{fig:diviner} for the prototype study.} The temperature channel did not ``win'' in this early plot. Combined with weak replicas on other channels, that mix is exactly why a single mean-skill bar can still look favorable in Fig.~\ref{fig:proto} while individual physics channels remain untrustworthy. The later locked studies therefore emphasize solar and radiation RMSE, where the replica comparison is more informative, and treat temperature as a shared physics path.
+Figure~\ref{fig:diviner} does not show a temperature win for the prototype. Combined with weak replicas on other channels, that mix explains why a single mean-skill bar can still look favorable in Fig.~\ref{fig:proto} while individual physics channels remain untrustworthy. The later locked studies therefore emphasize solar and radiation RMSE, where the replica comparison is more informative, and treat temperature as a shared physics path.
 
 \subsection{Locked Window A (night-dominant)}
 \label{sec:windowA}
@@ -63,16 +63,18 @@ For the research questions this means: RQ2 is supported on usability and coverag
 \subsection{Mission simulation}
 \label{sec:mission}
 
-A short mission timeline overlays caution and no-go markers for planning context (Fig.~\ref{fig:mission}). Legend markers use red for all compared paths so the timeline reads cleanly in print. This study is operational illustration, not a substitute for the locked RMSE tables.
+A radiation-focused EVA at Apollo~11 lasting 7\,h\,37\,min (matching the duration of the second Apollo~17 EVA) compared warning times from LIPAS with separate public products. The same injected storm was used on every path (precursor at T+40; rising $K_p$ and southward IMF $B_z$ at T+55; GOES-like proton surge at T+70), with caution at 0.095\,mSv\,h$^{-1}$ and no-go at 0.15\,mSv\,h$^{-1}$. The GOES-only path used proton flux alone; the combined NASA path took the earlier of that proton signal and the geomagnetic/solar-driver warnings.
+
+LIPAS issued caution at T+45 and no-go at T+85. GOES alone reached caution at T+80 and no-go at T+105; the combined path reached caution at T+55 and no-go at T+70 (Fig.~\ref{fig:mission}). The earlier LIPAS caution comes from upstream solar and geomagnetic drivers, not from an event the proton product cannot see. The exercise is radiation-focused: it does not show that LIPAS is safer on every hazard, and it does not replace an operator or flight-certified products.
 
 \begin{figure}[t]
 \centering
 \includegraphics[width=0.95\linewidth]{fig_mission_timeline.png}
-\caption{Mission simulation timeline with caution and no-go markers. Legend uses red markers for LIPAS, GOES-only, and Combined NASA paths. Operational context only.}
+\caption{Mission-simulation decision timeline. Markers compare LIPAS, GOES-only, and combined NASA paths. Operational context only; not a substitute for locked RMSE tables.}
 \label{fig:mission}
 \end{figure}
 
 \subsection{Ablation}
 \label{sec:ablation}
 
-Hazard-weight ablation shows that nonzero machine-learning weight on solar activity and radiation changes residuals as expected under Eq.~\eqref{eq:blend}, while zero-weight hazards stay on their physics or proxy paths. Ablation supports sensitivity interpretation; it does not create new locked wins.
+Under a relatively quiet portion of Window~A, the locked model was held fixed while one input at a time was replaced by its window mean (no retraining). On the radiation channel, replacing the solar input raised RMSE from 0.1020 to 0.1050 (about 2.9\%); setting solar and radiation together to their means raised it to 0.1068. On the solar channel, the same solar-mean replacement lowered RMSE from 3.899 to 3.290. That solar result is a sensitivity finding for this window; it does not show that live solar data are generally harmful. Zero-weight hazards remain on their physics or proxy paths under Eq.~\eqref{eq:blend}.

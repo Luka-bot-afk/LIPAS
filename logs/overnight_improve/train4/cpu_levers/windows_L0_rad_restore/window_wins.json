@@ -1,0 +1,29 @@
+{
+  "tag": "L0_rad_restore",
+  "wins": {
+    "A": {
+      "wins": 3,
+      "total": 6,
+      "beat_map": {
+        "solar_activity": true,
+        "radiation_mSv": false,
+        "temperature_C": false,
+        "moonquakes_per_day": false,
+        "meteor_flux_1e15": true,
+        "dust_g_cm3": true
+      }
+    },
+    "B_storm": {
+      "wins": 2,
+      "total": 6,
+      "beat_map": {
+        "solar_activity": false,
+        "radiation_mSv": false,
+        "temperature_C": true,
+        "moonquakes_per_day": false,
+        "meteor_flux_1e15": true,
+        "dust_g_cm3": false
+      }
+    }
+  }
+}

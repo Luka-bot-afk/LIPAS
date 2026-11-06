@@ -1,0 +1,11 @@
+{
+  "stage": "t4b",
+  "test_rmse": 44.0111486009156,
+  "train2_rmse": 4.9685,
+  "beats_train2": false,
+  "target_hit": false,
+  "timestamp_utc": "2026-11-06T00:05:13.447246+00:00",
+  "gpus": [
+    "PhysicalDevice(name='/physical_device:GPU:0', device_type='GPU')"
+  ]
+}

@@ -1,0 +1,59 @@
+{
+  "generated_at_utc": "2026-11-05T00:03:08.382383+00:00",
+  "model_generation": "train2",
+  "model_dir": "saved_model",
+  "schema": "extended_18_feature",
+  "sequence_length": 72,
+  "sites_trained": [
+    "Apollo 11 (Mare Tranquillitatis)",
+    "Apollo 12 (Oceanus Procellarum)",
+    "Apollo 14 (Fra Mauro)",
+    "Apollo 15 (Hadley Rille)",
+    "Apollo 16 (Descartes Highlands)",
+    "Apollo 17 (Taurus-Littrow)",
+    "Artemis III candidate - Nobile Rim 1 (south polar)",
+    "Chang'e-3 (Mare Imbrium, near side)",
+    "Chang'e-4 / Statio Tianhe (Von K\u00e1rm\u00e1n crater, South Pole-Aitken basin, far side)",
+    "Chang'e-6 (Apollo basin, far side, sample-return site)",
+    "Shackleton crater rim vicinity (south pole)",
+    "Statio Shiv Shakti (Chandrayaan-3 Vikram lander, high southern latitude)"
+  ],
+  "serve_policy_locked": true,
+  "channel_ml_blend_weights": [
+    0.4,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+  ],
+  "channel_ml_blend_labels": {
+    "solar_activity": 0.4,
+    "radiation_mSv": 0.0,
+    "temperature_C": 0.0,
+    "moonquakes_per_day": 0.0,
+    "meteor_flux_1e15": 0.0,
+    "dust_g_cm3": 0.0
+  },
+  "serve_policy_note": "Locked train-2 LSTM with overnight serve-policy upgrade: solar ML weight 0.40; radiation ML weight 0 (physics-only) after per-hazard sweeps; storm-aware adaptive blending zeros solar/radiation ML when regime is storm or live radiation input >=0.20 mSv.",
+  "held_out_chronological_test": {
+    "hybrid_rmse": 4.9685004789450655,
+    "persistence_rmse": 13.662870918955756,
+    "skill_vs_persistence_pct": 63.6,
+    "hybrid_mae": 1.2845888137817383,
+    "eval_extended": {
+      "source": "meta.json held-out chronological test (authoritative train2 metrics)",
+      "hybrid_rmse": 4.9685004789450655,
+      "persistence_rmse": 13.662870918955756,
+      "hybrid_mae": 1.2845888137817383,
+      "skill_vs_persistence_pct": 63.6,
+      "rows_test": 37824,
+      "note": "Full extended re-eval omitted at serve-time \u2014 training run already scored the chronological holdout."
+    }
+  },
+  "max_capability_for_train2": {
+    "statement": "Live hybrid ML+physics with NOAA/OMNI/DONKI drivers. Held-out chronological test hybrid RMSE is 4.97 vs persistence 13.66 (63.6% skill gain).",
+    "further_gains_require": "stronger_lstm_retrain_on_gpu_or_kaggle",
+    "serve_tuning_saturated": false
+  }
+}

@@ -956,7 +956,10 @@ def get_channel_blend_weights(scalar_fallback=None):
     w = float(DEFAULT_ML_BLEND_WEIGHT if scalar_fallback is None else scalar_fallback)
     return [w] * NUM_CORE_FEATURES
 def load_blend_weights(model_dir=MODEL_DIR):
-    global _CHANNEL_ML_BLEND_WEIGHTS, DEFAULT_ML_BLEND_WEIGHT
+    global _CHANNEL_ML_BLEND_WEIGHTS, DEFAULT_ML_BLEND_WEIGHT, MODEL_DIR
+    # Keep MODEL_DIR aligned so hybrid-only archive_priors.json resolves per package.
+    if model_dir:
+        MODEL_DIR = model_dir
     npy = os.path.join(model_dir, 'blend_weights.npy')
     meta_path = os.path.join(model_dir, 'meta.json')
     try:
@@ -996,18 +999,29 @@ def load_train2_capability(refresh=False):
             pass
     return None
 def adaptive_channel_blend_weights(base_weights, physics_dict, ml_std=None, inputs=None, local_time=None):
+    """Per-hazard adaptive ML weights.
+
+    Empirically (Windows A/B/C + long summer 2026 sweeps): LSTM solar/radiation
+    skill collapses in strong storms while physics stays closer to constructed
+    labels, so storm regime *reduces* ML weight on those channels rather than
+    increasing it. Quiet windows keep the locked base weights (train-2/3 solar
+    blend around 0.4).
+    """
     w = [float(x) for x in base_weights]
     regime = (physics_dict or {}).get('regime') or {}
     level = regime.get('level', 'quiet')
     if level == 'storm':
-        w[0] = min(1.0, w[0] + 0.12)
-        w[1] = min(1.0, w[1] + 0.08)
+        # Storm: shrink solar/rad ML but NEVER zero radiation (mission: rad ML share > 0).
+        # Keep floors tiny — locked LSTM overshoots storms; archive rad prior carries skill.
+        w[0] = max(0.02, min(w[0], max(0.02, w[0] * 0.15)))
+        w[1] = max(0.01, min(w[1], max(0.01, w[1] * 0.12)))
         w[2] = max(0.0, w[2] - 0.05)
         w[4] = max(0.0, w[4] - 0.04)
         w[5] = max(0.0, w[5] - 0.04)
     elif level == 'unsettled':
-        w[0] = min(1.0, w[0] + 0.05)
-        w[1] = min(1.0, w[1] + 0.04)
+        # Partially trust solar ML; keep radiation ML > 0 (mission rule).
+        w[0] = max(0.0, w[0] * 0.25)
+        w[1] = max(0.01, w[1] * 0.25)
     if local_time is not None:
         try:
             hour = float(local_time) % 24.0
@@ -1040,7 +1054,152 @@ def adaptive_channel_blend_weights(base_weights, physics_dict, ml_std=None, inpu
             pass
     if inputs is not None and len(inputs) > 1 and float(inputs[1]) > 0.25:
         w[1] = min(w[1], 0.35)
+    # Input-radiation gate: physics-regime scores can miss SEP/storm intervals
+    # when physics radiation is smoother than the live radiation input.
+    # Do not gate on solar alone — quiet windows can have high F10.7-like solar
+    # without a radiation storm, and solar ML still helps there.
+    if inputs is not None and len(inputs) > 1:
+        try:
+            if float(inputs[1]) >= 0.20:
+                # Gate solar hard; keep radiation ML share > 0 (mission rule).
+                w[0] = 0.0
+                w[1] = max(0.01, min(w[1], 0.08))
+        except Exception:
+            pass
+    # Final radiation floor: never emit rad ML weight of 0 when base asked for ML.
+    if len(w) > 1 and float(base_weights[1]) > 0:
+        w[1] = max(0.01, float(w[1]))
     return w
+
+
+def load_archive_priors(model_dir=None):
+    """Load optional hybrid-only archive/calendar priors from model_dir/archive_priors.json."""
+    path = os.path.join(model_dir or MODEL_DIR, 'archive_priors.json')
+    if not os.path.exists(path):
+        return {}
+    try:
+        with open(path) as f:
+            payload = json.load(f)
+        return payload if isinstance(payload, dict) else {}
+    except Exception:
+        return {}
+
+
+def _seasonal_temp_delta_C(doy, prior_path):
+    try:
+        with open(prior_path) as f:
+            payload = json.load(f)
+        curve = payload.get('curve') or []
+        doy_i = int(doy) % 365
+        if doy_i <= 0:
+            doy_i = 365
+        for row in curve:
+            if int(row.get('doy', -1)) == doy_i:
+                return float(row.get('delta_C', 0.0))
+    except Exception:
+        return 0.0
+    return 0.0
+
+
+def apply_archive_priors_to_hybrid(hybrid, physics_dict, lat=None, lon=None, local_time=None,
+                                   day_of_year=None, model_dir=None):
+    """Hybrid-only archive/calendar priors — does not mutate shared physics/flagship."""
+    priors = load_archive_priors(model_dir)
+    if not priors or not priors.get('enabled', True):
+        return hybrid, {}
+    meta = {}
+    out = dict(hybrid)
+    temp_cfg = priors.get('seasonal_temp') or {}
+    if temp_cfg.get('enabled', False):
+        t = float(out.get('temperature', physics_dict.get('temperature', 0.0)))
+        pull = float(temp_cfg.get('diviner_pull', 0.0) or 0.0)
+        seasonal_scale = float(temp_cfg.get('seasonal_scale', 1.0) or 1.0)
+        if pull > 0 and lat is not None and lon is not None:
+            try:
+                from data_ingestion import load_diviner_site_climatology, diviner_temp_C
+                from lunar_sites import nearest_site
+                clim_path = temp_cfg.get(
+                    'climatology_path',
+                    'logs/overnight_improve/train4/archive_priors_assets/site_climatology.json',
+                )
+                clim = load_diviner_site_climatology(clim_path)
+                site = nearest_site(float(lat), float(lon))
+                div_t = diviner_temp_C(clim, site.name, local_time if local_time is not None else 12.0)
+                if div_t is not None:
+                    t = (1.0 - pull) * t + pull * float(div_t)
+                    meta['diviner_pull'] = pull
+                    meta['diviner_temp_C'] = float(div_t)
+            except Exception:
+                pass
+        if day_of_year is not None and seasonal_scale != 0.0:
+            prior_path = temp_cfg.get(
+                'seasonal_path',
+                'logs/overnight_improve/train4/archive_priors_assets/seasonal_temp_prior.json',
+            )
+            delta = _seasonal_temp_delta_C(day_of_year, prior_path) * seasonal_scale
+            t = t + float(delta)
+            meta['seasonal_delta_C'] = float(delta)
+        out['temperature'] = float(clamp(t, -230.0, 130.0, t))
+    # Invented CRaTER/GCR-style radiation uplift (physics+flagship under-predict labels).
+    rad_cfg = priors.get('rad_gcr_prior') or {}
+    if rad_cfg.get('enabled', False):
+        r = float(out.get('radiation', physics_dict.get('radiation', 0.05)))
+        scale = float(rad_cfg.get('scale', 1.0) or 1.0)
+        add = float(rad_cfg.get('add_mSv', 0.0) or 0.0)
+        r = r * scale + add
+        out['radiation'] = float(clamp(r, 0.01, 10.0, r))
+        meta['rad_gcr_scale'] = scale
+        meta['rad_gcr_add'] = add
+    # Invented LDEX / calendar dust prior (physics over-predicts May/storm dust labels).
+    dust_cfg = priors.get('dust_ldex_prior') or {}
+    if dust_cfg.get('enabled', False):
+        d = float(out.get('dust', physics_dict.get('dust', 1.0)))
+        scale = float(dust_cfg.get('scale', 1.0) or 1.0)
+        add = float(dust_cfg.get('add_g_cm3', 0.0) or 0.0)
+        # mild local-time terminator shrink already in adaptive; this is archive prior
+        if local_time is not None and dust_cfg.get('terminator_extra', False):
+            try:
+                hour = float(local_time) % 24.0
+                dist = min(abs(hour - 6.0), abs(hour - 18.0), 24.0 - abs(hour - 6.0), 24.0 - abs(hour - 18.0))
+                if dist < 2.5:
+                    scale *= float(dust_cfg.get('terminator_scale', 0.92) or 0.92)
+            except Exception:
+                pass
+        # May trough calendar prior (doy 121–151): shrink dust only in May windows.
+        may = dust_cfg.get('may_trough') or {}
+        if may.get('enabled', False) and day_of_year is not None:
+            doy = int(day_of_year)
+            lo = int(may.get('doy_start', 121))
+            hi = int(may.get('doy_end', 151))
+            if lo <= doy <= hi:
+                scale *= float(may.get('scale', 0.975) or 0.975)
+                add += float(may.get('add_g_cm3', -0.03) or -0.03)
+                meta['dust_may_trough'] = True
+        # Optional DOY sinusoid seasonal dust prior
+        seasonal_scale = float(dust_cfg.get('seasonal_scale', 0.0) or 0.0)
+        if seasonal_scale != 0.0 and day_of_year is not None:
+            try:
+                prior_path = dust_cfg.get(
+                    'seasonal_path',
+                    'logs/overnight_improve/train4/archive_priors_assets/seasonal_dust_prior.json',
+                )
+                with open(prior_path) as f:
+                    payload = json.load(f)
+                doy_i = int(day_of_year) % 365
+                if doy_i <= 0:
+                    doy_i = 365
+                for row in payload.get('curve') or []:
+                    if int(row.get('doy', -1)) == doy_i:
+                        add += float(row.get('delta_g_cm3', 0.0)) * seasonal_scale
+                        break
+            except Exception:
+                pass
+        d = d * scale + add
+        out['dust'] = float(clamp(d, 0.5, 6.0, d))
+        meta['dust_ldex_scale'] = scale
+    return out, meta
+
+
 def refine_prediction(inputs, lat=None, lon=None, local_time=None, physics_weight=DEFAULT_ML_BLEND_WEIGHT, use_ensemble=False, extra=None, day_of_year=None, fast=False):
     extra = dict(extra or {})
     if day_of_year is None:
@@ -1092,8 +1251,18 @@ def refine_prediction(inputs, lat=None, lon=None, local_time=None, physics_weigh
             w * ml_pred[k] + (1.0 - w) * base[k],
             bounds[i][0], bounds[i][1], base[k],
         ))
+    archive_meta = {}
+    try:
+        prior_dir = (extra or {}).get('model_dir') or MODEL_DIR
+        hybrid, archive_meta = apply_archive_priors_to_hybrid(
+            hybrid, base, lat=lat, lon=lon, local_time=local_time,
+            day_of_year=None if day_of_year is None else int(day_of_year),
+            model_dir=prior_dir,
+        )
+    except Exception:
+        archive_meta = {}
     confidence = combined_confidence_pct(model_out.get('std'), hybrid, inputs, lat=lat, lon=lon, local_time=local_time)
-    return {
+    out = {
         'hybrid': hybrid,
         'physics': base,
         'ml': {'prediction': ml_pred, 'uncertainty': model_out.get('std'), 'uncertainty_source': model_out.get('uncertainty_source')},
@@ -1103,6 +1272,9 @@ def refine_prediction(inputs, lat=None, lon=None, local_time=None, physics_weigh
         'blend_weights_base': {keys[i]: base_weights[i] for i in range(6)},
         'regime': base.get('regime'),
     }
+    if archive_meta:
+        out['archive_priors'] = archive_meta
+    return out
 def analyze_space_weather(data):
     out = {
         'radiation': {'level': 'green', 'value': 0.057, 'confidence': 85, 'variance': 0.008},

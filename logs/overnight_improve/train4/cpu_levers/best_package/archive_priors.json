@@ -1,0 +1,20 @@
+{
+  "enabled": true,
+  "rad_gcr_prior": {
+    "enabled": true,
+    "scale": 1.15,
+    "add_mSv": 0.015
+  },
+  "dust_ldex_prior": {
+    "enabled": true,
+    "scale": 1.0,
+    "add_g_cm3": 0.0,
+    "may_trough": {
+      "enabled": true,
+      "doy_start": 121,
+      "doy_end": 151,
+      "scale": 0.975,
+      "add_g_cm3": -0.03
+    }
+  }
+}

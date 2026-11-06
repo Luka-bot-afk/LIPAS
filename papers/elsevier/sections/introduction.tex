@@ -1,9 +1,9 @@
 \section{Introduction}
 \label{sec:intro}
 
-Renewed lunar exploration plans increase the need for readable environmental information for temperature, radiation, dust, micrometeorites, solar activity, and moonquakes \citep{nasa2020artemis}. Specialized models already exist for many of these hazards, but they usually operate as separate tools. LIPAS was built to join public data and hybrid forecasts in one decision-support interface rather than to replace flight-qualified agency systems.
+Renewed lunar exploration plans increase the need for readable environmental information for temperature, radiation, dust, micrometeorites, solar activity, and moonquakes \citep{nasa2020artemis}. Specialized models already exist for many of these hazards; most operate as separate tools, though some products span more than one hazard domain. Mission planners still need to review and adapt outputs for a given timeline. LIPAS was built to join public data and hybrid forecasts in one decision-support system rather than to replace flight-qualified agency products. Public heliophysics measurements (solar-wind, field, and event products describing Sun-driven drivers that are effectively uniform across the Moon) are adapted as inputs; they are not treated here as a third forecasting method beside physics and machine learning. The public versions used in this paper are those available for replication; full operational models are not always public.
 
-This study asks three questions:
+This study aims to address three research questions:
 \begin{enumerate}[leftmargin=*,itemsep=0.2em]
 \item[\textbf{RQ1}] Can a hybrid lunar forecasting system usefully combine machine learning and physics?
 \item[\textbf{RQ2}] Does a unified multi-hazard interface improve operational usability relative to separate products?

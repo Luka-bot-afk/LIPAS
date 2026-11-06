@@ -1,0 +1,452 @@
+{
+  "best_so_far": {
+    "tag": "L20_may_dust_l16",
+    "A": 6,
+    "B": 5,
+    "score": 61
+  },
+  "completed": [
+    {
+      "tag": "L0_rad_restore",
+      "A_wins": 3,
+      "B_wins": 2,
+      "A_map": {
+        "solar_activity": true,
+        "radiation_mSv": false,
+        "temperature_C": false,
+        "moonquakes_per_day": false,
+        "meteor_flux_1e15": true,
+        "dust_g_cm3": true
+      },
+      "B_map": {
+        "solar_activity": false,
+        "radiation_mSv": false,
+        "temperature_C": true,
+        "moonquakes_per_day": false,
+        "meteor_flux_1e15": true,
+        "dust_g_cm3": false
+      }
+    },
+    {
+      "tag": "L10_solar_rad_floor",
+      "A_wins": 3,
+      "B_wins": 1,
+      "A_map": {
+        "solar_activity": false,
+        "radiation_mSv": false,
+        "temperature_C": false,
+        "moonquakes_per_day": true,
+        "meteor_flux_1e15": true,
+        "dust_g_cm3": true
+      },
+      "B_map": {
+        "solar_activity": false,
+        "radiation_mSv": false,
+        "temperature_C": false,
+        "moonquakes_per_day": false,
+        "meteor_flux_1e15": true,
+        "dust_g_cm3": false
+      }
+    },
+    {
+      "tag": "L11_combo_near_miss",
+      "A_wins": 4,
+      "B_wins": 2,
+      "A_map": {
+        "solar_activity": true,
+        "radiation_mSv": false,
+        "temperature_C": false,
+        "moonquakes_per_day": true,
+        "meteor_flux_1e15": true,
+        "dust_g_cm3": true
+      },
+      "B_map": {
+        "solar_activity": false,
+        "radiation_mSv": false,
+        "temperature_C": false,
+        "moonquakes_per_day": true,
+        "meteor_flux_1e15": true,
+        "dust_g_cm3": false
+      }
+    },
+    {
+      "tag": "L12_phys_seasonal_mild",
+      "A_wins": 4,
+      "B_wins": 1,
+      "A_map": {
+        "solar_activity": true,
+        "radiation_mSv": false,
+        "temperature_C": false,
+        "moonquakes_per_day": true,
+        "meteor_flux_1e15": true,
+        "dust_g_cm3": true
+      },
+      "B_map": {
+        "solar_activity": false,
+        "radiation_mSv": false,
+        "temperature_C": false,
+        "moonquakes_per_day": false,
+        "meteor_flux_1e15": true,
+        "dust_g_cm3": false
+      }
+    },
+    {
+      "tag": "L13_l7_rad_uplift",
+      "A_wins": 6,
+      "B_wins": 3,
+      "A_map": {
+        "solar_activity": true,
+        "radiation_mSv": true,
+        "temperature_C": true,
+        "moonquakes_per_day": true,
+        "meteor_flux_1e15": true,
+        "dust_g_cm3": true
+      },
+      "B_map": {
+        "solar_activity": false,
+        "radiation_mSv": false,
+        "temperature_C": true,
+        "moonquakes_per_day": true,
+        "meteor_flux_1e15": true,
+        "dust_g_cm3": false
+      }
+    },
+    {
+      "tag": "L14_l7_dust_shrink",
+      "A_wins": 4,
+      "B_wins": 3,
+      "A_map": {
+        "solar_activity": true,
+        "radiation_mSv": false,
+        "temperature_C": true,
+        "moonquakes_per_day": true,
+        "meteor_flux_1e15": true,
+        "dust_g_cm3": false
+      },
+      "B_map": {
+        "solar_activity": false,
+        "radiation_mSv": false,
+        "temperature_C": true,
+        "moonquakes_per_day": true,
+        "meteor_flux_1e15": true,
+        "dust_g_cm3": false
+      }
+    },
+    {
+      "tag": "L15_l7_rad_dust",
+      "A_wins": 4,
+      "B_wins": 2,
+      "A_map": {
+        "solar_activity": true,
+        "radiation_mSv": false,
+        "temperature_C": true,
+        "moonquakes_per_day": true,
+        "meteor_flux_1e15": true,
+        "dust_g_cm3": false
+      },
+      "B_map": {
+        "solar_activity": false,
+        "radiation_mSv": false,
+        "temperature_C": true,
+        "moonquakes_per_day": false,
+        "meteor_flux_1e15": true,
+        "dust_g_cm3": false
+      }
+    },
+    {
+      "tag": "L16_rad_mild_dust",
+      "A_wins": 5,
+      "B_wins": 4,
+      "A_map": {
+        "solar_activity": true,
+        "radiation_mSv": true,
+        "temperature_C": true,
+        "moonquakes_per_day": true,
+        "meteor_flux_1e15": true,
+        "dust_g_cm3": false
+      },
+      "B_map": {
+        "solar_activity": false,
+        "radiation_mSv": true,
+        "temperature_C": true,
+        "moonquakes_per_day": true,
+        "meteor_flux_1e15": true,
+        "dust_g_cm3": false
+      }
+    },
+    {
+      "tag": "L17_rad_strong_dust",
+      "A_wins": 5,
+      "B_wins": 4,
+      "A_map": {
+        "solar_activity": true,
+        "radiation_mSv": true,
+        "temperature_C": true,
+        "moonquakes_per_day": true,
+        "meteor_flux_1e15": true,
+        "dust_g_cm3": false
+      },
+      "B_map": {
+        "solar_activity": false,
+        "radiation_mSv": true,
+        "temperature_C": true,
+        "moonquakes_per_day": true,
+        "meteor_flux_1e15": true,
+        "dust_g_cm3": false
+      }
+    },
+    {
+      "tag": "L18_storm_target",
+      "A_wins": 5,
+      "B_wins": 4,
+      "A_map": {
+        "solar_activity": true,
+        "radiation_mSv": true,
+        "temperature_C": true,
+        "moonquakes_per_day": true,
+        "meteor_flux_1e15": true,
+        "dust_g_cm3": false
+      },
+      "B_map": {
+        "solar_activity": false,
+        "radiation_mSv": true,
+        "temperature_C": true,
+        "moonquakes_per_day": true,
+        "meteor_flux_1e15": true,
+        "dust_g_cm3": false
+      }
+    },
+    {
+      "tag": "L19_rad20_dust_term",
+      "A_wins": 4,
+      "B_wins": 3,
+      "A_map": {
+        "solar_activity": true,
+        "radiation_mSv": false,
+        "temperature_C": true,
+        "moonquakes_per_day": true,
+        "meteor_flux_1e15": true,
+        "dust_g_cm3": false
+      },
+      "B_map": {
+        "solar_activity": false,
+        "radiation_mSv": false,
+        "temperature_C": true,
+        "moonquakes_per_day": true,
+        "meteor_flux_1e15": true,
+        "dust_g_cm3": false
+      }
+    },
+    {
+      "tag": "L1_solar_rad",
+      "A_wins": 3,
+      "B_wins": 1,
+      "A_map": {
+        "solar_activity": true,
+        "radiation_mSv": false,
+        "temperature_C": false,
+        "moonquakes_per_day": false,
+        "meteor_flux_1e15": true,
+        "dust_g_cm3": true
+      },
+      "B_map": {
+        "solar_activity": false,
+        "radiation_mSv": false,
+        "temperature_C": false,
+        "moonquakes_per_day": false,
+        "meteor_flux_1e15": true,
+        "dust_g_cm3": false
+      }
+    },
+    {
+      "tag": "L20_may_dust_l16",
+      "A_wins": 6,
+      "B_wins": 5,
+      "A_map": {
+        "solar_activity": true,
+        "radiation_mSv": true,
+        "temperature_C": true,
+        "moonquakes_per_day": true,
+        "meteor_flux_1e15": true,
+        "dust_g_cm3": true
+      },
+      "B_map": {
+        "solar_activity": false,
+        "radiation_mSv": true,
+        "temperature_C": true,
+        "moonquakes_per_day": true,
+        "meteor_flux_1e15": true,
+        "dust_g_cm3": true
+      }
+    },
+    {
+      "tag": "L2_diviner_temp_resid",
+      "A_wins": 3,
+      "B_wins": 1,
+      "A_map": {
+        "solar_activity": true,
+        "radiation_mSv": false,
+        "temperature_C": false,
+        "moonquakes_per_day": false,
+        "meteor_flux_1e15": true,
+        "dust_g_cm3": true
+      },
+      "B_map": {
+        "solar_activity": false,
+        "radiation_mSv": false,
+        "temperature_C": false,
+        "moonquakes_per_day": false,
+        "meteor_flux_1e15": true,
+        "dust_g_cm3": false
+      }
+    },
+    {
+      "tag": "L3_physics_heavy",
+      "A_wins": 3,
+      "B_wins": 2,
+      "A_map": {
+        "solar_activity": true,
+        "radiation_mSv": false,
+        "temperature_C": false,
+        "moonquakes_per_day": false,
+        "meteor_flux_1e15": true,
+        "dust_g_cm3": true
+      },
+      "B_map": {
+        "solar_activity": false,
+        "radiation_mSv": false,
+        "temperature_C": true,
+        "moonquakes_per_day": false,
+        "meteor_flux_1e15": true,
+        "dust_g_cm3": false
+      }
+    },
+    {
+      "tag": "L4_balanced",
+      "A_wins": 3,
+      "B_wins": 1,
+      "A_map": {
+        "solar_activity": true,
+        "radiation_mSv": false,
+        "temperature_C": false,
+        "moonquakes_per_day": false,
+        "meteor_flux_1e15": true,
+        "dust_g_cm3": true
+      },
+      "B_map": {
+        "solar_activity": false,
+        "radiation_mSv": false,
+        "temperature_C": false,
+        "moonquakes_per_day": false,
+        "meteor_flux_1e15": true,
+        "dust_g_cm3": false
+      }
+    },
+    {
+      "tag": "L5_seasonal_meteor_light",
+      "A_wins": 3,
+      "B_wins": 1,
+      "A_map": {
+        "solar_activity": true,
+        "radiation_mSv": false,
+        "temperature_C": false,
+        "moonquakes_per_day": false,
+        "meteor_flux_1e15": true,
+        "dust_g_cm3": true
+      },
+      "B_map": {
+        "solar_activity": false,
+        "radiation_mSv": false,
+        "temperature_C": false,
+        "moonquakes_per_day": false,
+        "meteor_flux_1e15": true,
+        "dust_g_cm3": false
+      }
+    },
+    {
+      "tag": "L6_rad_floor_L0",
+      "A_wins": 3,
+      "B_wins": 2,
+      "A_map": {
+        "solar_activity": true,
+        "radiation_mSv": false,
+        "temperature_C": false,
+        "moonquakes_per_day": false,
+        "meteor_flux_1e15": true,
+        "dust_g_cm3": true
+      },
+      "B_map": {
+        "solar_activity": false,
+        "radiation_mSv": false,
+        "temperature_C": true,
+        "moonquakes_per_day": false,
+        "meteor_flux_1e15": true,
+        "dust_g_cm3": false
+      }
+    },
+    {
+      "tag": "L7_ultra_physics",
+      "A_wins": 5,
+      "B_wins": 3,
+      "A_map": {
+        "solar_activity": true,
+        "radiation_mSv": false,
+        "temperature_C": true,
+        "moonquakes_per_day": true,
+        "meteor_flux_1e15": true,
+        "dust_g_cm3": true
+      },
+      "B_map": {
+        "solar_activity": false,
+        "radiation_mSv": false,
+        "temperature_C": true,
+        "moonquakes_per_day": true,
+        "meteor_flux_1e15": true,
+        "dust_g_cm3": false
+      }
+    },
+    {
+      "tag": "L8_seasonal_temp_prior",
+      "A_wins": 4,
+      "B_wins": 1,
+      "A_map": {
+        "solar_activity": true,
+        "radiation_mSv": false,
+        "temperature_C": false,
+        "moonquakes_per_day": true,
+        "meteor_flux_1e15": true,
+        "dust_g_cm3": true
+      },
+      "B_map": {
+        "solar_activity": false,
+        "radiation_mSv": false,
+        "temperature_C": false,
+        "moonquakes_per_day": false,
+        "meteor_flux_1e15": true,
+        "dust_g_cm3": false
+      }
+    },
+    {
+      "tag": "L9_diviner_pull_strong",
+      "A_wins": 4,
+      "B_wins": 1,
+      "A_map": {
+        "solar_activity": true,
+        "radiation_mSv": false,
+        "temperature_C": false,
+        "moonquakes_per_day": true,
+        "meteor_flux_1e15": true,
+        "dust_g_cm3": true
+      },
+      "B_map": {
+        "solar_activity": false,
+        "radiation_mSv": false,
+        "temperature_C": false,
+        "moonquakes_per_day": false,
+        "meteor_flux_1e15": true,
+        "dust_g_cm3": false
+      }
+    }
+  ],
+  "note": "primary=window wins; held-out secondary"
+}

@@ -1,9 +1,11 @@
 \section{Methods}
 \label{sec:methods}
 
+The methods follow the same order as the results that follow: architecture and blend, skill reporting, the separate prototype diagnostic, the two locked fourteen-day windows with replicated baselines, then the mission simulation and input ablation. Related public models and archives that supply baselines and context are summarised in the accompanying repository overview notes; the body uses author-built replicas of those public methods rather than proprietary agency software, except for the MEM~3 export.
+
 \subsection{Architecture and hybrid blend}
 
-LIPAS predicts six hazards from an 18-feature input vector. The vector joins six hazard cores with location and time context (latitude, longitude, local solar time, hour, day, month) and space-weather or surface context (solar-wind speed and density, IMF $B_z$, $K_p$, regolith depth, thermal inertia). Figure~\ref{fig:arch_data} shows the data path from public feeds and lunar archives into that locked schema. Earlier draft schematics that labeled a 12-column row were incomplete; the locked train-2 path uses the 18-feature layout.
+LIPAS predicts six hazards from an 18-feature input vector. The vector joins six hazard cores with location and time context (latitude, longitude, local solar time, hour, day, month) and space-weather or surface context (solar-wind speed and density, IMF $B_z$, $K_p$,\footnote{$K_p$ is a planetary geomagnetic activity index used here as an upstream driver input.} regolith depth, thermal inertia). Figure~\ref{fig:arch_data} shows the data path from public feeds and lunar archives into that locked schema. Earlier draft schematics that labeled a 12-column row were incomplete; the locked production path from the second training run uses the 18-feature layout.
 
 \begin{figure}[t]
 \centering
@@ -12,7 +14,7 @@ LIPAS predicts six hazards from an 18-feature input vector. The vector joins six
 \label{fig:arch_data}
 \end{figure}
 
-The model is a temporal LSTM trained under hazard-wise hybrid blending with physics baselines. The locked train-2 blend used for the quantitative windows is
+The model is a temporal long short-term memory (LSTM)\footnote{An LSTM is a recurrent network that carries a memory state across time steps, used here for sequential residual corrections.} network trained under hazard-wise hybrid blending with physics baselines. The locked blend used for the quantitative windows is
 \begin{equation}
 \mathbf{w} = [0.4,\ 0.05,\ 0,\ 0,\ 0,\ 0]
 \label{eq:blend}
@@ -26,30 +28,36 @@ in hazard order solar activity, radiation, temperature, moonquakes, micrometeori
 \label{fig:arch_blend}
 \end{figure}
 
-A softplus-style residual update is used in later trainings:
+A softplus-style residual update is used in later trainings. With $y_{\mathrm{phys}}$ the hazard baseline and $\Delta_{\mathrm{ML}}$ the learned residual,
 \begin{equation}
-\hat{y} = y_{\mathrm{phys}} + \mathrm{softplus}(\Delta_{\mathrm{ML}}),
+\hat{y} = y_{\mathrm{phys}} + \mathrm{softplus}(\Delta_{\mathrm{ML}}).
 \label{eq:softplus}
 \end{equation}
-where $y_{\mathrm{phys}}$ is the hazard baseline and $\Delta_{\mathrm{ML}}$ is the learned residual. Softplus keeps residual corrections one-sided and stable. Equation~\eqref{eq:softplus} describes the later hybrid path; the early client-side prototype used a different stack (Section~\ref{sec:prototype}).
+Softplus keeps residual corrections one-sided and stable. Equation~\eqref{eq:softplus} describes the later hybrid path; the browser prototype used a different stack (Section~\ref{sec:prototype}). Physics baselines are produced by the Python physics-estimation function that maps each hazard to its public-archive formulation; code-level names are avoided in the body.
 
-\subsection{Skill and RMSE reporting}
+\subsection{Skill and error metrics}
 
 Within each hazard, skill is
 \begin{equation}
 \mathrm{skill} = 96 \times \max\!\left(0,\ 1 - \frac{\mathrm{RMSE}}{s_h}\right),
 \label{eq:skill}
 \end{equation}
-where $s_h$ is a hazard-specific scale taken from the site RMSE values for that hazard only. A skill of 96 means zero RMSE on that site for that hazard; it is not percent accuracy. Skill is never renormalized across hazards into equal heights. Physics ties and micrometeorite circular scoring are reported as such.
+where $s_h$ is a hazard-specific scale taken from the site RMSE values for that hazard only. A skill of 96 means zero RMSE on that site for that hazard; it is not percent accuracy. Skill is never renormalized across hazards into equal heights. Locked accuracy claims also quote root-mean-square error (RMSE) and, where useful, mean absolute error (MAE):\footnote{RMSE penalises large deviations more strongly; MAE reports typical absolute error. Both are computed against evaluation labels, not complete surface truth.} for $n$ paired samples with prediction $\hat{y}_j$ and label $y_j$,
+\begin{equation}
+\mathrm{RMSE}=\sqrt{\frac{1}{n}\sum_{j=1}^{n}(\hat{y}_j-y_j)^2},\qquad
+\mathrm{MAE}=\frac{1}{n}\sum_{j=1}^{n}|\hat{y}_j-y_j|.
+\label{eq:rmse}
+\end{equation}
+Physics ties and micrometeorite circular scoring are reported as such.
+
+\subsection{Prototype diagnostic (separate from locked windows)}
+
+An earlier browser-prototype study compared LIPAS against thin replicas of public tools. That path is described in Section~\ref{sec:prototype} and is not interchangeable with the locked production numbers from the second training run.
 
 \subsection{Evaluation windows and replica stack}
 
 Two 14-day locked windows are reported at the same three sites: equatorial reference $(0^\circ\mathrm{N},\ 0^\circ\mathrm{E})$, Apollo~11, and Nobile Rim. Window~A (5--18 July 2026) is night-dominant. Window~B (22 July--4 August 2026) is dayside-quiet. The same locked blend and replica stack are used for both. Full numeric tables live under \texttt{papers/appendix\_numerical\_tables/} and in \texttt{QUANTITATIVE\_COMPARISON\_FRAMEWORK.md} on the accompanying GitHub package.
 
-\subsection{Prototype path (separate from locked windows)}
-
-An earlier browser-client study compared LIPAS against thin replicas of public tools. That path is described in Section~\ref{sec:prototype} and is not interchangeable with the locked train-2 numbers.
-
 \subsection{Mission simulation and ablation}
 
-A short mission timeline and a hazard-weight ablation study provide operational and sensitivity context. They are secondary to the locked windows and are summarized only after the quantitative results.
+A short mission timeline matching the 7\,h\,37\,min duration of the second Apollo~17 EVA, and a hazard-weight ablation study, provide operational and sensitivity context. In the ablation, the locked model is held fixed while one input at a time is replaced by its window mean (no retraining); relative RMSE changes are then compared with the locked baseline. These studies are secondary to the locked windows and are summarised only after the quantitative results.

@@ -1,0 +1,51 @@
+{
+  "extracted_at": "2026-07-18T12:19:57Z",
+  "export_dir": "data/archives/mem3/user_export_9a8fb5b6508994c1",
+  "limiting_mass_g": 1e-06,
+  "trajectory": "lunar_orbit_1024_samples_2027",
+  "HiDensity": {
+    "path": "data/archives/mem3/user_export_9a8fb5b6508994c1/HiDensity/cube_avg.txt",
+    "sphere_flux_per_m2_yr": 2.619575,
+    "face_flux_per_m2_yr": {
+      "+x_ram": 0.9467672,
+      "-x_wake": 0.7393236,
+      "+y_port": 0.4102842,
+      "-y_starboard": 0.4126182,
+      "+z_zenith": 1.242156,
+      "-z_nadir": 0.0821502,
+      "Earth": 0.7926726,
+      "Sun": 1.143986,
+      "anti-Sun": 1.133283,
+      "rot_x": 1.705821,
+      "rot_y": 2.405357,
+      "rot_z": 2.000033
+    }
+  },
+  "LoDensity": {
+    "path": "data/archives/mem3/user_export_9a8fb5b6508994c1/LoDensity/cube_avg.txt",
+    "sphere_flux_per_m2_yr": 1.402529,
+    "face_flux_per_m2_yr": {
+      "+x_ram": 0.3890911,
+      "-x_wake": 0.2936624,
+      "+y_port": 0.4307199,
+      "-y_starboard": 0.4331628,
+      "+z_zenith": 0.4716317,
+      "-z_nadir": 0.0602442,
+      "Earth": 0.3070891,
+      "Sun": 0.2297107,
+      "anti-Sun": 0.2153912,
+      "rot_x": 1.114968,
+      "rot_y": 0.9670137,
+      "rot_z": 1.210144
+    }
+  },
+  "proxy": {
+    "scale_to_lipas_flux": 0.7956034950861538,
+    "baseline_flux_1e15": 1.6,
+    "hi_flux_1e15": 2.0841430256403113,
+    "lo_flux_1e15": 1.1158569743596882,
+    "zenith_hi_flux_1e15": 0.9882636550422365,
+    "nadir_hi_flux_1e15": 0.06535898624202656
+  },
+  "note": "MEM3 sphere/face fluxes from user NASA login export; blended into physics_micrometeorite_flux"
+}

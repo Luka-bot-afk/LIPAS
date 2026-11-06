@@ -1,0 +1,29 @@
+{
+  "tag": "L20_may_dust_l16",
+  "wins": {
+    "A": {
+      "wins": 6,
+      "total": 6,
+      "beat_map": {
+        "solar_activity": true,
+        "radiation_mSv": true,
+        "temperature_C": true,
+        "moonquakes_per_day": true,
+        "meteor_flux_1e15": true,
+        "dust_g_cm3": true
+      }
+    },
+    "B_storm": {
+      "wins": 5,
+      "total": 6,
+      "beat_map": {
+        "solar_activity": false,
+        "radiation_mSv": true,
+        "temperature_C": true,
+        "moonquakes_per_day": true,
+        "meteor_flux_1e15": true,
+        "dust_g_cm3": true
+      }
+    }
+  }
+}

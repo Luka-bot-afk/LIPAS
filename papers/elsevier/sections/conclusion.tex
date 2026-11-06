@@ -1,12 +1,12 @@
 \section{Conclusion}
 \label{sec:conclusion}
 
-Relative to the research questions:
+This research examined whether machine learning can be integrated into a unified, physics-based lunar forecasting system while retaining the physical foundations of established environmental models.
 
-\textbf{RQ1.} A hybrid LSTM-plus-physics architecture can be built and operated as a unified lunar forecasting stack. Softplus residual blending and a locked hazard-weight vector produce stable outputs suitable for dashboard use. That is an architecture result, not a claim of uniform skill.
+Regarding the first research question, a hybrid lunar-forecasting system can be developed by combining machine-learning and physics-based approaches in a hazard-specific way. The prototype diagnostics exposed instability in physically constrained channels and led to a locked hybrid model in which solar activity and radiation carry learned weights while temperature, moonquakes, micrometeorites, and dust remain on the physics path.
 
-\textbf{RQ2.} The unified interface improves operational usability relative to browsing separate hazard tools. Qualitative scoring supports high coverage and usability with only moderate validation depth.
+The second research question asked whether integrating multiple hazards and data sources into one decision-support system can improve operational usability. The radiation-focused mission simulation answered it only partially: LIPAS issued caution earlier than the GOES-only path by using upstream solar and geomagnetic drivers, but the combined NASA path reached the hard no-go first, and the study did not establish that LIPAS is safer than existing approaches.
 
-\textbf{RQ3.} Under the locked train-2 blend, accuracy gains are modest and hazard-specific. Solar RMSE improves in both 14-day windows. Radiation does not beat the replica in either window. Temperature, moonquakes, and dust remain physics ties. Micrometeorite scores are circular under zero blend weight. The prototype almost-everywhere win is discarded for accuracy claims.
+The third research question asked whether the locked hybrid improves prediction performance relative to replicated public baselines. The answer is mixed. Solar activity improved modestly in both windows; radiation did not; temperature, moonquakes, and dust tied because they share a physics construction with their references; and the micrometeorite contrast under blend weight zero describes the shower term rather than independent skill.
 
-Overall, LIPAS is best treated as consultative decision support alongside agency products. Further work should add better radiation baselines, independent micrometeorite truth, fuller ablation archives, and stronger validation against continuous surface measurements where available.
+The principal contribution of LIPAS is therefore not the replacement of existing lunar models but their integration into a single forecasting and decision-support framework. The studies show where a constrained hybrid architecture can add predictive value and where it does not yet do so, and they define the validation required before LIPAS can support lunar operations alongside NASA and NOAA products.

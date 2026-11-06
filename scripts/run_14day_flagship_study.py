@@ -178,7 +178,7 @@ def nasa_flagship_vector(row, day_of_year: int, lipas_physics: dict | None = Non
     }
 def row_to_inputs(row):
     return [float(row[c]) for c in CORE_FEATURE_NAMES]
-def predict_hybrid(row, day_of_year: int):
+def predict_hybrid(row, day_of_year: int, model_dir: str | None = None):
     inputs = row_to_inputs(row)
     extra = {
         'kp': float(row['kp_index']),
@@ -189,6 +189,8 @@ def predict_hybrid(row, day_of_year: int):
         'day_of_year': int(day_of_year),
         'date': str(pd.Timestamp(row['date']).date()),
     }
+    if model_dir:
+        extra['model_dir'] = model_dir
     out = refine_prediction(
         inputs,
         lat=float(row['lat']),
@@ -275,7 +277,7 @@ def main():
             continue
         for _, row in sub.iterrows():
             doy = int(pd.Timestamp(row['date']).dayofyear)
-            hybrid, physics_only, ml_only, _raw = predict_hybrid(row, doy)
+            hybrid, physics_only, ml_only, _raw = predict_hybrid(row, doy, model_dir=args.model_dir)
             flag = nasa_flagship_vector(row, doy, lipas_physics={
                 'temperature': physics_only['temperature_C'],
                 'micrometeorites': physics_only['meteor_flux_1e15'],

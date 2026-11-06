@@ -1,0 +1,13 @@
+\ProvidesPackage{enumitem}[2026/10/18 minimal stub]
+\RequirePackage{keyval}
+% Ignore enumitem optional args by making [] a no-op for lists via xparse-free approach:
+% redefine enumerate/itemize to discard one optional argument when present.
+\let\ea@enumerate\enumerate
+\let\ea@endenumerate\endenumerate
+\let\ea@itemize\itemize
+\let\ea@enditemize\enditemize
+\renewcommand{\enumerate}{\@ifnextchar[\ea@enumerate@opt\ea@enumerate}
+\def\ea@enumerate@opt[#1]{\ea@enumerate}
+\renewcommand{\itemize}{\@ifnextchar[\ea@itemize@opt\ea@itemize}
+\def\ea@itemize@opt[#1]{\ea@itemize}
+\endinput
