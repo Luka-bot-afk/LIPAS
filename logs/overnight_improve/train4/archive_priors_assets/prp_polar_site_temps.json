@@ -1,0 +1,26 @@
+{
+  "product": "Diviner PRP polar site samples",
+  "n_sites": 2,
+  "sites": {
+    "Artemis III candidate - Nobile Rim 1 (south polar)": {
+      "lat": -85.3,
+      "lon": 31.1,
+      "temp_avg_C": -128.61,
+      "temp_max_C": -17.18,
+      "sample_lat": -85.295440674,
+      "sample_lon": 31.056762695,
+      "dist_deg": 0.0058,
+      "source": "diviner_prp"
+    },
+    "Shackleton crater rim vicinity (south pole)": {
+      "lat": -89.9,
+      "lon": 0.0,
+      "temp_avg_C": -165.42,
+      "temp_max_C": 0.22,
+      "sample_lat": -89.838386536,
+      "sample_lon": -1.974820256,
+      "dist_deg": 0.1164,
+      "source": "diviner_prp"
+    }
+  }
+}

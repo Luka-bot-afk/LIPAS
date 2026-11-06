@@ -65,3 +65,49 @@ Format: `timestamp | change | retrain? Y/N | heldout_rmse | A_wins 0-6 | B_wins 
 | 2026-11-06T00:39Z | CPU LEVER L1_solar_rad WindowA=3/6 WindowB_storm=1/6 (parallel Metal T4c) | N | - | 3 | 1 | - | - | keep best | |
 | 2026-11-06T00:40Z | CPU LEVER L2_diviner_temp_resid WindowA=3/6 WindowB_storm=1/6 (parallel Metal T4c) | N | - | 3 | 1 | - | - | keep best | |
 | 2026-11-06T00:40Z | HEARTBEAT parallel: T4c Epoch 25/100 Metal; CPU levers L0 A=3/6 B=2/6 (temp win on storm!); L1 A=3 B=1; L2+ running; best=L0 | Y/N | T4c pending | 3 | 2 | L0 solar/meteor/dust | L0 temp+meteor storm | keep L0 package | finish L2-L5 |
+| 2026-11-06T00:41Z | CPU LEVER L3_physics_heavy WindowA=3/6 WindowB_storm=2/6 (parallel Metal T4c) | N | - | 3 | 2 | - | - | keep best | |
+| 2026-11-06T00:42Z | CPU LEVER L4_balanced WindowA=3/6 WindowB_storm=1/6 (parallel Metal T4c) | N | - | 3 | 1 | - | - | keep best | |
+| 2026-11-06T00:43Z | CPU LEVER L5_seasonal_meteor_light WindowA=3/6 WindowB_storm=1/6 (parallel Metal T4c) | N | - | 3 | 1 | - | - | keep best | |
+| 2026-11-06T01:05Z | CPU WAVE2 START: rad ML floor + seasonal/Diviner archive priors (parallel Metal T4c) | N | - | pending | pending | - | - | running | overlap |
+| 2026-11-06T01:06Z | CPU WAVE2 L6_rad_floor_L0 WindowA=3/6 WindowB_storm=2/6 (parallel Metal T4c) | N | - | 3 | 2 | - | - | keep best | |
+| 2026-11-06T01:07Z | CPU WAVE2 L7_ultra_physics WindowA=5/6 WindowB_storm=3/6 (parallel Metal T4c) | N | - | 5 | 3 | - | - | keep best | |
+| 2026-11-06T01:08Z | CPU WAVE2 L8_seasonal_temp_prior WindowA=4/6 WindowB_storm=1/6 (parallel Metal T4c) | N | - | 4 | 1 | - | - | keep best | |
+| 2026-11-06T01:09Z | CPU WAVE2 L9_diviner_pull_strong WindowA=4/6 WindowB_storm=1/6 (parallel Metal T4c) | N | - | 4 | 1 | - | - | keep best | |
+| 2026-11-06T01:10Z | CPU WAVE2 L10_solar_rad_floor WindowA=3/6 WindowB_storm=1/6 (parallel Metal T4c) | N | - | 3 | 1 | - | - | keep best | |
+| 2026-11-06T01:11Z | CPU WAVE2 L11_combo_near_miss WindowA=4/6 WindowB_storm=2/6 (parallel Metal T4c) | N | - | 4 | 2 | - | - | keep best | |
+| 2026-11-06T01:12Z | CPU WAVE2 L12_phys_seasonal_mild WindowA=4/6 WindowB_storm=1/6 (parallel Metal T4c) | N | - | 4 | 1 | - | - | keep best | |
+| 2026-11-06T01:12Z | CPU WAVE2 DONE best={
+  "tag": "L7_ultra_physics",
+  "A": 5,
+  "B": 3,
+  "score": 38
+} | N | - | see best | see best | - | - | keep | await T4c or next wave |
+| 2026-11-06T01:14Z | T4c DONE test_rmse=44.19217261141601 beats=False | Y | 44.19217261141601 | - | - | - | - | record | pick best |
+| 2026-11-06T01:14Z | PICK BEST saved_model_train4b test_rmse=44.0111486009156 beats_train2=False | N | 44.0111486009156 | - | - | - | - | discard_best_still_miss | serve fine-tune if beat else autopsy |
+| 2026-11-06T01:14Z | No stage beat train-2 4.9685 — STOP before promote/paper; autopsy needed | N | 44.0111486009156 | - | - | - | - | discard | invent/adapt next honest lever daytime |
+| 2026-11-06T01:15Z | CPU WAVE3 START: L7 base + GCR rad uplift + LDEX dust shrink (parallel Metal T4c) | N | - | pending | pending | - | - | running | overlap |
+| 2026-11-06T01:15Z | HEARTBEAT T4c~Epoch57/100 Metal; CPU best=L7 A=5/6 B=3/6 (rad miss A; solar/rad/dust miss B); wave3 GCR+LDEX priors launched | Y/N | T4c pending | 5 | 3 | L7 solar/temp/moonq/meteor/dust | L7 temp/moonq/meteor | keep L7 | wave3 |
+| 2026-11-06T01:15Z | CPU WAVE3 L13_l7_rad_uplift WindowA=6/6 WindowB_storm=3/6 (parallel Metal T4c) | N | - | 6 | 3 | - | - | keep best | |
+| 2026-11-06T01:16Z | CPU WAVE3 L14_l7_dust_shrink WindowA=4/6 WindowB_storm=3/6 (parallel Metal T4c) | N | - | 4 | 3 | - | - | keep best | |
+| 2026-11-06T01:17Z | CPU WAVE3 L15_l7_rad_dust WindowA=4/6 WindowB_storm=2/6 (parallel Metal T4c) | N | - | 4 | 2 | - | - | keep best | |
+| 2026-11-06T01:17Z | CPU WAVE3 L16_rad_mild_dust WindowA=5/6 WindowB_storm=4/6 (parallel Metal T4c) | N | - | 5 | 4 | - | - | keep best | |
+| 2026-11-06T01:18Z | CPU WAVE3 L17_rad_strong_dust WindowA=5/6 WindowB_storm=4/6 (parallel Metal T4c) | N | - | 5 | 4 | - | - | keep best | |
+| 2026-11-06T01:19Z | CPU WAVE3 L18_storm_target WindowA=5/6 WindowB_storm=4/6 (parallel Metal T4c) | N | - | 5 | 4 | - | - | keep best | |
+| 2026-11-06T01:19Z | CPU WAVE3 L19_rad20_dust_term WindowA=4/6 WindowB_storm=3/6 (parallel Metal T4c) | N | - | 4 | 3 | - | - | keep best | |
+| 2026-11-06T01:19Z | CPU WAVE3 DONE best={
+  "tag": "L16_rad_mild_dust",
+  "A": 5,
+  "B": 4,
+  "score": 49
+} | N | - | see | see | - | - | keep | |
+| 2026-11-06T01:22Z | T4c HELD-OUT test_rmse=44.192 DOES NOT beat train2 4.9685 (T4a=55.13 T4b=44.01 T4c=44.19); ladder best=T4b; continue serve/physics | N | 44.192 | - | - | - | - | no promote LSTM | CPU wave4 May-dust |
+| 2026-11-06T01:22Z | CPU WAVE4 START: May dust trough + L16 rad uplift (T4c held-out=44.19 miss) | N | 44.19 | pending | pending | - | - | running | |
+| 2026-11-06T01:23Z | CPU WAVE4 L20_may_dust_l16 WindowA=6/6 WindowB_storm=5/6 | N | 44.19 | 6 | 5 | - | - | keep best | |
+| 2026-11-06T01:23Z | BAR HIT L20_may_dust_l16 A=6 B=5 — start mission+ablation next | Y | 44.19 | 6 | 5 | - | - | PROMOTE | mission |
+| 2026-11-06T01:23Z | CPU WAVE4 DONE best={
+  "tag": "L20_may_dust_l16",
+  "A": 6,
+  "B": 5,
+  "score": 61
+} T4c_heldout=44.19 | N | 44.19 | see | see | - | - | keep | |
+| 2026-11-06T01:28Z | BAR HIT L20_may_dust_l16 WindowA=6/6 WindowB_storm=5/6 (miss=solar storm only); rad ML=0.15>0; T4c held-out=44.19 secondary miss | Y | 44.19 | 6 | 5 | all 6 | all but solar | PROMOTE hybrid package | mission+ablation |
