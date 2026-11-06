@@ -19,8 +19,6 @@ logrow() { printf '| %s | %s\n' "$(date -u +%Y-%m-%dT%H:%MZ)" "$1" >> "$LEDGER";
 
 pip install -q --force-reinstall 'setuptools==69.5.1'
 
-CPU_RUN="python logs/overnight_improve/train4/run_on_cpu.py"
-
 logrow "CPU LEVERS START NOW (parallel Metal T4c): Diviner/MEM/blend/archive on train2_locked; score Window A + storm B | N | - | pending | pending | - | - | running | overlap |"
 
 # Ensure data
@@ -74,16 +72,20 @@ score_one() {
   local o="$OUT/windows_$tag"
   mkdir -p "$o"
   echo "=== SCORE $tag on CPU ==="
-  $CPU_RUN scripts/run_14day_flagship_study.py \
+  pip install -q --force-reinstall 'setuptools==69.5.1'
+  export SETUPTOOLS_USE_DISTUTILS=local
+  python logs/overnight_improve/train4/run_on_cpu.py scripts/run_14day_flagship_study.py \
     --csv "$WIN_CSV" --model-dir "$model_dir" \
     --start 2026-06-17 --end 2026-07-14 --window-label A \
     --out-dir "$o/A" >"$o/A.log" 2>"$o/A.err" || true
-  tail -8 "$o/A.log" "$o/A.err" 2>/dev/null || true
-  $CPU_RUN scripts/run_14day_flagship_study.py \
+  tail -12 "$o/A.log" 2>/dev/null || true
+  tail -12 "$o/A.err" 2>/dev/null || true
+  python logs/overnight_improve/train4/run_on_cpu.py scripts/run_14day_flagship_study.py \
     --csv "$WIN_CSV" --model-dir "$model_dir" \
     --start 2024-05-04 --end 2024-05-17 --window-label C \
     --out-dir "$o/B_storm" >"$o/B.log" 2>"$o/B.err" || true
-  tail -8 "$o/B.log" "$o/B.err" 2>/dev/null || true
+  tail -12 "$o/B.log" 2>/dev/null || true
+  tail -12 "$o/B.err" 2>/dev/null || true
   python - <<PY
 import json
 from pathlib import Path
