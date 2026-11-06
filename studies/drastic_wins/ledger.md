@@ -42,3 +42,12 @@
 | 2026-11-06T17:12Z | R3g_rad_climb_cmax | 6 | 6 | solarB=True |
 | 2026-11-06T17:13Z | R3h_persist_storm_hard | 6 | 5 | solarB=True |
 | 2026-11-06T17:13Z | WAVE R3 DONE | - | - | - | see cpu_levers/drastic_R3_summary.json |
+| 2026-11-06T17:19Z | WAVE R4 START | - | - | - | TEMP on R3b base; correct day+/night- ; NOT_READY lock |
+| 2026-11-06T17:20Z | R4t_dn_correct_mild | 6 | 5 | tempA=21.798294884152114 |
+| 2026-11-06T17:21Z | R4t2_dn_correct_med | 6 | 6 | tempA=21.52899763523056 |
+| 2026-11-06T17:23Z | R4t3_dn_correct_optA | 6 | 6 | tempA=21.35244469676122 |
+| 2026-11-06T17:24Z | R4t4_dn_dawn_window | 6 | 5 | tempA=21.740595483062226 |
+| 2026-11-06T17:25Z | R4d_diviner_03 | 6 | 5 | tempA=22.1185496873858 |
+| 2026-11-06T17:26Z | R4d2_diviner_08 | 6 | 5 | tempA=22.22030211739392 |
+| 2026-11-06T17:28Z | R4d3_diviner_15 | 5 | 5 | tempA=22.820115014014352 |
+| 2026-11-06T17:29Z | R4d4_diviner_dn_mild | 6 | 5 | tempA=21.811908102519656 |
