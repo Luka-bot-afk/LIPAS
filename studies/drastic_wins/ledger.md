@@ -28,3 +28,17 @@
 | 2026-11-06T16:50Z | R2p2_persist_storm_only | 5 | 4 | solarB=True |
 | 2026-11-06T16:50Z | WAVE R2 DONE | - | - | - | see cpu_levers/drastic_R2_summary.json |
 | 2026-11-06T16:54Z | WAVE R3 START | - | - | - | post-regime persist + solar climb; NOT_READY lock |
+| 2026-11-06T16:58Z | WAVE R3 START | - | - | - | post-regime persist + solar climb; NOT_READY lock |
+| 2026-11-06T16:59Z | R3a_m2_soft_persist | 6 | 5 | solarB=True |
+| 2026-11-06T17:01Z | R3a2_m2_persist_med | 5 | 5 | solarB=True |
+| 2026-11-06T17:02Z | R3a3_persist_storm_cmax | 6 | 5 | solarB=True |
+| 2026-11-06T17:03Z | R3b_solar120_m2rad | 6 | 6 | solarB=True |
+| 2026-11-06T17:04Z | R3b2_solar120_mq_soft | 5 | 5 | solarB=True |
+| 2026-11-06T17:06Z | R3c_add_hard_cmax | 6 | 5 | solarB=True |
+| 2026-11-06T17:07Z | R3d_m2_soft_clim | 6 | 6 | solarB=True |
+| 2026-11-06T17:08Z | R3e_m2_persist_clim | 6 | 5 | solarB=True |
+| 2026-11-06T17:09Z | R3t_night_temp_025 | 6 | 5 | solarB=True |
+| 2026-11-06T17:10Z | R3f_temp_band_clip | 6 | 6 | solarB=True |
+| 2026-11-06T17:12Z | R3g_rad_climb_cmax | 6 | 6 | solarB=True |
+| 2026-11-06T17:13Z | R3h_persist_storm_hard | 6 | 5 | solarB=True |
+| 2026-11-06T17:13Z | WAVE R3 DONE | - | - | - | see cpu_levers/drastic_R3_summary.json |

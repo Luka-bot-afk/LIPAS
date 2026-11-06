@@ -1,0 +1,59 @@
+{
+  "promote": "NOT_READY",
+  "reason": "Temp still epsilon vs L20 (ASR would not care). Solar climbed (R3b B 15.83 vs R2m2 16.55) but temp gap open.",
+  "best_tag": "R3b_solar120_m2rad",
+  "best": {
+    "tag": "R3b_solar120_m2rad",
+    "A_wins": 6,
+    "B_wins": 6,
+    "A_solar_activity": 13.938603823146394,
+    "A_radiation_mSv": 1.2131670115764897,
+    "A_temperature_C": 22.203377515057255,
+    "B_solar_activity": 15.828986951619878,
+    "B_radiation_mSv": 0.09685990734279053,
+    "B_temperature_C": 27.009148098177707
+  },
+  "R2m2": {
+    "tag": "R2m2_solar115_rad",
+    "A_wins": 6,
+    "B_wins": 6,
+    "A_solar_activity": 13.963038482992228,
+    "A_radiation_mSv": 1.2217799071588695,
+    "A_temperature_C": 22.201957145240282,
+    "B_solar_activity": 16.548775144338514,
+    "B_radiation_mSv": 0.09490585019171485,
+    "B_temperature_C": 26.999033678811394
+  },
+  "L20": {
+    "tag": "L20_may_dust_l16",
+    "A_wins": 6,
+    "B_wins": 5,
+    "A_solar_activity": 14.146468118427498,
+    "A_radiation_mSv": 1.255031696108609,
+    "A_temperature_C": 22.209442506427692,
+    "B_solar_activity": 18.6232705988475,
+    "B_radiation_mSv": 0.19009682378083395,
+    "B_temperature_C": 26.99375362366431
+  },
+  "A6_B6": [
+    "R3b_solar120_m2rad",
+    "R3d_m2_soft_clim",
+    "R3f_temp_band_clip",
+    "R3g_rad_climb_cmax"
+  ],
+  "kill": [
+    "R3a*_persist mqB/quiet",
+    "R3b2_mq_soft",
+    "R3t_night_temp_025 temp worse",
+    "R3c",
+    "R3e",
+    "R3h"
+  ],
+  "keep": [
+    "R3b_solar120_m2rad",
+    "R2m2_solar115_rad"
+  ],
+  "wave": "R3",
+  "n_cands": 12,
+  "completed_utc": "2026-11-06T17:13Z"
+}
