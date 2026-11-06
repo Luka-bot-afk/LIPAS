@@ -23,3 +23,7 @@
 | 2026-11-06T16:06Z | R2m5_solar_add_hard | 6 | 5 | solarB=True |
 | 2026-11-06T16:07Z | R2t_merge_temp_mild | 5 | 5 | solarB=True |
 | 2026-11-06T16:47Z | R2u_unsettled_soft | 6 | 5 | solarB=True |
+| 2026-11-06T16:48Z | R2s_sep_heavy | 6 | 5 | solarB=True |
+| 2026-11-06T16:49Z | R2p_persist_merge | 5 | 5 | solarB=True |
+| 2026-11-06T16:50Z | R2p2_persist_storm_only | 5 | 4 | solarB=True |
+| 2026-11-06T16:50Z | WAVE R2 DONE | - | - | - | see cpu_levers/drastic_R2_summary.json |

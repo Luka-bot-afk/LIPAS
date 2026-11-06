@@ -1,9 +1,10 @@
-# Drastic wins — Mac handoff (`bc-d6c08fcb`)
+# Drastic wins — Mac handoff (`bc-9b4346a4` resume; old `bc-d6c08fcb` offline)
 
 **Branch:** `cursor/drastic-wins-regime-ff97`  
 **Cloud owner:** `bc-a48cf0e9` (implements hooks / cloud probes)  
 **Mac owner:** you — Metal/CPU window sweeps  
-**Hard rules:** no paper edits; no mission/ablation studies package yet. Window A + storm B RMSE probes only. Keep rad ML share > 0. LSTM stays train-2 locked weights.
+**Hard rules:** no paper edits; no mission/ablation studies package yet. Window A + storm B RMSE probes only. Keep rad ML share > 0. LSTM stays train-2 locked weights.  
+**User lock:** do **not** READY until wins are drastically better (ASR would care). R2m2-class = still climb.
 
 ## Sync note (cloud `bc-a48cf0e9`)
 
