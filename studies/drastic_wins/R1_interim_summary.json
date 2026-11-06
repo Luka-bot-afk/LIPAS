@@ -1,0 +1,337 @@
+{
+  "status": "INTERIM \u2014 wave still running (past R1a*; on R1c+)",
+  "ref_L20": {
+    "A_wins": 6,
+    "B_wins": 5,
+    "solar_B": "TIE hyb=flag=18.6233",
+    "solar_A_hyb": 14.146468118427498,
+    "solar_B_hyb": 18.6232705988475,
+    "rad_A_hyb": 1.255031696108609,
+    "rad_B_hyb": 0.19009682378083395
+  },
+  "verdict_so_far": {
+    "R1s_climatology": "KILL for storm B \u2014 all A=6/B=4; solar B regresses; mq B tip-loss",
+    "R1a_regime_scale": "KEEP \u2014 all three break storm solar tie with A=6/B=6; best so far R1a2_storm_solar_112 (B solar RMSE 16.93 vs L20 18.62, \u0394\u2248+1.70 vs flagship)",
+    "substantial?": "Storm solar tie broken with clear \u0394 (~1.3\u20131.7 RMSE). Not yet 3\u00d7 L20 quiet solar margin; rad margins still L20-tiny. Promote-worthy NOT yet \u2014 promising solar family."
+  },
+  "completed": [
+    {
+      "tag": "R1s_solar_clim_pull15",
+      "A_wins": 6,
+      "B_wins": 4,
+      "A_beat": {
+        "solar_activity": true,
+        "radiation_mSv": true,
+        "temperature_C": true,
+        "moonquakes_per_day": true,
+        "meteor_flux_1e15": true,
+        "dust_g_cm3": true
+      },
+      "B_beat": {
+        "solar_activity": false,
+        "radiation_mSv": true,
+        "temperature_C": true,
+        "moonquakes_per_day": false,
+        "meteor_flux_1e15": true,
+        "dust_g_cm3": true
+      },
+      "deltas_flag_minus_hyb": {
+        "A": {
+          "solar_activity": 0.7066956853753279,
+          "radiation_mSv": 0.003947475026101266,
+          "temperature_C": 0.09329789288197432,
+          "moonquakes_per_day": 0.006146607823794614,
+          "meteor_flux_1e15": 0.592838359266107,
+          "dust_g_cm3": 1.2123733108215795e-05
+        },
+        "B_storm": {
+          "solar_activity": -0.7178293762245964,
+          "radiation_mSv": 0.003421169267132984,
+          "temperature_C": 0.19258061977373586,
+          "moonquakes_per_day": -0.00020956575345842943,
+          "meteor_flux_1e15": 0.6099903405693409,
+          "dust_g_cm3": 0.004474841673270946
+        }
+      },
+      "solar_rmse": {
+        "A_hyb": 13.468108802665611,
+        "A_L20": 14.146468118427498,
+        "B_hyb": 19.341099975072098,
+        "B_L20": 18.6232705988475,
+        "A_dL20": 0.6783593157618864,
+        "B_dL20": -0.7178293762245964
+      },
+      "rad_rmse": {
+        "A_hyb": 1.2550240341143126,
+        "A_L20": 1.255031696108609,
+        "B_hyb": 0.19009394643946126,
+        "B_L20": 0.19009682378083395
+      }
+    },
+    {
+      "tag": "R1s2_solar_clim_pull25",
+      "A_wins": 6,
+      "B_wins": 4,
+      "A_beat": {
+        "solar_activity": true,
+        "radiation_mSv": true,
+        "temperature_C": true,
+        "moonquakes_per_day": true,
+        "meteor_flux_1e15": true,
+        "dust_g_cm3": true
+      },
+      "B_beat": {
+        "solar_activity": false,
+        "radiation_mSv": true,
+        "temperature_C": true,
+        "moonquakes_per_day": false,
+        "meteor_flux_1e15": true,
+        "dust_g_cm3": true
+      },
+      "deltas_flag_minus_hyb": {
+        "A": {
+          "solar_activity": 1.1823974345504666,
+          "radiation_mSv": 0.00398293003002137,
+          "temperature_C": 0.0948234470641367,
+          "moonquakes_per_day": 0.006380436566198133,
+          "meteor_flux_1e15": 0.5928361263293207,
+          "dust_g_cm3": 1.2917469393802783e-05
+        },
+        "B_storm": {
+          "solar_activity": -0.676561227343317,
+          "radiation_mSv": 0.003429548744008859,
+          "temperature_C": 0.18458241679497434,
+          "moonquakes_per_day": -0.000759552276376807,
+          "meteor_flux_1e15": 0.6099836028150789,
+          "dust_g_cm3": 0.0044745393570613246
+        }
+      },
+      "solar_rmse": {
+        "A_hyb": 12.992407053490473,
+        "A_L20": 14.146468118427498,
+        "B_hyb": 19.299831826190818,
+        "B_L20": 18.6232705988475,
+        "A_dL20": 1.154061064937025,
+        "B_dL20": -0.676561227343317
+      },
+      "rad_rmse": {
+        "A_hyb": 1.2549885791103925,
+        "A_L20": 1.255031696108609,
+        "B_hyb": 0.19008556696258538,
+        "B_L20": 0.19009682378083395
+      }
+    },
+    {
+      "tag": "R1s3_solar_clim_low_target",
+      "A_wins": 6,
+      "B_wins": 4,
+      "A_beat": {
+        "solar_activity": true,
+        "radiation_mSv": true,
+        "temperature_C": true,
+        "moonquakes_per_day": true,
+        "meteor_flux_1e15": true,
+        "dust_g_cm3": true
+      },
+      "B_beat": {
+        "solar_activity": false,
+        "radiation_mSv": true,
+        "temperature_C": true,
+        "moonquakes_per_day": false,
+        "meteor_flux_1e15": true,
+        "dust_g_cm3": true
+      },
+      "deltas_flag_minus_hyb": {
+        "A": {
+          "solar_activity": 0.37860582859961944,
+          "radiation_mSv": 0.00395595735064358,
+          "temperature_C": 0.10054106788076567,
+          "moonquakes_per_day": 0.006556052798081247,
+          "meteor_flux_1e15": 0.5928285614443126,
+          "dust_g_cm3": 1.1398182630739662e-05
+        },
+        "B_storm": {
+          "solar_activity": -1.4567688882326522,
+          "radiation_mSv": 0.0034230554676271674,
+          "temperature_C": 0.16692780852052636,
+          "moonquakes_per_day": -0.0003014384178556817,
+          "meteor_flux_1e15": 0.610020735115132,
+          "dust_g_cm3": 0.004475779819702375
+        }
+      },
+      "solar_rmse": {
+        "A_hyb": 13.79619865944132,
+        "A_L20": 14.146468118427498,
+        "B_hyb": 20.080039487080153,
+        "B_L20": 18.6232705988475,
+        "A_dL20": 0.3502694589861779,
+        "B_dL20": -1.4567688882326522
+      },
+      "rad_rmse": {
+        "A_hyb": 1.2550155517897703,
+        "A_L20": 1.255031696108609,
+        "B_hyb": 0.19009206023896708,
+        "B_L20": 0.19009682378083395
+      }
+    },
+    {
+      "tag": "R1a_storm_solar_108",
+      "A_wins": 6,
+      "B_wins": 6,
+      "A_beat": {
+        "solar_activity": true,
+        "radiation_mSv": true,
+        "temperature_C": true,
+        "moonquakes_per_day": true,
+        "meteor_flux_1e15": true,
+        "dust_g_cm3": true
+      },
+      "B_beat": {
+        "solar_activity": true,
+        "radiation_mSv": true,
+        "temperature_C": true,
+        "moonquakes_per_day": true,
+        "meteor_flux_1e15": true,
+        "dust_g_cm3": true
+      },
+      "deltas_flag_minus_hyb": {
+        "A": {
+          "solar_activity": 0.15198866413915546,
+          "radiation_mSv": 0.003964884573981919,
+          "temperature_C": 0.10408183165254314,
+          "moonquakes_per_day": 0.0059998686482078956,
+          "meteor_flux_1e15": 0.5928397765948866,
+          "dust_g_cm3": 1.062368477489084e-05
+        },
+        "B_storm": {
+          "solar_activity": 1.2708614204267512,
+          "radiation_mSv": 0.0034659699971643643,
+          "temperature_C": 0.1808253356935623,
+          "moonquakes_per_day": 0.00035232510862592825,
+          "meteor_flux_1e15": 0.6099944354066248,
+          "dust_g_cm3": 0.004475991490646036
+        }
+      },
+      "solar_rmse": {
+        "A_hyb": 14.022815823901784,
+        "A_L20": 14.146468118427498,
+        "B_hyb": 17.35240917842075,
+        "B_L20": 18.6232705988475,
+        "A_dL20": 0.12365229452571391,
+        "B_dL20": 1.2708614204267512
+      },
+      "rad_rmse": {
+        "A_hyb": 1.255006624566432,
+        "A_L20": 1.255031696108609,
+        "B_hyb": 0.19004914570942988,
+        "B_L20": 0.19009682378083395
+      }
+    },
+    {
+      "tag": "R1a2_storm_solar_112",
+      "A_wins": 6,
+      "B_wins": 6,
+      "A_beat": {
+        "solar_activity": true,
+        "radiation_mSv": true,
+        "temperature_C": true,
+        "moonquakes_per_day": true,
+        "meteor_flux_1e15": true,
+        "dust_g_cm3": true
+      },
+      "B_beat": {
+        "solar_activity": true,
+        "radiation_mSv": true,
+        "temperature_C": true,
+        "moonquakes_per_day": true,
+        "meteor_flux_1e15": true,
+        "dust_g_cm3": true
+      },
+      "deltas_flag_minus_hyb": {
+        "A": {
+          "solar_activity": 0.19429257517002263,
+          "radiation_mSv": 0.00398021405869442,
+          "temperature_C": 0.11057461263813906,
+          "moonquakes_per_day": 0.005389134524777406,
+          "meteor_flux_1e15": 0.5928312794432603,
+          "dust_g_cm3": 1.1990719015808615e-05
+        },
+        "B_storm": {
+          "solar_activity": 1.6958148942476825,
+          "radiation_mSv": 0.003418311327953616,
+          "temperature_C": 0.18219144788981012,
+          "moonquakes_per_day": 0.0002520904316098971,
+          "meteor_flux_1e15": 0.6099983698277137,
+          "dust_g_cm3": 0.004476332253825599
+        }
+      },
+      "solar_rmse": {
+        "A_hyb": 13.980511912870917,
+        "A_L20": 14.146468118427498,
+        "B_hyb": 16.92745570459982,
+        "B_L20": 18.6232705988475,
+        "A_dL20": 0.16595620555658108,
+        "B_dL20": 1.6958148942476825
+      },
+      "rad_rmse": {
+        "A_hyb": 1.2549912950817195,
+        "A_L20": 1.255031696108609,
+        "B_hyb": 0.19009680437864063,
+        "B_L20": 0.19009682378083395
+      }
+    },
+    {
+      "tag": "R1a3_storm_solar_add_only",
+      "A_wins": 6,
+      "B_wins": 6,
+      "A_beat": {
+        "solar_activity": true,
+        "radiation_mSv": true,
+        "temperature_C": true,
+        "moonquakes_per_day": true,
+        "meteor_flux_1e15": true,
+        "dust_g_cm3": true
+      },
+      "B_beat": {
+        "solar_activity": true,
+        "radiation_mSv": true,
+        "temperature_C": true,
+        "moonquakes_per_day": true,
+        "meteor_flux_1e15": true,
+        "dust_g_cm3": true
+      },
+      "deltas_flag_minus_hyb": {
+        "A": {
+          "solar_activity": 0.17149503964992796,
+          "radiation_mSv": 0.003969607262868546,
+          "temperature_C": 0.11321011106515044,
+          "moonquakes_per_day": 0.006529139471580958,
+          "meteor_flux_1e15": 0.5928328100173449,
+          "dust_g_cm3": 1.2193403827409632e-05
+        },
+        "B_storm": {
+          "solar_activity": 0.44047801511125684,
+          "radiation_mSv": 0.0034384467161234222,
+          "temperature_C": 0.191359934047739,
+          "moonquakes_per_day": 0.00020513177792058634,
+          "meteor_flux_1e15": 0.6099994739486526,
+          "dust_g_cm3": 0.004474422411670176
+        }
+      },
+      "solar_rmse": {
+        "A_hyb": 14.003309448391011,
+        "A_L20": 14.146468118427498,
+        "B_hyb": 18.182792583736244,
+        "B_L20": 18.6232705988475,
+        "A_dL20": 0.1431586700364864,
+        "B_dL20": 0.44047801511125684
+      },
+      "rad_rmse": {
+        "A_hyb": 1.2550019018775453,
+        "A_L20": 1.255031696108609,
+        "B_hyb": 0.19007666899047082,
+        "B_L20": 0.19009682378083395
+      }
+    }
+  ]
+}
