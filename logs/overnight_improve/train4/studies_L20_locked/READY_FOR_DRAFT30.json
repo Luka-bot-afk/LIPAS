@@ -1,0 +1,96 @@
+{
+  "status": "READY_FOR_DRAFT30",
+  "package_id": "L20_may_dust_l16",
+  "generated_utc": "2026-11-06T01:44:46.792310+00:00",
+  "window_bar": {
+    "A": 6,
+    "B_storm": 5,
+    "bar_met": true,
+    "B_miss": [
+      "solar_activity"
+    ]
+  },
+  "blend": {
+    "order": [
+      "solar_activity",
+      "radiation_mSv",
+      "temperature_C",
+      "moonquakes_per_day",
+      "meteor_flux_1e15",
+      "dust_g_cm3"
+    ],
+    "values": [
+      0.4,
+      0.15,
+      0.02,
+      0.02,
+      0.03,
+      0.01
+    ],
+    "radiation_ml_share": 0.15,
+    "radiation_ml_gt_0": true
+  },
+  "held_out_secondary": {
+    "train2_locked": 4.9685,
+    "T4c": 44.19217261141601,
+    "beats_train2": false
+  },
+  "paths": {
+    "serve_config": "logs/overnight_improve/train4/L20_serve_config_locked.json",
+    "promoted_package": "logs/overnight_improve/train4/promoted_L20_may_dust_l16",
+    "canonical_lock": "saved_model_L20_promoted",
+    "window_A_summary": "logs/overnight_improve/train4/cpu_levers/windows_L20_may_dust_l16/A/summary.json",
+    "window_B_summary": "logs/overnight_improve/train4/cpu_levers/windows_L20_may_dust_l16/B_storm/summary.json",
+    "mission_sim": "logs/overnight_improve/train4/studies_L20_locked/mission_sim",
+    "ablation": "logs/overnight_improve/train4/studies_L20_locked/ablation",
+    "figures_data": "logs/overnight_improve/train4/studies_L20_locked/figures_data",
+    "honesty": "logs/overnight_improve/train4/studies_L20_locked/HONESTY_CIRCULAR_RISK.md"
+  },
+  "mission_metrics_measured": {
+    "lipas_first_caution_t_min": 50,
+    "lipas_first_nogo_t_min": 85,
+    "nasa_goes_first_caution_t_min": 80,
+    "nasa_goes_first_nogo_t_min": 105,
+    "nasa_combined_first_caution_t_min": 55,
+    "nasa_combined_first_nogo_t_min": 70,
+    "lead_time_analysis": {
+      "lipas_caution_minus_storm_onset_min": 10,
+      "lipas_caution_minus_goes_surge_min": -20,
+      "nasa_goes_caution_minus_goes_surge_min": 10,
+      "lipas_nogo_minus_nasa_goes_nogo_min": 20,
+      "recommended_return_call": "LIPAS NO-GO at T+85 min"
+    }
+  },
+  "ablation_metrics_measured": {
+    "window": {
+      "start": "2026-07-05",
+      "end": "2026-07-18"
+    },
+    "baseline_solar_rmse": 5.148874146840956,
+    "baseline_radiation_rmse": 0.10500249250734696,
+    "worst_one_away_for_radiation": {
+      "config": "remove solar",
+      "removed": "solar",
+      "n_removed": 1,
+      "solar_rmse": 3.2522239649535423,
+      "radiation_rmse": 0.10608989148493322,
+      "solar_rmse_increase": -1.8966501818874133,
+      "radiation_rmse_increase": 0.0010873989775862652,
+      "solar_pct_worse": -36.83621171923741,
+      "radiation_pct_worse": 1.035593490802307
+    },
+    "worst_one_away_for_solar": {
+      "config": "remove temperature",
+      "removed": "temperature",
+      "n_removed": 1,
+      "solar_rmse": 5.182781921372329,
+      "radiation_rmse": 0.10491129646779725,
+      "solar_rmse_increase": 0.03390777453137339,
+      "radiation_rmse_increase": -9.119603954971245e-05,
+      "solar_pct_worse": 0.6585473554869699,
+      "radiation_pct_worse": -0.08685130930899713
+    }
+  },
+  "honesty_flags_count": 4,
+  "note": "All numbers below/above are measured from scripts \u2014 do not invent additional prose metrics."
+}

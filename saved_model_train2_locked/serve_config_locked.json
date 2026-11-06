@@ -1,0 +1,89 @@
+{
+  "package_id": "L20_may_dust_l16",
+  "promoted_utc": "2026-11-06T01:39:36.134664+00:00",
+  "authorization": "user confirmed \u22655/6; promote hybrid serve package (LSTM remains train-2 locked weights)",
+  "lstm_source": "papers/appendix_numerical_tables/locked_saved_model (train-2)",
+  "held_out_note": "T4a/b/c did not beat train-2 4.9685; no new LSTM promote. This is a serve/physics/archive package promote.",
+  "blend_weights": {
+    "order": [
+      "solar_activity",
+      "radiation_mSv",
+      "temperature_C",
+      "moonquakes_per_day",
+      "meteor_flux_1e15",
+      "dust_g_cm3"
+    ],
+    "values": [
+      0.4,
+      0.15,
+      0.02,
+      0.02,
+      0.03,
+      0.01
+    ],
+    "radiation_ml_share": 0.15,
+    "radiation_ml_gt_0": true
+  },
+  "archive_priors": {
+    "enabled": true,
+    "rad_gcr_prior": {
+      "enabled": true,
+      "scale": 1.15,
+      "add_mSv": 0.015
+    },
+    "dust_ldex_prior": {
+      "enabled": true,
+      "scale": 1.0,
+      "add_g_cm3": 0.0,
+      "may_trough": {
+        "enabled": true,
+        "doy_start": 121,
+        "doy_end": 151,
+        "scale": 0.975,
+        "add_g_cm3": -0.03
+      }
+    }
+  },
+  "window_wins": {
+    "tag": "L20_may_dust_l16",
+    "wins": {
+      "A": {
+        "wins": 6,
+        "total": 6,
+        "beat_map": {
+          "solar_activity": true,
+          "radiation_mSv": true,
+          "temperature_C": true,
+          "moonquakes_per_day": true,
+          "meteor_flux_1e15": true,
+          "dust_g_cm3": true
+        }
+      },
+      "B_storm": {
+        "wins": 5,
+        "total": 6,
+        "beat_map": {
+          "solar_activity": false,
+          "radiation_mSv": true,
+          "temperature_C": true,
+          "moonquakes_per_day": true,
+          "meteor_flux_1e15": true,
+          "dust_g_cm3": true
+        }
+      }
+    }
+  },
+  "paths": {
+    "promoted_dir": "logs/overnight_improve/train4/promoted_L20_may_dust_l16",
+    "canonical_lock": "saved_model_L20_promoted",
+    "window_A": "logs/overnight_improve/train4/cpu_levers/windows_L20_may_dust_l16/A",
+    "window_B_storm": "logs/overnight_improve/train4/cpu_levers/windows_L20_may_dust_l16/B_storm"
+  },
+  "file_digests_sha256_16": {
+    "blend_weights.npy": "7b15a6e2375d7564",
+    "archive_priors.json": "bd5ac571a8d7f57a",
+    "meta.json": "3a018f8f015c3e87"
+  },
+  "train2_meta_source_csv": "data/ingested_extended/extended_training_1784310247.csv",
+  "train2_test_rmse_locked": 4.9685
+}

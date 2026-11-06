@@ -1,0 +1,66 @@
+{
+  "package_id": "L20_may_dust_l16",
+  "generated_utc": "2026-11-06T01:44:46.782984+00:00",
+  "policy": "Do not claim independent NASA wins for channels where evaluation labels are constructed from the same physics family the hybrid largely follows. Meteor labels are shower-augmented physics (corr\u22481 with physics). Dust hybrid is physics-dominated (corr\u22481 with physics/flagship); May trough prior gives a small measured edge but is not an independent sensor forecast.",
+  "windows": {
+    "A": {
+      "n_rows": 84,
+      "meteor_label_vs_physics_corr": 1.0,
+      "meteor_hybrid_vs_physics_corr": 0.9983920965391886,
+      "meteor_hybrid_vs_truth_corr": 0.9983920965391886,
+      "dust_hybrid_vs_physics_corr": 0.9999974814197548,
+      "dust_hybrid_vs_flagship_corr": 0.9999974814197548,
+      "dust_label_vs_physics_corr": -0.004935725766642778
+    },
+    "B_storm": {
+      "n_rows": 42,
+      "meteor_label_vs_physics_corr": 1.0,
+      "meteor_hybrid_vs_physics_corr": 0.9991220445248398,
+      "meteor_hybrid_vs_truth_corr": 0.9991220445248398,
+      "dust_hybrid_vs_physics_corr": 0.9999939613656523,
+      "dust_hybrid_vs_flagship_corr": 0.9999939613656523,
+      "dust_label_vs_physics_corr": 0.543698696111242
+    }
+  },
+  "flags": [
+    {
+      "window": "A",
+      "channel": "meteor_flux_1e15",
+      "severity": "circular_label_construction",
+      "detail": "truth meteor == physics shower-augmented series (corr\u22481); hybrid follows physics. Report as shower-timing/physics illustration, NOT independent forecast win.",
+      "measured_corr_label_vs_physics": 1.0,
+      "measured_corr_hybrid_vs_physics": 0.9983920965391886
+    },
+    {
+      "window": "A",
+      "channel": "dust_g_cm3",
+      "severity": "physics_dominated_near_circular",
+      "detail": "hybrid dust corr\u22481 with physics/flagship; measured win is a tiny residual/prior edge, not independent dust sensing.",
+      "measured_corr_hybrid_vs_physics": 0.9999974814197548,
+      "measured_corr_hybrid_vs_flagship": 0.9999974814197548
+    },
+    {
+      "window": "B_storm",
+      "channel": "meteor_flux_1e15",
+      "severity": "circular_label_construction",
+      "detail": "truth meteor == physics shower-augmented series (corr\u22481); hybrid follows physics. Report as shower-timing/physics illustration, NOT independent forecast win.",
+      "measured_corr_label_vs_physics": 1.0,
+      "measured_corr_hybrid_vs_physics": 0.9991220445248398
+    },
+    {
+      "window": "B_storm",
+      "channel": "dust_g_cm3",
+      "severity": "physics_dominated_near_circular",
+      "detail": "hybrid dust corr\u22481 with physics/flagship; measured win is a tiny residual/prior edge, not independent dust sensing.",
+      "measured_corr_hybrid_vs_physics": 0.9999939613656523,
+      "measured_corr_hybrid_vs_flagship": 0.9999939613656523
+    }
+  ],
+  "manuscript_guidance": [
+    "Primary honest wins to emphasize: solar (Window A), radiation (A+B), temperature residual (A+B), moonquakes (A+B).",
+    "Meteor: disclose circular/label-construction risk; do not sell as independent skill.",
+    "Dust: disclose physics-dominated / near-circular risk; May trough prior is calendar archive, small measured edge only.",
+    "Storm B solar: exact tie (adaptive/physics) \u2014 counted miss; allowed as the 1 miss.",
+    "Held-out LSTM: T4c=44.192 does not beat train-2 4.9685 \u2014 do not claim new LSTM."
+  ]
+}
