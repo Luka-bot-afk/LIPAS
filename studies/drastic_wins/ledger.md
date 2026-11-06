@@ -81,3 +81,14 @@
 | 2026-11-06T19:09Z | R5w3_solar45_rad18 | 6 | 5 | nogo=60;caution=5 |
 | 2026-11-06T19:11Z | R5x_combo_mission | 5 | 5 | nogo=60;caution=0 |
 | 2026-11-06T19:11Z | WAVE R5 DONE | - | - | - | see studies/drastic_wins/R5_FINAL.md |
+| 2026-11-06T19:57Z | WAVE R6 LASTSHOT START | - | - | - | residual+lunar+caution FA; owner bc-43fb58ef |
+| 2026-11-06T19:58Z | R6_base_r5s2 | 6 | 6 | nogo=55;caution=0 |
+| 2026-11-06T19:59Z | R6c2_caution_cap092_solar | 6 | 5 | nogo=55;caution=50 |
+| 2026-11-06T20:01Z | R6c3_caution_lunar_quiet | 6 | 6 | nogo=60;caution=50 |
+| 2026-11-06T20:02Z | R6c_caution_cap090 | 6 | 6 | nogo=55;caution=50 |
+| 2026-11-06T20:03Z | R6p2_lunar_mild | 6 | 5 | nogo=60;caution=50 |
+| 2026-11-06T20:05Z | R6p_lunar_storm_kp | 6 | 6 | nogo=60;caution=50 |
+| 2026-11-06T20:06Z | R6r_resid_bias | 6 | 5 | nogo=55;caution=0 |
+| 2026-11-06T20:07Z | R6x_caution_lunar | 6 | 6 | nogo=60;caution=50 |
+| 2026-11-06T20:09Z | R6x_resid_caution | 6 | 5 | nogo=55;caution=50 |
+| 2026-11-06T20:09Z | WAVE R6 LASTSHOT DONE | - | - | - | see studies/drastic_wins/R6_FINAL.md |
