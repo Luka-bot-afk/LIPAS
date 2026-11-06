@@ -27,3 +27,4 @@
 | 2026-11-06T16:49Z | R2p_persist_merge | 5 | 5 | solarB=True |
 | 2026-11-06T16:50Z | R2p2_persist_storm_only | 5 | 4 | solarB=True |
 | 2026-11-06T16:50Z | WAVE R2 DONE | - | - | - | see cpu_levers/drastic_R2_summary.json |
+| 2026-11-06T16:54Z | WAVE R3 START | - | - | - | post-regime persist + solar climb; NOT_READY lock |
