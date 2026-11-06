@@ -61,3 +61,17 @@
 | 2026-11-06T17:40Z | R4p2_phys_dn_mild | 6 | 6 | tempA=21.906262501589907 |
 | 2026-11-06T17:41Z | R4r_regime_temp_dn | 6 | 6 | tempA=21.81489725552661 |
 | 2026-11-06T17:41Z | WAVE R4 DONE | - | - | - | see cpu_levers/drastic_R4_summary.json |
+| 2026-11-06T18:25Z | WAVE R5 START | - | - | - | R4l2 base; NEW families; mission lead proxy; wall climb; owner bc-4bbf4026 |
+| 2026-11-06T18:28Z | R5_base_r4l2 | 6 | 6 | nogo=60;caution=0 |
+| 2026-11-06T18:30Z | R5q_quiet_solar_shrink | 6 | 6 | nogo=65;caution=0 |
+| 2026-11-06T18:33Z | R5q2_quiet_solar_lift | 6 | 6 | nogo=60;caution=0 |
+| 2026-11-06T18:35Z | R5e_early_warn_rad | 6 | 6 | nogo=60;caution=0 |
+| 2026-11-06T18:38Z | R5e2_early_warn_hard | 6 | 5 | nogo=60;caution=0 |
+| 2026-11-06T18:41Z | R5s_soft_regime | 6 | 5 | nogo=60;caution=0 |
+| 2026-11-06T18:43Z | R5s2_soft_plus_ew | 6 | 6 | nogo=55;caution=0 |
+| 2026-11-06T18:46Z | R5p_rad_formula_105 | 6 | 5 | nogo=60;caution=0 |
+| 2026-11-06T18:48Z | R5p2_rad_formula_108 | 6 | 6 | nogo=60;caution=0 |
+| 2026-11-06T18:51Z | R5a_couple_strong | 6 | 5 | nogo=60;caution=0 |
+| 2026-11-06T18:53Z | R5a2_couple_ew | 6 | 5 | nogo=60;caution=0 |
+| 2026-11-06T18:56Z | R5m_mq_lat | 5 | 5 | nogo=60;caution=0 |
+| 2026-11-06T18:58Z | R5t_lst_48 | 6 | 5 | nogo=65;caution=0 |
