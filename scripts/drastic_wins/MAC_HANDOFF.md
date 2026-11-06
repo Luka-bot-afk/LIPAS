@@ -49,3 +49,7 @@ Script builds `R1_*` cands under `logs/overnight_improve/train4/cpu_levers/cands
 - Push cand results + ledger rows to this branch often
 - If you invent a new prior key the code lacks, note it in ledger and ping via git commit message `NEED HOOK: ...` — cloud will implement
 - Do not promote / paper until cloud+Mac agree margins are drastic vs L20
+
+## Mac fix (2026-11-06)
+
+`run_wave_R1.sh` ROOT was `../../..` (landed outside LIPAS). Fixed to `../..`. First Mac attempt null-scored; re-run after fix.
