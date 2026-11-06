@@ -61,3 +61,7 @@ Format: `timestamp | change | retrain? Y/N | heldout_rmse | A_wins 0-6 | B_wins 
 | 2026-11-06T00:36Z | CPU LEVER L5_seasonal_meteor_light WindowA_wins=None WindowB_storm_wins=None (train2_locked+blend; Metal T4c still running) | N | - | None | None | - | - | keep if best | next cand |
 | 2026-11-06T00:36Z | CPU LEVERS DONE best={'tag': 'L0_rad_restore', 'A': 3, 'B': -1, 'score': -7} — will merge onto T4c when ready; draft30 only after promote+studies | N | - | see best | see best | - | - | keep | await T4c heldout then merge |
 | 2026-11-06T00:37Z | CPU LEVER L0_rad_restore WindowA=3/6 (solar+meteor+dust win; rad/temp/moonq miss); B_storm pending; Metal T4c parallel | N | - | 3 | pending | solar/meteor | rad miss | keep climbing | finish B + other cands |
+| 2026-11-06T00:38Z | CPU LEVER L0_rad_restore WindowA=3/6 WindowB_storm=2/6 (parallel Metal T4c) | N | - | 3 | 2 | - | - | keep best | |
+| 2026-11-06T00:39Z | CPU LEVER L1_solar_rad WindowA=3/6 WindowB_storm=1/6 (parallel Metal T4c) | N | - | 3 | 1 | - | - | keep best | |
+| 2026-11-06T00:40Z | CPU LEVER L2_diviner_temp_resid WindowA=3/6 WindowB_storm=1/6 (parallel Metal T4c) | N | - | 3 | 1 | - | - | keep best | |
+| 2026-11-06T00:40Z | HEARTBEAT parallel: T4c Epoch 25/100 Metal; CPU levers L0 A=3/6 B=2/6 (temp win on storm!); L1 A=3 B=1; L2+ running; best=L0 | Y/N | T4c pending | 3 | 2 | L0 solar/meteor/dust | L0 temp+meteor storm | keep L0 package | finish L2-L5 |

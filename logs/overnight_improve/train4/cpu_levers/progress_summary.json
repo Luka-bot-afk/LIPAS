@@ -1,0 +1,74 @@
+{
+  "best_so_far": {
+    "tag": "L0_rad_restore",
+    "A": 3,
+    "B": 2,
+    "score": 25
+  },
+  "completed": [
+    {
+      "tag": "L0_rad_restore",
+      "A_wins": 3,
+      "B_wins": 2,
+      "A_map": {
+        "solar_activity": true,
+        "radiation_mSv": false,
+        "temperature_C": false,
+        "moonquakes_per_day": false,
+        "meteor_flux_1e15": true,
+        "dust_g_cm3": true
+      },
+      "B_map": {
+        "solar_activity": false,
+        "radiation_mSv": false,
+        "temperature_C": true,
+        "moonquakes_per_day": false,
+        "meteor_flux_1e15": true,
+        "dust_g_cm3": false
+      }
+    },
+    {
+      "tag": "L1_solar_rad",
+      "A_wins": 3,
+      "B_wins": 1,
+      "A_map": {
+        "solar_activity": true,
+        "radiation_mSv": false,
+        "temperature_C": false,
+        "moonquakes_per_day": false,
+        "meteor_flux_1e15": true,
+        "dust_g_cm3": true
+      },
+      "B_map": {
+        "solar_activity": false,
+        "radiation_mSv": false,
+        "temperature_C": false,
+        "moonquakes_per_day": false,
+        "meteor_flux_1e15": true,
+        "dust_g_cm3": false
+      }
+    },
+    {
+      "tag": "L2_diviner_temp_resid",
+      "A_wins": 3,
+      "B_wins": 1,
+      "A_map": {
+        "solar_activity": true,
+        "radiation_mSv": false,
+        "temperature_C": false,
+        "moonquakes_per_day": false,
+        "meteor_flux_1e15": true,
+        "dust_g_cm3": true
+      },
+      "B_map": {
+        "solar_activity": false,
+        "radiation_mSv": false,
+        "temperature_C": false,
+        "moonquakes_per_day": false,
+        "meteor_flux_1e15": true,
+        "dust_g_cm3": false
+      }
+    }
+  ],
+  "note": "primary mission = window wins vs NASA/replica; held-out secondary"
+}

@@ -1,6 +1,5 @@
 {
   "tag": "L0_rad_restore",
-  "model_dir": "logs/overnight_improve/train4/cpu_levers/cands/L0_rad_restore",
   "wins": {
     "A": {
       "wins": 3,
@@ -15,9 +14,16 @@
       }
     },
     "B_storm": {
-      "wins": null,
-      "error": "missing summary",
-      "err": "\n  File \"/Users/lukatakki/Documents/GitHub/LIPAS/logs/overnight_improve/train4/cpu_tf_bootstrap.py\", line 18, in <module>\n    force_cpu()\n  File \"/Users/lukatakki/Documents/GitHub/LIPAS/logs/overnight_improve/train4/cpu_tf_bootstrap.py\", line 9, in force_cpu\n    import tensorflow as tf\n  File \"/Users/lukatakki/Documents/GitHub/LIPAS/.venv/lib/python3.12/site-packages/tensorflow/__init__.py\", line 30, in <module>\n    import distutils as _distutils\nModuleNotFoundError: No module named 'distutils'\n"
+      "wins": 2,
+      "total": 6,
+      "beat_map": {
+        "solar_activity": false,
+        "radiation_mSv": false,
+        "temperature_C": true,
+        "moonquakes_per_day": false,
+        "meteor_flux_1e15": true,
+        "dust_g_cm3": false
+      }
     }
   }
 }
