@@ -44,6 +44,9 @@ images/
 # keep manuscript figures and appendix charts
 !papers/**/*.png
 !papers/**/*.jpg
+# conference poster art and R6c figure copies
+!poster/**/*.png
+!poster/**/*.jpg
 !studies/
 
 # Local terrain package stays off the public repo
