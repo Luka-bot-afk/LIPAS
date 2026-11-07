@@ -1,23 +1,19 @@
-% LIPAS conference poster — portrait A0, two columns
-% White base + low-opacity moon; no content panel fills
+% LIPAS A0 poster — pure white + low-opacity moon watermark
+% NO filled panels/cards/section bars (titles are plain text only)
 \documentclass[12pt]{article}
 
 \usepackage[paperwidth=841mm,paperheight=1189mm,margin=0mm]{geometry}
 \usepackage{graphicx}
 \usepackage{xcolor}
 \usepackage{tikz}
-\usetikzlibrary{calc}
-\usepackage{tcolorbox}
-\tcbuselibrary{skins}
 \usepackage{ragged2e}
 \usepackage{microtype}
 \usepackage{fontspec}
 \usepackage{setspace}
 
-\definecolor{LipasInk}{HTML}{1B2430}
+\definecolor{LipasInk}{HTML}{1A2430}
 \definecolor{LipasMuted}{HTML}{4A5564}
-\definecolor{LipasTeal}{HTML}{1F8A8A}
-\definecolor{LipasHead}{HTML}{163A4A}
+\definecolor{LipasTeal}{HTML}{1F7A7A}
 
 \setmainfont{Liberation Sans}[
   BoldFont = Liberation Sans Bold,
@@ -27,75 +23,56 @@
 
 \pagestyle{empty}
 \setlength{\parindent}{0pt}
-\setlength{\parskip}{0.1em}
-\setstretch{1.05}
+\setlength{\parskip}{0.12em}
+\setstretch{1.06}
 
-% Consistent A0 type scale
-\newcommand{\TitleSize}{44pt}
+% Uniform type scale
+\newcommand{\TitleSize}{42pt}
 \newcommand{\SubSize}{16pt}
-\newcommand{\SectionSize}{24pt}
+\newcommand{\SectionSize}{26pt}
 \newcommand{\BodySize}{18pt}
 \newcommand{\BodyLead}{23pt}
 \newcommand{\SmallSize}{16pt}
 \newcommand{\CaptionSize}{14pt}
 \newcommand{\FootSize}{11pt}
-\newcommand{\UITitle}{17pt}
 
-\newcommand{\OuterPad}{18mm}
+\newcommand{\OuterPad}{20mm}
 \newcommand{\InnerWidth}{\dimexpr\paperwidth-2\OuterPad\relax}
-% Fixed column stage height so both columns fill evenly above footer
-\newcommand{\ColHeight}{1088mm}
+\newcommand{\ColHeight}{1065mm}
 
-\tcbset{
-  sectionbar/.style={
-    enhanced,
-    colback=LipasTeal,
-    colframe=LipasTeal,
-    boxrule=0pt,
-    arc=1mm,
-    left=4.5mm,right=4mm,top=2mm,bottom=2mm,
-    fontupper=\color{white}\bfseries\fontsize{\SectionSize}{28pt}\selectfont,
-    before skip=1.8mm,
-    after skip=1.4mm
-  },
-  % NO panel fill — text sits on white+moon
-  clearpanel/.style={
-    empty,
-    left=0.5mm,right=0.5mm,top=0.8mm,bottom=0.8mm,
-    fontupper=\color{LipasInk}\fontsize{\BodySize}{\BodyLead}\selectfont,
-    before skip=0mm,
-    after skip=1.2mm
-  }
+% Section title: text only, thin teal rule — NO box fill
+\newcommand{\SectionTitle}[1]{%
+  \vspace{2.2mm}%
+  {\bfseries\fontsize{\SectionSize}{30pt}\selectfont\color{LipasTeal}#1\par}%
+  {\color{LipasTeal}\rule{0.42\linewidth}{1.1pt}\par}%
+  \vspace{1.6mm}%
 }
 
-\newcommand{\SectionBar}[1]{\begin{tcolorbox}[sectionbar,width=\linewidth]#1\end{tcolorbox}}
-\newcommand{\Panel}[1]{\begin{tcolorbox}[clearpanel,width=\linewidth]#1\end{tcolorbox}}
+\newcommand{\Body}{\color{LipasInk}\fontsize{\BodySize}{\BodyLead}\selectfont}
 \newcommand{\Cap}[1]{{\fontsize{\CaptionSize}{17pt}\selectfont\color{LipasMuted}\RaggedRight #1\par}}
 
 \begin{document}%
-% -------- White base + low-opacity moon + four-side waves --------
+% Pure white base + subtle moon watermark + four-side waves
 \begin{tikzpicture}[remember picture,overlay]
   \fill[white] (current page.south west) rectangle (current page.north east);
   \node[anchor=center,inner sep=0] at (current page.center)
     {\includegraphics[width=\paperwidth,height=\paperheight]{assets/bg_moon_overlay.png}};
-  \node[anchor=center,inner sep=0,opacity=0.88] at (current page.center)
+  \node[anchor=center,inner sep=0,opacity=0.75] at (current page.center)
     {\includegraphics[width=\paperwidth,height=\paperheight]{assets/wave_frame.png}};
-  \fill[LipasHead!92]
-    (current page.north west) rectangle ([yshift=-36mm]current page.north east);
 \end{tikzpicture}
 
-\vspace*{4mm}
+\vspace*{5mm}
 \hspace*{\OuterPad}%
 \begin{minipage}{\InnerWidth}
 
-% -------- Header --------
+% -------- Header: logos + title (no filled title band) --------
 \noindent
 \begin{minipage}[c]{0.12\InnerWidth}
 \includegraphics[width=\linewidth,height=14mm,keepaspectratio]{assets/logo_lipas.png}
 \end{minipage}\hfill
 \begin{minipage}[c]{0.72\InnerWidth}
 \centering
-{\bfseries\fontsize{\TitleSize}{50pt}\selectfont\color{white}
+{\bfseries\fontsize{\TitleSize}{48pt}\selectfont\color{LipasInk}
 LUNAR IMPACT AND PREDICTIVE ANALYSIS SYSTEM\par}
 \end{minipage}\hfill
 \begin{minipage}[c]{0.11\InnerWidth}
@@ -104,9 +81,9 @@ LUNAR IMPACT AND PREDICTIVE ANALYSIS SYSTEM\par}
 
 \vspace{2.5mm}
 \noindent
-{\color{LipasInk}%
+{\Body
 \begin{minipage}[c]{0.16\linewidth}
-{\bfseries\fontsize{17pt}{20pt}\selectfont Luka Takki}
+{\bfseries\fontsize{16pt}{19pt}\selectfont Luka Takki}
 \end{minipage}%
 \begin{minipage}[c]{0.66\linewidth}
 \centering
@@ -117,16 +94,16 @@ Lunar Forecasting and Mission Planning\par}
 \begin{minipage}[c]{0.16\linewidth}
 \raggedleft{\bfseries\fontsize{15pt}{18pt}\selectfont Luxembourg 2026}
 \end{minipage}%
-}\\[-1mm]
-{\color{LipasTeal}\rule{\linewidth}{0.8pt}}
+}\\[0.8mm]
+{\color{LipasTeal}\rule{\linewidth}{0.9pt}}
 
 \vspace{2mm}
 
 \noindent
 \begin{minipage}[t][\ColHeight][s]{0.485\InnerWidth}
-%% ================= LEFT =================
-\SectionBar{Abstract}
-\Panel{%
+\Body
+%% LEFT
+\SectionTitle{Abstract}
 LIPAS (Lunar Impact and Predictive Analysis System) is a hybrid forecasting and decision-support
 platform that combines Long Short-Term Memory (LSTM) machine learning with physics-based
 models to predict lunar space weather (temperature, radiation, micrometeorites, and solar
@@ -135,11 +112,9 @@ study evaluated whether a system like LIPAS could be developed, whether it was u
 whether it could produce accurate forecasts. Results: $\sim$15\% lower solar RMSE and $\sim$22\% lower
 radiation RMSE compared with NASA-replicated flagship models, with earlier solar storm EVA
 caution alerts than NASA (T+45 vs T+55).
-}
 
 \vfill
-\SectionBar{Introduction}
-\Panel{%
+\SectionTitle{Introduction}
 Renewed lunar exploration through initiatives such as NASA's Artemis programme increases the
 need for faster and more accurate operational forecasting tools. Existing models often address
 individual hazards, requiring mission planners to consult multiple products when making time-
@@ -151,52 +126,48 @@ This study addresses three research questions:\\[0.6mm]
 RQ1: Can physics and machine learning be combined into an hybrid lunar forecast system?\\
 RQ2: Does unifying multiple hazards into one mission platform improve operational usability?\\
 RQ3: Can LIPAS improve selected hazard forecasts versus established NASA/NOAA baselines?
-}
 
 \vfill
-\SectionBar{System Overview}
-\Panel{%
+\SectionTitle{System Overview}
 \begin{minipage}[c]{0.56\linewidth}
-\centering\includegraphics[width=\linewidth,height=120mm,keepaspectratio]{assets/ui_dashboard.png}
+\centering\includegraphics[width=\linewidth,height=112mm,keepaspectratio]{assets/ui_dashboard.png}
 \end{minipage}\hfill
 \begin{minipage}[c]{0.42\linewidth}
-{\bfseries\fontsize{\UITitle}{21pt}\selectfont Dashboard for any location\par}
+{\bfseries\fontsize{17pt}{21pt}\selectfont Dashboard for any location\par}
 \vspace{0.8mm}
 {\fontsize{\SmallSize}{20pt}\selectfont\raggedright
 Live six hazard forecasts for a chosen site in one view: maps, trends, and alerts instead of raw numbers from separate tools. Built so planners see the full risk picture at a glance.\par}
 \end{minipage}
 
-\vspace{3.5mm}
+\vspace{3.8mm}
 \begin{minipage}[c]{0.56\linewidth}
-\centering\includegraphics[width=\linewidth,height=120mm,keepaspectratio]{assets/ui_mission.png}
+\centering\includegraphics[width=\linewidth,height=112mm,keepaspectratio]{assets/ui_mission.png}
 \end{minipage}\hfill
 \begin{minipage}[c]{0.42\linewidth}
-{\bfseries\fontsize{\UITitle}{21pt}\selectfont Mission planner\par}
+{\bfseries\fontsize{17pt}{21pt}\selectfont Mission planner\par}
 \vspace{0.8mm}
 {\fontsize{\SmallSize}{20pt}\selectfont\raggedright
 Turn those forecasts into a go / caution / no go call for an EVA. Set place and duration, then get a clear ops recommendation without jumping between agency products.\par}
 \end{minipage}
 
-\vspace{3.5mm}
+\vspace{3.8mm}
 \begin{minipage}[c]{0.56\linewidth}
-\centering\includegraphics[width=\linewidth,height=120mm,keepaspectratio]{assets/ui_site.png}
+\centering\includegraphics[width=\linewidth,height=112mm,keepaspectratio]{assets/ui_site.png}
 \end{minipage}\hfill
 \begin{minipage}[c]{0.42\linewidth}
-{\bfseries\fontsize{\UITitle}{21pt}\selectfont Site / map detail page\par}
+{\bfseries\fontsize{17pt}{21pt}\selectfont Site / map detail page\par}
 \vspace{0.8mm}
 {\fontsize{\SmallSize}{20pt}\selectfont\raggedright
 Inspect any lunar location and its local conditions on the surface map. Same hybrid forecasts, shown where the crew would actually work, so planning stays tied to place and time.\par}
 \end{minipage}
-}
 
 \vfill
-\SectionBar{Methods}
-\Panel{%
+\SectionTitle{Methods}
 LIPAS forecasts each lunar hazard by joining physics based estimates (agency style NASA and NOAA methods, live APIs, and historical archives) with a temporal LSTM that reads 18 features over a 72 day window. The two streams are blended with locked, hazard specific weights so machine learning corrects channels where it helps and physics leads where the relation is already strong. The formula below states that blend; the flowchart shows the live data path into six hazard outputs. The experimental design used a qualitative ranking against single purpose tools; a quantitative evaluation at three locations (equatorial reference, Apollo 11, and Nobile Rim) across two locked windows (summer Window A, 1 June to 4 August 2026, 195 site days of quiet to mixed space weather; storm Window B, 20 April to 20 May 2024, 93 site days of disturbed drivers) so accuracy could be judged in both quiet and storm regimes; a radiation focused EVA mission simulation for warning time; and a cross hazard input ablation.
 
 \vspace{2.5mm}
 \centering
-{\fontsize{26pt}{32pt}\selectfont\color{LipasInk}
+{\fontsize{26pt}{32pt}\selectfont
 $\displaystyle \hat{y}_{t}=w_{1}\,ML_{t}+(1-w_{1})\,Physics_{t}$
 \par}
 \vspace{1.8mm}
@@ -209,66 +180,63 @@ $w_{1}$ is the locked machine learning weight for that hazard
 (with $1-w_{1}$ the physics share).
 \par}
 \vspace{2.5mm}
-\centering\includegraphics[width=\linewidth,height=155mm,keepaspectratio]{assets/flowchart.png}
-}
+\centering\includegraphics[width=\linewidth,height=140mm,keepaspectratio]{assets/flowchart.png}
 \end{minipage}%
 \hfill
 \begin{minipage}[t][\ColHeight][s]{0.485\InnerWidth}
-%% ================= RIGHT =================
-\SectionBar{Results}
-\Panel{%
+\Body
+%% RIGHT
+\SectionTitle{Results}
 Across both locked evaluation windows, LIPAS beat the replicated baselines on every hazard while temperature, moonquakes, and dust stayed nearly physics tied. Summer Window A (1 June to 4 August 2026, 195 site days) cut solar RMSE by about 3.6\% and radiation by about 3.7\%. Storm Window B (20 April to 20 May 2024, 93 site days) was the standout: solar improved by about 18.6\% and radiation by about 58.7\%. Micrometeorite gaps looked huge when AMS shower timing was included versus MEM 3 seasonal only, but those labels are circular, so they illustrate shower timing rather than an independent win. In the EVA mission simulation, LIPAS issued caution at T+50, earlier than combined NASA (T+55) and far earlier than GOES only (T+80), and reached no go at T+55 versus GOES T+105, showing the ops value of one unified forecast view.
 
 \vspace{2mm}
-{\bfseries\fontsize{\UITitle}{21pt}\selectfont Window A: four key hazards\par}
+{\bfseries\fontsize{17pt}{21pt}\selectfont Window A: four key hazards\par}
 \vspace{1.2mm}
 \begin{minipage}[t]{0.485\linewidth}
-\centering\includegraphics[width=\linewidth,height=108mm,keepaspectratio]{figures/fig_windowA_solar_activity.png}\\[0.4mm]
+\centering\includegraphics[width=\linewidth,height=98mm,keepaspectratio]{figures/fig_windowA_solar_activity.png}\\[0.4mm]
 \Cap{Solar: about 3.6\% lower RMSE.}
 \end{minipage}\hfill
 \begin{minipage}[t]{0.485\linewidth}
-\centering\includegraphics[width=\linewidth,height=108mm,keepaspectratio]{figures/fig_windowA_radiation_mSv.png}\\[0.4mm]
+\centering\includegraphics[width=\linewidth,height=98mm,keepaspectratio]{figures/fig_windowA_radiation_mSv.png}\\[0.4mm]
 \Cap{Radiation: about 3.7\% lower RMSE.}
 \end{minipage}
 
 \vspace{2mm}
 \begin{minipage}[t]{0.485\linewidth}
-\centering\includegraphics[width=\linewidth,height=108mm,keepaspectratio]{figures/fig_windowA_temperature_C.png}\\[0.4mm]
+\centering\includegraphics[width=\linewidth,height=98mm,keepaspectratio]{figures/fig_windowA_temperature_C.png}\\[0.4mm]
 \Cap{Temperature: three sites where latitude matters.}
 \end{minipage}\hfill
 \begin{minipage}[t]{0.485\linewidth}
-\centering\includegraphics[width=\linewidth,height=108mm,keepaspectratio]{figures/fig_windowA_meteor_flux_1e15.png}\\[0.4mm]
+\centering\includegraphics[width=\linewidth,height=98mm,keepaspectratio]{figures/fig_windowA_meteor_flux_1e15.png}\\[0.4mm]
 \Cap{Micrometeorites: circular shower timing illustration.}
 \end{minipage}
 
 \vspace{2.2mm}
-{\bfseries\fontsize{\UITitle}{21pt}\selectfont Window B: storm solar and radiation\par}
+{\bfseries\fontsize{17pt}{21pt}\selectfont Window B: storm solar and radiation\par}
 {\fontsize{\SmallSize}{20pt}\selectfont\color{LipasMuted}
 Storm Window B stresses space weather drivers. These charts show the clearest hybrid separation: solar RMSE fell by about 18.6\% and radiation by about 58.7\% versus the replicas.
 \par}
 \vspace{1.2mm}
 \begin{minipage}[t]{0.485\linewidth}
-\centering\includegraphics[width=\linewidth,height=105mm,keepaspectratio]{figures/fig_windowB_solar_activity.png}\\[0.4mm]
+\centering\includegraphics[width=\linewidth,height=95mm,keepaspectratio]{figures/fig_windowB_solar_activity.png}\\[0.4mm]
 \Cap{Window B solar: larger hybrid margin when disturbed.}
 \end{minipage}\hfill
 \begin{minipage}[t]{0.485\linewidth}
-\centering\includegraphics[width=\linewidth,height=105mm,keepaspectratio]{figures/fig_windowB_radiation_mSv.png}\\[0.4mm]
+\centering\includegraphics[width=\linewidth,height=95mm,keepaspectratio]{figures/fig_windowB_radiation_mSv.png}\\[0.4mm]
 \Cap{Window B radiation: strongest locked accuracy gain.}
 \end{minipage}
 
 \vspace{2.2mm}
-{\bfseries\fontsize{\UITitle}{21pt}\selectfont Mission simulation\par}
+{\bfseries\fontsize{17pt}{21pt}\selectfont Mission simulation\par}
 {\fontsize{\SmallSize}{20pt}\selectfont\color{LipasMuted}
 Apollo length EVA with a shared radiation script. LIPAS caution T+50 / no go T+55; combined NASA T+55 / T+70; GOES only T+80 / T+105.
 \par}
 \vspace{1.2mm}
-\centering\includegraphics[width=\linewidth,height=118mm,keepaspectratio]{figures/fig_mission_timeline.png}\\[0.4mm]
+\centering\includegraphics[width=\linewidth,height=105mm,keepaspectratio]{figures/fig_mission_timeline.png}\\[0.4mm]
 \Cap{Earlier unified warnings from upstream solar and geomagnetic drivers, not proton flux alone.}
-}
 
 \vfill
-\SectionBar{Discussion and Conclusion}
-\Panel{%
+\SectionTitle{Discussion and Conclusion}
 This study advances a working hybrid lunar forecast stack that joins machine learning with physics in one decision support platform rather than leaving planners to stitch single hazard products by hand.
 
 \vspace{1mm}
@@ -282,14 +250,13 @@ This study advances a working hybrid lunar forecast stack that joins machine lea
 
 \vspace{1.2mm}
 LIPAS stands as a research grade decision support layer for lunar planners. It should not make crew decisions without human input, and further validation is required before it could serve as a complete mission control system.
-}
 \end{minipage}
 
-\vspace{1.5mm}
-{\color{LipasTeal}\rule{\linewidth}{0.8pt}}\\[1mm]
+\vspace{2mm}
+{\color{LipasTeal}\rule{\linewidth}{0.9pt}}\\[1.2mm]
 \noindent
 {\color{LipasInk}\fontsize{\FootSize}{13.5pt}\selectfont
-{\bfseries\fontsize{14pt}{17pt}\selectfont References and Acknowledgements\par}
+{\bfseries\fontsize{15pt}{18pt}\selectfont\color{LipasTeal} References and Acknowledgements\par}
 \vspace{0.8mm}
 \begin{minipage}[t]{0.485\linewidth}
 {\bfseries SOURCES USED:}\\
@@ -309,5 +276,5 @@ Benjamin Irani-Fey for his coding support during the Nasa Space Apps Challenge
 
 \end{minipage}%
 \hspace*{\OuterPad}
-\vspace*{1.5mm}
+\vspace*{2mm}
 \end{document}
