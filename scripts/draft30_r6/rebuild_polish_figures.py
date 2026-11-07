@@ -41,20 +41,24 @@ def _save(fig, name: str):
 
 
 def plot_mission_draft22():
+    """Draft-22 Caution/No-go tracks; staggered labels so Combined does not sit on LIPAS."""
     events = json.loads((ROOT / "studies/draft30_r6/mission_sim/events.json").read_text())
-    lipas_c = float(events["lipas_first_caution_t_min"])
-    lipas_n = float(events["lipas_first_nogo_t_min"])
-    comb_c = float(events["nasa_combined_first_caution_t_min"])
-    comb_n = float(events["nasa_combined_first_nogo_t_min"])
-    goes_c = float(events["nasa_goes_first_caution_t_min"])
-    goes_n = float(events["nasa_goes_first_nogo_t_min"])
+    lipas_c = float(events["lipas_first_caution_t_min"])  # 50
+    lipas_n = float(events["lipas_first_nogo_t_min"])  # 55
+    comb_c = float(events["nasa_combined_first_caution_t_min"])  # 55
+    comb_n = float(events["nasa_combined_first_nogo_t_min"])  # 70
+    goes_c = float(events["nasa_goes_first_caution_t_min"])  # 80
+    goes_n = float(events["nasa_goes_first_nogo_t_min"])  # 105
     precursor = float(events.get("storm_onset_t_min", 40))
     geomag = 55.0
     proton = float(events.get("goes_proton_surge_t_min", 70))
 
-    fig, ax = plt.subplots(figsize=(10.8, 3.55))
+    caution_c = "#E67E22"
+    nogo_c = "#C0392B"
+
+    fig, ax = plt.subplots(figsize=(11.0, 3.75))
     ax.set_xlim(0, 120)
-    ax.set_ylim(-0.55, 1.55)
+    ax.set_ylim(-0.7, 1.7)
     ax.set_yticks([1.0, 0.0])
     ax.set_yticklabels(["Caution", "No-go"])
     ax.set_xlabel("Elapsed time (min)")
@@ -65,32 +69,36 @@ def plot_mission_draft22():
 
     for t, lab in ((precursor, "Precursor"), (geomag, "Geomagnetic\nchange"), (proton, "Proton\nsurge")):
         ax.axvline(t, color="#888888", ls="--", lw=1.0, zorder=1)
-        ax.text(t, 1.48, lab, ha="center", va="top", fontsize=8, color="#444444")
+        ax.text(t, 1.62, lab, ha="center", va="top", fontsize=8, color="#444444")
 
-    for x, m, lab in (
-        (lipas_c, "o", f"LIPAS T+{int(lipas_c)}"),
-        (comb_c, "D", f"Combined T+{int(comb_c)}"),
-        (goes_c, "s", f"GOES T+{int(goes_c)}"),
-    ):
-        ax.scatter([x], [1.0], marker=m, s=70, c="#E67E22", edgecolors="black", linewidths=0.7, zorder=3)
-        ax.annotate(lab, (x, 1.0), textcoords="offset points", xytext=(0, 10), ha="center", fontsize=8)
+    # Caution row — stagger Combined away from LIPAS (Combined caution coincides with LIPAS no-go at T+55)
+    caution_pts = [
+        (lipas_c, "o", "LIPAS T+50", (-10, 14)),
+        (comb_c, "D", "Combined T+55", (22, 14)),
+        (goes_c, "s", "GOES T+80", (0, 14)),
+    ]
+    for x, m, lab, (dx, dy) in caution_pts:
+        ax.scatter([x], [1.0], marker=m, s=78, c=caution_c, edgecolors="black", linewidths=0.7, zorder=3)
+        ax.annotate(lab, (x, 1.0), textcoords="offset points", xytext=(dx, dy), ha="center", fontsize=8)
 
-    offsets = {comb_n: (-18, -16), lipas_n: (10, -16), goes_n: (0, -16)}
-    for x, m, lab in (
-        (comb_n, "D", f"Combined T+{int(comb_n)}"),
-        (lipas_n, "o", f"LIPAS T+{int(lipas_n)}"),
-        (goes_n, "s", f"GOES T+{int(goes_n)}"),
-    ):
-        ax.scatter([x], [0.0], marker=m, s=70, c="#C0392B", edgecolors="black", linewidths=0.7, zorder=3)
-        dx, dy = offsets.get(x, (0, -16))
+    # No-go row — pull LIPAS label left so it does not collide with Combined caution at T+55
+    nogo_pts = [
+        (lipas_n, "o", "LIPAS T+55", (-28, -20)),
+        (comb_n, "D", "Combined T+70", (8, -20)),
+        (goes_n, "s", "GOES T+105", (0, -20)),
+    ]
+    for x, m, lab, (dx, dy) in nogo_pts:
+        ax.scatter([x], [0.0], marker=m, s=78, c=nogo_c, edgecolors="black", linewidths=0.7, zorder=3)
         ax.annotate(lab, (x, 0.0), textcoords="offset points", xytext=(dx, dy), ha="center", fontsize=8)
 
     legend = [
-        Line2D([0], [0], marker="o", color="w", markerfacecolor="#555", markeredgecolor="k", label="LIPAS hybrid", markersize=8),
-        Line2D([0], [0], marker="s", color="w", markerfacecolor="#555", markeredgecolor="k", label="GOES-only", markersize=8),
-        Line2D([0], [0], marker="D", color="w", markerfacecolor="#555", markeredgecolor="k", label="Combined replica", markersize=8),
+        Line2D([0], [0], marker="o", color="w", markerfacecolor="#555555", markeredgecolor="k", label="LIPAS hybrid", markersize=8),
+        Line2D([0], [0], marker="s", color="w", markerfacecolor="#555555", markeredgecolor="k", label="GOES-only", markersize=8),
+        Line2D([0], [0], marker="D", color="w", markerfacecolor="#555555", markeredgecolor="k", label="Combined replica", markersize=8),
+        Line2D([0], [0], marker="o", color="w", markerfacecolor=caution_c, markeredgecolor="k", label="Caution threshold", markersize=8),
+        Line2D([0], [0], marker="o", color="w", markerfacecolor=nogo_c, markeredgecolor="k", label="No-go threshold", markersize=8),
     ]
-    ax.legend(handles=legend, loc="upper right", frameon=True, fontsize=8)
+    ax.legend(handles=legend, loc="center right", bbox_to_anchor=(1.0, 0.55), frameon=True, fontsize=7.5)
     for spine in ("top", "right"):
         ax.spines[spine].set_visible(False)
     fig.tight_layout()
