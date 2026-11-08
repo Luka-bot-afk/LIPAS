@@ -1,0 +1,61 @@
+% DRAFT30 R6c reshape from READY_FOR_DRAFT30_R6 (ART-34)
+\documentclass[10pt,twocolumn]{article}
+\usepackage[margin=1in]{geometry}
+\usepackage[T1]{fontenc}
+\usepackage{mathptmx}
+\usepackage{amsmath,amssymb}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{placeins}
+\usepackage{multicol}
+\setcounter{dbltopnumber}{4}
+\renewcommand{\dbltopfraction}{0.95}
+\renewcommand{\dblfloatpagefraction}{0.75}
+\renewcommand{\textfraction}{0.05}
+\renewcommand{\floatpagefraction}{0.75}
+\renewcommand{\topfraction}{0.95}
+
+\usepackage{float}
+\usepackage{caption}
+\usepackage{titlesec}
+% ASR-like numbered headings: "1. Introduction"
+\titleformat{\section}{\normalfont\large\bfseries}{\thesection.}{0.6em}{}
+\titleformat{\subsection}{\normalfont\normalsize\bfseries}{\thesubsection.}{0.5em}{}
+\titleformat{\subsubsection}{\normalfont\normalsize\bfseries}{\thesubsubsection.}{0.5em}{}
+\titlespacing*{\section}{0pt}{1.05em plus .15em minus .1em}{0.38em plus .05em}
+\titlespacing*{\subsection}{0pt}{0.9em plus .12em minus .08em}{0.32em plus .05em}
+\titlespacing*{\subsubsection}{0pt}{0.8em plus .1em minus .05em}{0.28em}
+\captionsetup{skip=0.45em}
+\setlength{\multicolsep}{0.45em}
+\usepackage{xcolor}
+\usepackage{hyperref}
+\usepackage{url}
+\usepackage{newunicodechar}
+\newunicodechar{−}{-}
+\newunicodechar{∼}{\textasciitilde}
+\newunicodechar{;}{;}
+\graphicspath{{figures/}}
+\hypersetup{colorlinks=true,linkcolor=black,citecolor=black,urlcolor=blue}
+
+\title{Building and evaluating a cross-hazard machine-learning approach to unified lunar forecasting}
+\author{Luka Takki\\
+\texttt{lukatakki123@gmail.com}}
+\date{}
+
+\raggedbottom
+\begin{document}
+\twocolumn[{%
+\maketitle
+\begin{abstract}
+\input{abstract}
+\end{abstract}
+
+\medskip
+\noindent\textbf{Keywords:} \input{keywords}
+
+\vspace{1.7em}
+}]
+
+\input{body}
+
+\end{document}

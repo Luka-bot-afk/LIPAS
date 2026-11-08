@@ -91,53 +91,66 @@ def physics_temperature(lat, lon, local_time, albedo=0.07, emissivity=0.95,
         return -160.0
 def physics_solar_activity(solar_activity=5.0, kp=3.0, imf_bz=-2.0,
                            solar_wind_speed=400.0, solar_wind_density=5.0,
-                           f107=None):
+                           f107=None, knobs=None):
+    """Optional knobs (hybrid last-shot): quiet, kp_coef, kp_pow, bz_coef, sa_w, driven_w."""
+    knobs = knobs or {}
     sa = float(solar_activity)
     kp = float(kp)
     bz = float(imf_bz)
     v = float(solar_wind_speed)
     n = float(solar_wind_density)
-    quiet = 4.5
-    kp_term = 0.85 * max(0.0, kp - 2.0) ** 1.35
-    bz_term = 0.35 * max(0.0, -bz - 1.0)
+    quiet = float(knobs.get('quiet', 4.5))
+    kp_term = float(knobs.get('kp_coef', 0.85)) * max(0.0, kp - 2.0) ** float(knobs.get('kp_pow', 1.35))
+    bz_term = float(knobs.get('bz_coef', 0.35)) * max(0.0, -bz - 1.0)
     stream = 0.012 * max(0.0, v - 450.0) + 0.08 * max(0.0, n - 8.0)
     f107_term = 0.0
     if f107 is not None:
         f107_term = 0.55 * max(0.0, (float(f107) - 70.0) / 18.0)
     driven = quiet + kp_term + bz_term + stream + f107_term
-    out = 0.55 * sa + 0.45 * driven
+    sa_w = float(knobs.get('sa_w', 0.55))
+    driven_w = float(knobs.get('driven_w', 0.45))
+    out = sa_w * sa + driven_w * driven
     return float(clamp(out, 0.0, 80.0, sa))
 def physics_radiation(solar_activity=5.0, kp=3.0, proton_flux=1.0,
-                      lat=None, imf_bz=None, solar_wind_speed=None):
+                      lat=None, imf_bz=None, solar_wind_speed=None, knobs=None):
+    """Optional knobs (hybrid last-shot): quiet, kp_storm, sep_sa, lat_gain."""
+    knobs = knobs or {}
     sa = float(solar_activity)
     kp = float(kp)
     pf_raw = float(proton_flux)
     pf = normalize_proton_flux(pf_raw) if pf_raw > 4.0 else pf_raw
     solar_mod = max(0.55, min(1.45, sa / 8.0))
     gcr = calc_gcr_radiation(solar_mod=solar_mod)
-    quiet = 0.018
+    quiet = float(knobs.get('quiet', 0.018))
     storm = 0.0
+    k1 = float(knobs.get('kp_storm', 0.006))
+    k5 = float(knobs.get('kp5', 0.012))
+    k7 = float(knobs.get('kp7', 0.035))
     if kp > 2.0:
-        storm += 0.006 * (kp - 2.0)
+        storm += k1 * (kp - 2.0)
     if kp >= 5.0:
-        storm += 0.012 * (kp - 4.5)
+        storm += k5 * (kp - 4.5)
     if kp >= 7.0:
-        storm += 0.035
+        storm += k7
     if imf_bz is not None and float(imf_bz) < -5.0:
         storm += 0.008 * min(3.0, (-float(imf_bz) - 5.0) / 5.0)
     if solar_wind_speed is not None and float(solar_wind_speed) > 600.0:
         storm += 0.004 * min(2.0, (float(solar_wind_speed) - 600.0) / 200.0)
     sep = 0.0
+    sep_pf0 = float(knobs.get('sep_pf0', 0.004))
+    sep_pf = float(knobs.get('sep_pf', 0.028))
+    sep_sa = float(knobs.get('sep_sa', 0.012))
     if pf > 0.15:
-        sep += 0.004 + 0.028 * pf
+        sep += sep_pf0 + sep_pf * pf
     if sa > 12.0:
-        sep += 0.012 * ((sa - 12.0) / 10.0)
+        sep += sep_sa * ((sa - 12.0) / 10.0)
     if sa > 25.0:
-        sep *= 1.35
+        sep *= float(knobs.get('sep_hi_mult', 1.35))
     rad = gcr + quiet + storm + sep
     if lat is not None:
         abs_lat = abs(float(lat)) / 90.0
-        rad *= (1.0 + 0.08 * abs_lat ** 2)
+        lat_gain = float(knobs.get('lat_gain', 0.08))
+        rad *= (1.0 + lat_gain * abs_lat ** 2)
     return float(clamp(rad, 0.01, 10.0, 0.057))
 _METEOR_SHOWER_PEAKS = (
     (3, 1.18),

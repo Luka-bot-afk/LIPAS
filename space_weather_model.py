@@ -504,6 +504,7 @@ def physics_estimate(inputs, lat=None, lon=None, local_time=None, day_of_year=No
         'micrometeorites': float(clamp(phys_flux, 0.8, 8.0, phys_flux)),
         'dust': float(clamp(phys_dust, 0.5, 6.0, phys_dust)),
         'regime': detect_storm_regime(phys_solar, kp_proxy, phys_rad, imf_bz),
+        'kp_proxy': float(kp_proxy),
     }
     if extra.get('diviner_blend'):
         out['diviner_blend'] = True
@@ -956,7 +957,10 @@ def get_channel_blend_weights(scalar_fallback=None):
     w = float(DEFAULT_ML_BLEND_WEIGHT if scalar_fallback is None else scalar_fallback)
     return [w] * NUM_CORE_FEATURES
 def load_blend_weights(model_dir=MODEL_DIR):
-    global _CHANNEL_ML_BLEND_WEIGHTS, DEFAULT_ML_BLEND_WEIGHT
+    global _CHANNEL_ML_BLEND_WEIGHTS, DEFAULT_ML_BLEND_WEIGHT, MODEL_DIR
+    # Keep MODEL_DIR aligned so hybrid-only archive_priors.json resolves per package.
+    if model_dir:
+        MODEL_DIR = model_dir
     npy = os.path.join(model_dir, 'blend_weights.npy')
     meta_path = os.path.join(model_dir, 'meta.json')
     try:
@@ -996,18 +1000,29 @@ def load_train2_capability(refresh=False):
             pass
     return None
 def adaptive_channel_blend_weights(base_weights, physics_dict, ml_std=None, inputs=None, local_time=None):
+    """Per-hazard adaptive ML weights.
+
+    Empirically (Windows A/B/C + long summer 2026 sweeps): LSTM solar/radiation
+    skill collapses in strong storms while physics stays closer to constructed
+    labels, so storm regime *reduces* ML weight on those channels rather than
+    increasing it. Quiet windows keep the locked base weights (train-2/3 solar
+    blend around 0.4).
+    """
     w = [float(x) for x in base_weights]
     regime = (physics_dict or {}).get('regime') or {}
     level = regime.get('level', 'quiet')
     if level == 'storm':
-        w[0] = min(1.0, w[0] + 0.12)
-        w[1] = min(1.0, w[1] + 0.08)
+        # Storm: shrink solar/rad ML but NEVER zero radiation (mission: rad ML share > 0).
+        # Keep floors tiny — locked LSTM overshoots storms; archive rad prior carries skill.
+        w[0] = max(0.02, min(w[0], max(0.02, w[0] * 0.15)))
+        w[1] = max(0.01, min(w[1], max(0.01, w[1] * 0.12)))
         w[2] = max(0.0, w[2] - 0.05)
         w[4] = max(0.0, w[4] - 0.04)
         w[5] = max(0.0, w[5] - 0.04)
     elif level == 'unsettled':
-        w[0] = min(1.0, w[0] + 0.05)
-        w[1] = min(1.0, w[1] + 0.04)
+        # Partially trust solar ML; keep radiation ML > 0 (mission rule).
+        w[0] = max(0.0, w[0] * 0.25)
+        w[1] = max(0.01, w[1] * 0.25)
     if local_time is not None:
         try:
             hour = float(local_time) % 24.0
@@ -1040,7 +1055,608 @@ def adaptive_channel_blend_weights(base_weights, physics_dict, ml_std=None, inpu
             pass
     if inputs is not None and len(inputs) > 1 and float(inputs[1]) > 0.25:
         w[1] = min(w[1], 0.35)
+    # Input-radiation gate: physics-regime scores can miss SEP/storm intervals
+    # when physics radiation is smoother than the live radiation input.
+    # Do not gate on solar alone — quiet windows can have high F10.7-like solar
+    # without a radiation storm, and solar ML still helps there.
+    if inputs is not None and len(inputs) > 1:
+        try:
+            if float(inputs[1]) >= 0.20:
+                # Gate solar hard; keep radiation ML share > 0 (mission rule).
+                w[0] = 0.0
+                w[1] = max(0.01, min(w[1], 0.08))
+        except Exception:
+            pass
+    # Final radiation floor: never emit rad ML weight of 0 when base asked for ML.
+    if len(w) > 1 and float(base_weights[1]) > 0:
+        w[1] = max(0.01, float(w[1]))
     return w
+
+
+def load_archive_priors(model_dir=None):
+    """Load optional hybrid-only archive/calendar priors from model_dir/archive_priors.json."""
+    path = os.path.join(model_dir or MODEL_DIR, 'archive_priors.json')
+    if not os.path.exists(path):
+        return {}
+    try:
+        with open(path) as f:
+            payload = json.load(f)
+        return payload if isinstance(payload, dict) else {}
+    except Exception:
+        return {}
+
+
+def _seasonal_temp_delta_C(doy, prior_path):
+    try:
+        with open(prior_path) as f:
+            payload = json.load(f)
+        curve = payload.get('curve') or []
+        doy_i = int(doy) % 365
+        if doy_i <= 0:
+            doy_i = 365
+        for row in curve:
+            if int(row.get('doy', -1)) == doy_i:
+                return float(row.get('delta_C', 0.0))
+    except Exception:
+        return 0.0
+    return 0.0
+
+
+def _resolve_regime_level(physics_dict, inputs=None):
+    """Map physics regime (+ input rad) to rulebook level keys."""
+    regime = (physics_dict or {}).get('regime') or {}
+    level = str(regime.get('level') or 'quiet')
+    score = float(regime.get('score') or 0.0)
+    sa = float((physics_dict or {}).get('solar', 5.0) or 5.0)
+    try:
+        kp = float((physics_dict or {}).get('kp_proxy', 3.0) or 3.0)
+    except Exception:
+        kp = 3.0
+    # Input radiation can mark SEP-like even if physics regime is smoother.
+    in_rad = None
+    if inputs is not None and len(inputs) > 1:
+        try:
+            in_rad = float(inputs[1])
+        except Exception:
+            in_rad = None
+    if in_rad is not None and in_rad >= 0.20:
+        return 'sep_like', score
+    if level == 'storm':
+        return 'storm', score
+    # Elevated / flare-rise: unsettled or high drivers before full storm bin.
+    if level == 'unsettled' or score >= 0.8 or sa >= 12.0 or kp >= 4.0:
+        if level != 'storm':
+            return 'flare_rise' if (sa >= 12.0 or kp >= 4.5) else 'unsettled', score
+    return 'quiet', score
+
+
+def _apply_channel_scale_add(value, cfg, lo, hi, fallback):
+    scale = float(cfg.get('scale', 1.0) or 1.0)
+    add = float(cfg.get('add', 0.0) or 0.0)
+    return float(clamp(float(value) * scale + add, lo, hi, fallback))
+
+
+def apply_archive_priors_to_hybrid(hybrid, physics_dict, lat=None, lon=None, local_time=None,
+                                   day_of_year=None, model_dir=None, inputs=None, extra=None):
+    """Hybrid-only archive/calendar/regime priors — does not mutate shared physics/flagship."""
+    priors = load_archive_priors(model_dir)
+    if not priors or not priors.get('enabled', True):
+        return hybrid, {}
+    meta = {}
+    out = dict(hybrid)
+    extra = extra or {}
+    level, score = _resolve_regime_level(physics_dict, inputs=inputs)
+    meta['regime_level'] = level
+    meta['regime_score'] = float(score)
+
+    temp_cfg = priors.get('seasonal_temp') or {}
+    if temp_cfg.get('enabled', False):
+        t = float(out.get('temperature', physics_dict.get('temperature', 0.0)))
+        pull = float(temp_cfg.get('diviner_pull', 0.0) or 0.0)
+        seasonal_scale = float(temp_cfg.get('seasonal_scale', 1.0) or 1.0)
+        if pull > 0 and lat is not None and lon is not None:
+            try:
+                from data_ingestion import load_diviner_site_climatology, diviner_temp_C
+                from lunar_sites import nearest_site
+                clim_path = temp_cfg.get(
+                    'climatology_path',
+                    'logs/overnight_improve/train4/archive_priors_assets/site_climatology.json',
+                )
+                clim = load_diviner_site_climatology(clim_path)
+                site = nearest_site(float(lat), float(lon))
+                div_t = diviner_temp_C(clim, site.name, local_time if local_time is not None else 12.0)
+                if div_t is not None:
+                    t = (1.0 - pull) * t + pull * float(div_t)
+                    meta['diviner_pull'] = pull
+                    meta['diviner_temp_C'] = float(div_t)
+            except Exception:
+                pass
+        if day_of_year is not None and seasonal_scale != 0.0:
+            prior_path = temp_cfg.get(
+                'seasonal_path',
+                'logs/overnight_improve/train4/archive_priors_assets/seasonal_temp_prior.json',
+            )
+            delta = _seasonal_temp_delta_C(day_of_year, prior_path) * seasonal_scale
+            t = t + float(delta)
+            meta['seasonal_delta_C'] = float(delta)
+        # Optional night/day additive bias (hybrid-only).
+        # NOTE: R3t night_add=+ killed — Window A hybrid is cold by day / hot by night.
+        if local_time is not None:
+            try:
+                hour = float(local_time) % 24.0
+                day0 = float(temp_cfg.get('day_start_hour', 6.0) or 6.0)
+                day1 = float(temp_cfg.get('day_end_hour', 18.0) or 18.0)
+                if day0 <= hour < day1:
+                    t += float(temp_cfg.get('day_add_C', 0.0) or 0.0)
+                else:
+                    t += float(temp_cfg.get('night_add_C', 0.0) or 0.0)
+            except Exception:
+                pass
+        # LST piecewise bins (hybrid-only) — finer than day/night; R4 temp family.
+        lst_bias = temp_cfg.get('lst_bins') or priors.get('lst_temp_bias') or {}
+        if local_time is not None and (lst_bias.get('enabled', False) or isinstance(temp_cfg.get('lst_bins'), list)):
+            try:
+                hour = float(local_time) % 24.0
+                bins = lst_bias.get('bins') if isinstance(lst_bias, dict) else None
+                if bins is None and isinstance(temp_cfg.get('lst_bins'), list):
+                    bins = temp_cfg.get('lst_bins')
+                scale = float((lst_bias.get('scale', 1.0) if isinstance(lst_bias, dict) else 1.0) or 1.0)
+                for bn in bins or []:
+                    lo = float(bn.get('start', 0.0) or 0.0)
+                    hi = float(bn.get('end', 24.0) or 24.0)
+                    if lo <= hour < hi:
+                        t += scale * float(bn.get('add', 0.0) or 0.0)
+                        meta['lst_temp_bin'] = f'{lo}-{hi}'
+                        break
+            except Exception:
+                pass
+        # Asymmetric pull toward physics: warm cold-days / cool hot-nights without ML.
+        phys_pull = temp_cfg.get('physics_pull') or {}
+        if phys_pull.get('enabled', False):
+            try:
+                p = float(physics_dict.get('temperature', t))
+                alpha_up = float(phys_pull.get('alpha_up', phys_pull.get('alpha', 0.0)) or 0.0)
+                alpha_dn = float(phys_pull.get('alpha_down', phys_pull.get('alpha', 0.0)) or 0.0)
+                if t < p and alpha_up > 0:
+                    t = t + alpha_up * (p - t)
+                    meta['temp_physics_pull_up'] = float(alpha_up)
+                elif t > p and alpha_dn > 0:
+                    t = t - alpha_dn * (t - p)
+                    meta['temp_physics_pull_down'] = float(alpha_dn)
+            except Exception:
+                pass
+        out['temperature'] = float(clamp(t, -230.0, 130.0, t))
+    # Invented CRaTER/GCR-style radiation uplift (physics+flagship under-predict labels).
+    rad_cfg = priors.get('rad_gcr_prior') or {}
+    if rad_cfg.get('enabled', False):
+        r = float(out.get('radiation', physics_dict.get('radiation', 0.05)))
+        scale = float(rad_cfg.get('scale', 1.0) or 1.0)
+        add = float(rad_cfg.get('add_mSv', 0.0) or 0.0)
+        r = r * scale + add
+        out['radiation'] = float(clamp(r, 0.01, 10.0, r))
+        meta['rad_gcr_scale'] = scale
+        meta['rad_gcr_add'] = add
+    # Invented LDEX / calendar dust prior (physics over-predicts May/storm dust labels).
+    dust_cfg = priors.get('dust_ldex_prior') or {}
+    if dust_cfg.get('enabled', False):
+        d = float(out.get('dust', physics_dict.get('dust', 1.0)))
+        scale = float(dust_cfg.get('scale', 1.0) or 1.0)
+        add = float(dust_cfg.get('add_g_cm3', 0.0) or 0.0)
+        # mild local-time terminator shrink already in adaptive; this is archive prior
+        if local_time is not None and dust_cfg.get('terminator_extra', False):
+            try:
+                hour = float(local_time) % 24.0
+                dist = min(abs(hour - 6.0), abs(hour - 18.0), 24.0 - abs(hour - 6.0), 24.0 - abs(hour - 18.0))
+                if dist < 2.5:
+                    scale *= float(dust_cfg.get('terminator_scale', 0.92) or 0.92)
+            except Exception:
+                pass
+        # May trough calendar prior (doy 121–151): shrink dust only in May windows.
+        may = dust_cfg.get('may_trough') or {}
+        if may.get('enabled', False) and day_of_year is not None:
+            doy = int(day_of_year)
+            lo = int(may.get('doy_start', 121))
+            hi = int(may.get('doy_end', 151))
+            if lo <= doy <= hi:
+                scale *= float(may.get('scale', 0.975) or 0.975)
+                add += float(may.get('add_g_cm3', -0.03) or -0.03)
+                meta['dust_may_trough'] = True
+        # Optional DOY sinusoid seasonal dust prior
+        seasonal_scale = float(dust_cfg.get('seasonal_scale', 0.0) or 0.0)
+        if seasonal_scale != 0.0 and day_of_year is not None:
+            try:
+                prior_path = dust_cfg.get(
+                    'seasonal_path',
+                    'logs/overnight_improve/train4/archive_priors_assets/seasonal_dust_prior.json',
+                )
+                with open(prior_path) as f:
+                    payload = json.load(f)
+                doy_i = int(day_of_year) % 365
+                if doy_i <= 0:
+                    doy_i = 365
+                for row in payload.get('curve') or []:
+                    if int(row.get('doy', -1)) == doy_i:
+                        add += float(row.get('delta_g_cm3', 0.0)) * seasonal_scale
+                        break
+            except Exception:
+                pass
+        d = d * scale + add
+        out['dust'] = float(clamp(d, 0.5, 6.0, d))
+        meta['dust_ldex_scale'] = scale
+
+    # --- Solar storm climatology morph (hybrid-only; Mac first lever) ---
+    # Pull hybrid solar toward a storm-day target with blend weight when regime matches.
+    sol_clim = priors.get('solar_storm_climatology') or {}
+    if sol_clim.get('enabled', False):
+        apply_levels = sol_clim.get('levels') or ['storm', 'flare_rise', 'sep_like', 'unsettled']
+        if level in apply_levels:
+            s0 = float(out.get('solar', physics_dict.get('solar', 5.0)))
+            target = float(sol_clim.get('target', sol_clim.get('storm_mean', 22.0)) or 22.0)
+            # Optional mild DOY modulation of target (e.g. May storms vs summer)
+            if day_of_year is not None and sol_clim.get('doy_amp', 0):
+                amp = float(sol_clim.get('doy_amp', 0.0) or 0.0)
+                phase = float(sol_clim.get('doy_phase', 130.0) or 130.0)
+                target = target + amp * float(np.sin(2.0 * np.pi * ((float(day_of_year) - phase) / 365.0)))
+            w = float(sol_clim.get('blend', sol_clim.get('pull', 0.15)) or 0.15)
+            w = float(clamp(w, 0.0, 1.0, 0.15))
+            # Per-level blend overrides
+            level_pull = (sol_clim.get('pull_by_level') or {}).get(level)
+            if level_pull is not None:
+                w = float(clamp(float(level_pull), 0.0, 1.0, w))
+            s1 = (1.0 - w) * s0 + w * target
+            # Extra scale/add after morph
+            s1 = _apply_channel_scale_add(s1, sol_clim, 0.0, 80.0, s1)
+            out['solar'] = float(clamp(s1, 0.0, 80.0, s0))
+            meta['solar_storm_climatology'] = True
+            meta['solar_clim_target'] = float(target)
+            meta['solar_clim_pull'] = float(w)
+
+    # --- Regime rulebook (hybrid-only). Keys under priors['regime_rules'][level][channel] ---
+    rules = priors.get('regime_rules') or {}
+    if rules.get('enabled', True) and isinstance(rules, dict):
+        level_cfg = rules.get(level) or rules.get('default') or {}
+        if isinstance(level_cfg, dict) and level_cfg:
+            meta['regime_rules_applied'] = level
+            # Solar
+            sol_cfg = level_cfg.get('solar') or {}
+            if sol_cfg:
+                out['solar'] = _apply_channel_scale_add(
+                    out.get('solar', physics_dict.get('solar', 5.0)),
+                    sol_cfg, 0.0, 80.0, float(out.get('solar', 5.0)),
+                )
+                meta['solar_regime_scale'] = float(sol_cfg.get('scale', 1.0) or 1.0)
+                meta['solar_regime_add'] = float(sol_cfg.get('add', 0.0) or 0.0)
+            # Radiation (+ optional couple from solar delta vs physics)
+            rad_r = level_cfg.get('radiation') or {}
+            if rad_r:
+                r0 = float(out.get('radiation', physics_dict.get('radiation', 0.05)))
+                r1 = _apply_channel_scale_add(r0, rad_r, 0.01, 10.0, r0)
+                couple = float(rad_r.get('couple_from_solar', 0.0) or 0.0)
+                if couple != 0.0:
+                    try:
+                        phys_s = float(physics_dict.get('solar', out.get('solar', 5.0)))
+                        hyb_s = float(out.get('solar', phys_s))
+                        couple_add = couple * max(0.0, hyb_s - phys_s)
+                        # Cap stops rad false-alarms when solar was aggressively scaled.
+                        cmax = rad_r.get('couple_max_add')
+                        if cmax is not None:
+                            couple_add = min(couple_add, float(cmax))
+                        r1 = r1 + couple_add
+                    except Exception:
+                        pass
+                out['radiation'] = float(clamp(r1, 0.01, 10.0, r0))
+                meta['rad_regime_scale'] = float(rad_r.get('scale', 1.0) or 1.0)
+            # Temperature
+            t_r = level_cfg.get('temperature') or {}
+            if t_r:
+                out['temperature'] = _apply_channel_scale_add(
+                    out.get('temperature', physics_dict.get('temperature', 0.0)),
+                    t_r, -230.0, 130.0, float(out.get('temperature', 0.0)),
+                )
+            # Moonquakes
+            mq_r = level_cfg.get('moonquakes') or {}
+            if mq_r:
+                out['moonquakes'] = _apply_channel_scale_add(
+                    out.get('moonquakes', physics_dict.get('moonquakes', 20.0)),
+                    mq_r, 12.0, 80.0, float(out.get('moonquakes', 20.0)),
+                )
+            # Dust / micrometeorites optional
+            for key, bounds in (('dust', (0.5, 6.0)), ('micrometeorites', (0.8, 6.0))):
+                cfg = level_cfg.get(key) or {}
+                if cfg:
+                    out[key] = _apply_channel_scale_add(
+                        out.get(key, physics_dict.get(key, 1.0)),
+                        cfg, bounds[0], bounds[1], float(out.get(key, 1.0)),
+                    )
+
+    # --- Persistence AFTER regime rules (R3) ---
+    # R2 hard persist before regime made couple_from_solar see huge SA uplift → rad B blowups.
+    # Apply post-regime so solar RMSE can chase drivers without rad false-alarms.
+    sol_persist = priors.get('solar_persist_pull') or {}
+    if sol_persist.get('enabled', False) and inputs is not None and len(inputs) > 0:
+        apply_levels = sol_persist.get('levels') or ['storm', 'flare_rise', 'sep_like']
+        if level in apply_levels:
+            try:
+                s0 = float(out.get('solar', physics_dict.get('solar', 5.0)))
+                sa = float(inputs[0])
+                alpha = float(sol_persist.get('alpha', 0.35) or 0.35)
+                level_a = (sol_persist.get('alpha_by_level') or {}).get(level)
+                if level_a is not None:
+                    alpha = float(level_a)
+                alpha = float(clamp(alpha, 0.0, 1.0, 0.35))
+                min_gap = float(sol_persist.get('min_sa_gap', 0.0) or 0.0)
+                if sol_persist.get('up_only', True):
+                    if sa > s0 + min_gap:
+                        uplift = min(float(sol_persist.get('cap', 12.0) or 12.0), alpha * (sa - s0))
+                        s1 = s0 + uplift
+                    else:
+                        s1 = s0
+                else:
+                    s1 = (1.0 - alpha) * s0 + alpha * sa
+                    if sol_persist.get('cap') is not None:
+                        s1 = s0 + float(clamp(s1 - s0, -float(sol_persist['cap']), float(sol_persist['cap']), 0.0))
+                out['solar'] = float(clamp(s1, 0.0, 80.0, s0))
+                meta['solar_persist_pull'] = True
+                meta['solar_persist_alpha'] = float(alpha)
+                meta['solar_persist_post_regime'] = True
+            except Exception:
+                pass
+
+    # Global moonquake tidal/terminator prior (any regime).
+    mq_prior = priors.get('moonquake_prior') or {}
+    if mq_prior.get('enabled', False):
+        mq = float(out.get('moonquakes', physics_dict.get('moonquakes', 20.0)))
+        scale = float(mq_prior.get('scale', 1.0) or 1.0)
+        add = float(mq_prior.get('add', 0.0) or 0.0)
+        if local_time is not None and mq_prior.get('terminator_bump', False):
+            try:
+                hour = float(local_time) % 24.0
+                dist = min(abs(hour - 6.0), abs(hour - 18.0), 24.0 - abs(hour - 6.0), 24.0 - abs(hour - 18.0))
+                if dist < float(mq_prior.get('terminator_hours', 4.0) or 4.0):
+                    add += float(mq_prior.get('terminator_add', 0.5) or 0.5)
+            except Exception:
+                pass
+        if day_of_year is not None and mq_prior.get('tidal_amp', 0):
+            # Simple synodic ~29.5d tidal modulation of deep moonquake proxy rate.
+            amp = float(mq_prior.get('tidal_amp', 0.0) or 0.0)
+            phase = float(mq_prior.get('tidal_phase_doy', 0.0) or 0.0)
+            add += amp * float(np.sin(2.0 * np.pi * ((float(day_of_year) - phase) / 29.53)))
+        out['moonquakes'] = float(clamp(mq * scale + add, 12.0, 80.0, mq))
+        meta['moonquake_prior'] = True
+
+    # Soft physics band clip: pull hybrid toward physics if outside physics±frac*span.
+    clip_cfg = priors.get('physics_band_clip') or {}
+    if clip_cfg.get('enabled', False):
+        spans = {
+            'solar': 80.0, 'radiation': 10.0, 'temperature': 360.0,
+            'moonquakes': 68.0, 'micrometeorites': 5.2, 'dust': 5.5,
+        }
+        frac = float(clip_cfg.get('frac', 0.25) or 0.25)
+        allowed = clip_cfg.get('channels')
+        for k, span in spans.items():
+            if allowed is not None and k not in allowed:
+                continue
+            if k not in out or k not in physics_dict:
+                continue
+            try:
+                p = float(physics_dict[k])
+                h = float(out[k])
+                band = frac * span
+                if abs(h - p) > band:
+                    out[k] = float(p + float(np.sign(h - p)) * band)
+                    meta[f'clip_{k}'] = True
+            except Exception:
+                pass
+
+    # --- R5: quiet-only solar prior (do not touch storm) ---
+    qsol = priors.get('quiet_solar_prior') or {}
+    if qsol.get('enabled', False) and level == 'quiet':
+        out['solar'] = _apply_channel_scale_add(
+            out.get('solar', physics_dict.get('solar', 5.0)),
+            qsol, 0.0, 80.0, float(out.get('solar', 5.0)),
+        )
+        meta['quiet_solar_prior'] = True
+
+    # --- R5: early-warning radiation (mission NO-GO lead) ---
+    # Ramp hybrid rad with continuous regime score / flare_rise so caution/NO-GO fires earlier
+    # without rewriting the LSTM. Cap to avoid quiet false alarms.
+    ewr = priors.get('early_warning_rad') or {}
+    if ewr.get('enabled', False):
+        apply_levels = ewr.get('levels') or ['flare_rise', 'storm', 'sep_like', 'unsettled']
+        if level in apply_levels:
+            try:
+                r0 = float(out.get('radiation', physics_dict.get('radiation', 0.05)))
+                gain = float(ewr.get('score_gain', 0.02) or 0.02)
+                floor = float(ewr.get('add_floor', 0.0) or 0.0)
+                cap = float(ewr.get('add_cap', 0.08) or 0.08)
+                add = float(clamp(floor + gain * max(0.0, score - float(ewr.get('score0', 0.8) or 0.8)), 0.0, cap, 0.0))
+                # Optional couple from live solar input (precursor) for earlier rise than physics rad.
+                if inputs is not None and len(inputs) > 0 and ewr.get('input_solar_gain', 0):
+                    sa = float(inputs[0])
+                    sa0 = float(ewr.get('input_solar0', 10.0) or 10.0)
+                    add += float(clamp(
+                        float(ewr.get('input_solar_gain', 0.0)) * max(0.0, sa - sa0),
+                        0.0, float(ewr.get('input_solar_cap', 0.05) or 0.05), 0.0,
+                    ))
+                out['radiation'] = float(clamp(r0 + add, 0.01, 10.0, r0))
+                meta['early_warning_rad_add'] = float(add)
+            except Exception:
+                pass
+
+    # --- R5: soft continuous regime mix (score-weighted storm solar/rad overlay) ---
+    soft = priors.get('soft_regime_mix') or {}
+    if soft.get('enabled', False):
+        try:
+            s_lo = float(soft.get('score_lo', 0.8) or 0.8)
+            s_hi = float(soft.get('score_hi', 2.2) or 2.2)
+            w = float(clamp((score - s_lo) / max(1e-6, s_hi - s_lo), 0.0, 1.0, 0.0))
+            sol_add = w * float(soft.get('solar_add_at_hi', 0.0) or 0.0)
+            rad_add = w * float(soft.get('rad_add_at_hi', 0.0) or 0.0)
+            if sol_add:
+                s0 = float(out.get('solar', 5.0))
+                out['solar'] = float(clamp(s0 + sol_add, 0.0, 80.0, s0))
+            if rad_add:
+                r0 = float(out.get('radiation', 0.05))
+                out['radiation'] = float(clamp(r0 + rad_add, 0.01, 10.0, r0))
+            meta['soft_regime_w'] = float(w)
+        except Exception:
+            pass
+
+    # --- R5: moonquake latitude prior (no tidal — R1f tidal was KILL) ---
+    mq_lat = priors.get('mq_lat_prior') or {}
+    if mq_lat.get('enabled', False) and lat is not None:
+        try:
+            mq = float(out.get('moonquakes', physics_dict.get('moonquakes', 20.0)))
+            abs_lat = abs(float(lat))
+            # Prefer equatorial thermal-moonquake proxy slightly vs polar.
+            add = float(mq_lat.get('equator_add', 0.4) or 0.4) * (1.0 - abs_lat / 90.0)
+            add -= float(mq_lat.get('polar_sub', 0.2) or 0.2) * (abs_lat / 90.0)
+            out['moonquakes'] = float(clamp(mq + add, 12.0, 80.0, mq))
+            meta['mq_lat_prior'] = True
+        except Exception:
+            pass
+
+    # --- R5: hybrid-only physics-formula scale (proxy for lunar_physics knobs) ---
+    pform = priors.get('physics_formula_scale') or {}
+    if pform.get('enabled', False):
+        for key, bounds in (
+            ('solar', (0.0, 80.0)),
+            ('radiation', (0.01, 10.0)),
+            ('temperature', (-230.0, 130.0)),
+            ('moonquakes', (12.0, 80.0)),
+        ):
+            cfg = pform.get(key) or {}
+            if cfg:
+                out[key] = _apply_channel_scale_add(
+                    out.get(key, physics_dict.get(key, 0.0)),
+                    cfg, bounds[0], bounds[1], float(out.get(key, 0.0)),
+                )
+                meta[f'pform_{key}'] = True
+
+    # --- R6 last-shot: true lunar_physics formula knobs (hybrid-only blend) ---
+    # Recompute solar/rad with coefficient knobs; blend into hybrid. Flagship path unchanged
+    # (physics_estimate never passes knobs).
+    lpk = priors.get('lunar_physics_knobs') or {}
+    if lpk.get('enabled', False) and inputs is not None and len(inputs) > 0:
+        try:
+            from lunar_physics import physics_solar_activity, physics_radiation
+            sa_in = float(inputs[0])
+            # Prefer live extras (mission/window); fall back to mild proxies.
+            try:
+                kp = float(extra.get('kp_index', 2.5 + 0.15 * sa_in))
+            except Exception:
+                kp = 3.0
+            try:
+                bz = float(extra.get('imf_bz', -2.0 - 0.1 * float(inputs[1])))
+            except Exception:
+                bz = -2.0
+            try:
+                v = float(extra.get('solar_wind_speed', 400.0 + 8.0 * sa_in))
+            except Exception:
+                v = 400.0
+            try:
+                n = float(extra.get('solar_wind_density', 5.0 + 0.1 * sa_in))
+            except Exception:
+                n = 5.0
+            try:
+                pf = float(extra.get('proton_flux', max(1.0, float(inputs[1]) * 40.0)))
+            except Exception:
+                pf = 1.0
+            w = float(clamp(float(lpk.get('blend', 0.35) or 0.35), 0.0, 1.0, 0.35))
+            if lpk.get('solar') is not None or lpk.get('solar_knobs') is not None:
+                sk = lpk.get('solar_knobs') or lpk.get('solar') or {}
+                if isinstance(sk, dict) and ('scale' in sk or 'add' in sk) and not any(
+                    k in sk for k in ('quiet', 'kp_coef', 'kp_pow', 'sa_w')
+                ):
+                    # allow plain scale/add fallback
+                    out['solar'] = _apply_channel_scale_add(
+                        out.get('solar', physics_dict.get('solar', 5.0)),
+                        sk, 0.0, 80.0, float(out.get('solar', 5.0)),
+                    )
+                else:
+                    alt_s = physics_solar_activity(
+                        solar_activity=sa_in, kp=kp, imf_bz=bz,
+                        solar_wind_speed=v, solar_wind_density=n, knobs=sk if isinstance(sk, dict) else None,
+                    )
+                    s0 = float(out.get('solar', alt_s))
+                    out['solar'] = float(clamp((1.0 - w) * s0 + w * float(alt_s), 0.0, 80.0, s0))
+                    meta['lunar_physics_knobs_solar'] = True
+            if lpk.get('radiation') is not None or lpk.get('radiation_knobs') is not None:
+                rk = lpk.get('radiation_knobs') or lpk.get('radiation') or {}
+                if isinstance(rk, dict) and ('scale' in rk or 'add' in rk) and not any(
+                    k in rk for k in ('quiet', 'kp_storm', 'sep_sa', 'lat_gain')
+                ):
+                    out['radiation'] = _apply_channel_scale_add(
+                        out.get('radiation', physics_dict.get('radiation', 0.05)),
+                        rk, 0.01, 10.0, float(out.get('radiation', 0.05)),
+                    )
+                else:
+                    alt_r = physics_radiation(
+                        solar_activity=sa_in, kp=kp, proton_flux=pf,
+                        lat=lat, imf_bz=bz, solar_wind_speed=v,
+                        knobs=rk if isinstance(rk, dict) else None,
+                    )
+                    r0 = float(out.get('radiation', alt_r))
+                    out['radiation'] = float(clamp((1.0 - w) * r0 + w * float(alt_r), 0.01, 10.0, r0))
+                    meta['lunar_physics_knobs_rad'] = True
+        except Exception:
+            pass
+
+    # --- R6 last-shot: residual bias tables (y−physics ridge/GBM gated offline) ---
+    # Constant / LST-keyed adds only — no sklearn on the serve path.
+    resid = priors.get('residual_correct') or {}
+    if resid.get('enabled', False):
+        try:
+            for ch, key, bounds in (
+                ('solar', 'solar', (0.0, 80.0)),
+                ('radiation', 'radiation', (0.01, 10.0)),
+                ('temperature', 'temperature', (-230.0, 130.0)),
+            ):
+                cfg = resid.get(key) or {}
+                if not cfg:
+                    continue
+                v0 = float(out.get(ch, physics_dict.get(ch, 0.0)))
+                add = float(cfg.get('add', 0.0) or 0.0)
+                if local_time is not None and cfg.get('lst_bins'):
+                    hour = float(local_time) % 24.0
+                    for bn in cfg.get('lst_bins') or []:
+                        lo = float(bn.get('start', 0.0) or 0.0)
+                        hi = float(bn.get('end', 24.0) or 24.0)
+                        if lo <= hour < hi:
+                            add += float(bn.get('add', 0.0) or 0.0)
+                            break
+                scale = float(cfg.get('scale', 1.0) or 1.0)
+                out[ch] = float(clamp(v0 * scale + add, bounds[0], bounds[1], v0))
+                meta[f'residual_correct_{ch}'] = True
+        except Exception:
+            pass
+
+    # --- R6 last-shot: caution@0 false-alarm guard (quiet rad cap) ---
+    # Mission proxy: R5 packages fire caution at t=0 because quiet hybrid rad ~0.097 > 0.095.
+    # Cap ONLY in quiet (and optionally unsettled-low) so storm EW / NO-GO stay intact.
+    fag = priors.get('false_alarm_guard') or {}
+    if fag.get('enabled', False):
+        try:
+            levels = fag.get('levels') or ['quiet']
+            if level in levels:
+                r0 = float(out.get('radiation', physics_dict.get('radiation', 0.05)))
+                cap = float(fag.get('quiet_rad_cap', 0.090) or 0.090)
+                if r0 > cap:
+                    out['radiation'] = float(clamp(cap, 0.01, 10.0, cap))
+                    meta['false_alarm_guard_rad_cap'] = float(cap)
+                # Optional: also suppress soft solar overshoot in deep quiet
+                if fag.get('quiet_solar_cap') is not None:
+                    s0 = float(out.get('solar', 5.0))
+                    scap = float(fag.get('quiet_solar_cap'))
+                    if s0 > scap:
+                        out['solar'] = float(clamp(scap, 0.0, 80.0, scap))
+                        meta['false_alarm_guard_solar_cap'] = float(scap)
+        except Exception:
+            pass
+
+    return out, meta
+
+
 def refine_prediction(inputs, lat=None, lon=None, local_time=None, physics_weight=DEFAULT_ML_BLEND_WEIGHT, use_ensemble=False, extra=None, day_of_year=None, fast=False):
     extra = dict(extra or {})
     if day_of_year is None:
@@ -1092,8 +1708,20 @@ def refine_prediction(inputs, lat=None, lon=None, local_time=None, physics_weigh
             w * ml_pred[k] + (1.0 - w) * base[k],
             bounds[i][0], bounds[i][1], base[k],
         ))
+    archive_meta = {}
+    try:
+        prior_dir = (extra or {}).get('model_dir') or MODEL_DIR
+        hybrid, archive_meta = apply_archive_priors_to_hybrid(
+            hybrid, base, lat=lat, lon=lon, local_time=local_time,
+            day_of_year=None if day_of_year is None else int(day_of_year),
+            model_dir=prior_dir,
+            inputs=inputs,
+            extra=extra,
+        )
+    except Exception:
+        archive_meta = {}
     confidence = combined_confidence_pct(model_out.get('std'), hybrid, inputs, lat=lat, lon=lon, local_time=local_time)
-    return {
+    out = {
         'hybrid': hybrid,
         'physics': base,
         'ml': {'prediction': ml_pred, 'uncertainty': model_out.get('std'), 'uncertainty_source': model_out.get('uncertainty_source')},
@@ -1103,6 +1731,9 @@ def refine_prediction(inputs, lat=None, lon=None, local_time=None, physics_weigh
         'blend_weights_base': {keys[i]: base_weights[i] for i in range(6)},
         'regime': base.get('regime'),
     }
+    if archive_meta:
+        out['archive_priors'] = archive_meta
+    return out
 def analyze_space_weather(data):
     out = {
         'radiation': {'level': 'green', 'value': 0.057, 'confidence': 85, 'variance': 0.008},

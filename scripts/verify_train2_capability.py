@@ -10,7 +10,7 @@ sys.path.insert(0, str(ROOT))
 MODEL_DIR = ROOT / "saved_model"
 META = MODEL_DIR / "meta.json"
 OUT = MODEL_DIR / "capability.json"
-TRAIN2_BLEND = [0.4, 0.05, 0.0, 0.0, 0.0, 0.0]
+TRAIN2_BLEND = [0.4, 0.0, 0.0, 0.0, 0.0, 0.0]
 CHANNELS = [
     "solar_activity",
     "radiation_mSv",
@@ -53,7 +53,7 @@ def main() -> None:
         "channel_ml_blend_labels": dict(zip(CHANNELS, TRAIN2_BLEND)),
         "serve_policy_note": meta.get(
             "blend_policy_note",
-            "Train2: solar ML 0.40, radiation 0.05, temp/dust/quakes/meteors physics-only.",
+            "Train2 weights with serve policy: solar ML 0.40, radiation 0.0, temp/dust/quakes/meteors physics-only; storm-aware adaptive gating.",
         ),
         "held_out_chronological_test": {
             "hybrid_rmse": hybrid_rmse,
@@ -72,8 +72,8 @@ def main() -> None:
                 persist_rmse,
                 skill or 0.0,
             ),
-            "further_gains_require": "new_training_run",
-            "serve_tuning_saturated": True,
+            "further_gains_require": "stronger_lstm_retrain_on_gpu_or_kaggle",
+            "serve_tuning_saturated": False,
         },
     }
     OUT.write_text(json.dumps(capability, indent=2), encoding="utf-8")

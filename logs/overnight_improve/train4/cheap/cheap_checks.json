@@ -1,0 +1,55 @@
+{
+  "n_rows_used": 80000,
+  "channels": {
+    "target_solar_activity": {
+      "corr_label_vs_physics_x": 0.932957404799888,
+      "residual_ridge_rmse": 3.2291448197948167,
+      "physics_residual_rmse": 3.268434012747876,
+      "ridge_skill_vs_physics": 0.012020800419962563,
+      "circular_risk": false,
+      "residual_has_skill": false
+    },
+    "target_radiation_mSv": {
+      "corr_label_vs_physics_x": 0.9491476218708652,
+      "residual_ridge_rmse": 0.036123136290871015,
+      "physics_residual_rmse": 0.0371916341084056,
+      "ridge_skill_vs_physics": 0.028729520580358048,
+      "circular_risk": false,
+      "residual_has_skill": true
+    },
+    "target_temperature_C": {
+      "corr_label_vs_physics_x": 0.9516983775286868,
+      "residual_ridge_rmse": 30.605076247859405,
+      "physics_residual_rmse": 32.505725758801695,
+      "ridge_skill_vs_physics": 0.05847122211777245,
+      "circular_risk": false,
+      "residual_has_skill": true
+    },
+    "target_moonquakes_per_day": {
+      "corr_label_vs_physics_x": 0.8805041786254785,
+      "residual_ridge_rmse": 6.55441500096414,
+      "physics_residual_rmse": 6.740419126434201,
+      "ridge_skill_vs_physics": 0.02759533524267055,
+      "circular_risk": false,
+      "residual_has_skill": true
+    },
+    "target_meteor_flux_1e15": {
+      "corr_label_vs_physics_x": 0.999851779886209,
+      "residual_ridge_rmse": 0.0017539459104504215,
+      "physics_residual_rmse": 0.001755534222669514,
+      "ridge_skill_vs_physics": 0.000904745802492668,
+      "circular_risk": true,
+      "residual_has_skill": false
+    },
+    "target_dust_g_cm3": {
+      "corr_label_vs_physics_x": 0.9998517798862091,
+      "residual_ridge_rmse": 0.00014031567283603462,
+      "physics_residual_rmse": 0.00014044273781356202,
+      "ridge_skill_vs_physics": 0.000904745802492668,
+      "circular_risk": true,
+      "residual_has_skill": false
+    }
+  },
+  "recommend_retrain": true,
+  "recommend_residual_head": true
+}

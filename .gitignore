@@ -27,6 +27,9 @@ saved_model*/
 *.h5
 *.keras
 *.npy
+# Locked paper-reproduction weights (train-2) shipped with the appendix package
+!papers/appendix_numerical_tables/locked_saved_model/
+!papers/appendix_numerical_tables/locked_saved_model/**
 
 images/
 # study runners are published with the paper package
@@ -41,6 +44,9 @@ images/
 # keep manuscript figures and appendix charts
 !papers/**/*.png
 !papers/**/*.jpg
+# conference poster art and R6c figure copies
+!poster/**/*.png
+!poster/**/*.jpg
 !studies/
 
 # Local terrain package stays off the public repo

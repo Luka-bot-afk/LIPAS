@@ -1,0 +1,42 @@
+{
+  "scenario": {
+    "site": {
+      "name": "Apollo 11 (Mare Tranquillitatis)",
+      "lat": 0.67408,
+      "lon": 23.47297
+    },
+    "eva_duration_min": 457,
+    "apollo_reference": "Apollo 17 EVA-3 \u2248 7 h 37 min",
+    "base_day_drivers_from": "2026-07-12",
+    "model": "second-train / train2 saved_model",
+    "injection": {
+      "T+40min": "solar/CME precursor rise (DONKI-like)",
+      "T+55min": "Kp / IMF coupling rise",
+      "T+70min": "GOES proton flux surge"
+    },
+    "thresholds": {
+      "radiation_caution_mSv_h": 0.095,
+      "radiation_nogo_mSv_h": 0.15,
+      "goes_proton_caution": 10.0,
+      "goes_proton_nogo": 50.0
+    },
+    "bias_note": "Radiation is the scripted abort driver because it is operationally decisive for EVA and was a hybrid strength channel in the 14-day study. This does not imply LIPAS wins every hazard; other channels were monitored but not used as the abort trigger."
+  },
+  "storm_onset_t_min": 40,
+  "goes_proton_surge_t_min": 70,
+  "lipas_first_caution_t_min": 50,
+  "lipas_first_nogo_t_min": 55,
+  "nasa_physics_first_caution_t_min": 55,
+  "nasa_physics_first_nogo_t_min": 70,
+  "nasa_goes_first_caution_t_min": 80,
+  "nasa_goes_first_nogo_t_min": 105,
+  "nasa_combined_first_caution_t_min": 55,
+  "nasa_combined_first_nogo_t_min": 70,
+  "lead_time_analysis": {
+    "lipas_caution_minus_storm_onset_min": 10,
+    "lipas_caution_minus_goes_surge_min": -20,
+    "nasa_goes_caution_minus_goes_surge_min": 10,
+    "lipas_nogo_minus_nasa_goes_nogo_min": 50,
+    "recommended_return_call": "LIPAS NO-GO at T+55 min"
+  }
+}

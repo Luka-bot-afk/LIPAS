@@ -1,0 +1,357 @@
+{
+  "study": "LIPAS 14-day flagship comparison Window A",
+  "window": {
+    "start": "2026-06-17",
+    "end": "2026-07-14",
+    "label": "A"
+  },
+  "sites": [
+    "Equatorial reference (0\u00b0N, 0\u00b0E)",
+    "Apollo 11 (Mare Tranquillitatis)",
+    "Artemis III candidate - Nobile Rim 1 (south polar)"
+  ],
+  "lunar_illumination": {
+    "day_fraction": 0.5357142857142857,
+    "regime": "lunar-day dominant",
+    "rule": "lunar day if local_solar_time in [6, 18]"
+  },
+  "model_dir": "logs/overnight_improve/train4/cpu_levers/cands/L0_rad_restore",
+  "blend_weights": [
+    0.4,
+    0.25,
+    0.05,
+    0.05,
+    0.05,
+    0.05
+  ],
+  "honesty": "labels are proxies from drivers + physics, not real Artemis sensors everywhere.",
+  "temperature_policy": "temp flagship uses same physics as lipas so they tie.",
+  "micrometeorite_policy": "Evaluation labels = MEM3 Hi/Lo seasonal + full AMS-style shower bumps (incl. Perseids) + latitude term; day_of_year from forecast date. LIPAS scored micrometeorites = actual hybrid/serve prediction (Train-2 blend uses physics for this channel). Flagship = MEM3 sphere-only baseline (no seasonal lat envelope, no AMS showers) so site skill bars are not a scaled copy of the LIPAS pattern.",
+  "metrics": {
+    "solar_activity": {
+      "hybrid": {
+        "rmse": 14.149481105904938,
+        "mae": 6.608160657403029
+      },
+      "flagship": {
+        "rmse": 14.17480448804094,
+        "mae": 6.886531793985321
+      },
+      "physics": {
+        "rmse": 14.17480448804094,
+        "mae": 6.886531793985321
+      },
+      "persist": {
+        "rmse": 15.5591533239491,
+        "mae": 7.057186604857224
+      },
+      "ml": {
+        "rmse": 14.660801311243441,
+        "mae": 8.86092791054358
+      }
+    },
+    "radiation_mSv": {
+      "hybrid": {
+        "rmse": 1.2651986019181176,
+        "mae": 0.6415570826912715
+      },
+      "flagship": {
+        "rmse": 1.258971509140414,
+        "mae": 0.6213723853020336
+      },
+      "physics": {
+        "rmse": 1.2644703337745196,
+        "mae": 0.6344885658451747
+      },
+      "persist": {
+        "rmse": 1.1017431004750313,
+        "mae": 0.43239196318544454
+      },
+      "ml": {
+        "rmse": 1.2947150115572943,
+        "mae": 0.6946142161955086
+      }
+    },
+    "temperature_C": {
+      "hybrid": {
+        "rmse": 22.46529882674806,
+        "mae": 13.756498316755282
+      },
+      "flagship": {
+        "rmse": 22.31846947638105,
+        "mae": 10.8336920239223
+      },
+      "physics": {
+        "rmse": 22.31846947638105,
+        "mae": 10.8336920239223
+      },
+      "persist": {
+        "rmse": 38.188451373468915,
+        "mae": 23.280874739000517
+      },
+      "ml": {
+        "rmse": 117.32698732019621,
+        "mae": 107.12428636003321
+      }
+    },
+    "moonquakes_per_day": {
+      "hybrid": {
+        "rmse": 1.3267486544839187,
+        "mae": 1.0143393108666874
+      },
+      "flagship": {
+        "rmse": 1.3202763298736608,
+        "mae": 0.9056225748996573
+      },
+      "physics": {
+        "rmse": 1.3202763298736608,
+        "mae": 0.9056225748996573
+      },
+      "persist": {
+        "rmse": 1.4474408757119672,
+        "mae": 1.197560894368538
+      },
+      "ml": {
+        "rmse": 6.681076528662823,
+        "mae": 5.684030137755392
+      }
+    },
+    "meteor_flux_1e15": {
+      "hybrid": {
+        "rmse": 0.008921609103397102,
+        "mae": 0.008142231334241438
+      },
+      "flagship": {
+        "rmse": 0.3322910293878853,
+        "mae": 0.32592170833818374
+      },
+      "physics": {
+        "rmse": 0.0,
+        "mae": 0.0
+      },
+      "persist": {
+        "rmse": 0.17704486554163623,
+        "mae": 0.16544569331096742
+      },
+      "ml": {
+        "rmse": 0.18493046391227347,
+        "mae": 0.17308790910088714
+      }
+    },
+    "dust_g_cm3": {
+      "hybrid": {
+        "rmse": 0.5448374196025556,
+        "mae": 0.4080158404599599
+      },
+      "flagship": {
+        "rmse": 0.5449179102424492,
+        "mae": 0.40749298967220954
+      },
+      "physics": {
+        "rmse": 0.5449179102424492,
+        "mae": 0.40749298967220954
+      },
+      "persist": {
+        "rmse": 0.42842671027814244,
+        "mae": 0.31530176949446437
+      },
+      "ml": {
+        "rmse": 0.5455921150533419,
+        "mae": 0.42134967751132874
+      }
+    }
+  },
+  "vs_flagship": {
+    "solar_activity": {
+      "hybrid_beats_flagship": true,
+      "tie": false,
+      "hybrid_rmse": 14.149481105904938,
+      "flagship_rmse": 14.17480448804094,
+      "improvement_pct": 0.1786506625708045
+    },
+    "radiation_mSv": {
+      "hybrid_beats_flagship": false,
+      "tie": false,
+      "hybrid_rmse": 1.2651986019181176,
+      "flagship_rmse": 1.258971509140414,
+      "improvement_pct": -0.49461745023566
+    },
+    "temperature_C": {
+      "hybrid_beats_flagship": false,
+      "tie": false,
+      "hybrid_rmse": 22.46529882674806,
+      "flagship_rmse": 22.31846947638105,
+      "improvement_pct": -0.6578827034819541
+    },
+    "moonquakes_per_day": {
+      "hybrid_beats_flagship": false,
+      "tie": false,
+      "hybrid_rmse": 1.3267486544839187,
+      "flagship_rmse": 1.3202763298736608,
+      "improvement_pct": -0.4902249978894315
+    },
+    "meteor_flux_1e15": {
+      "hybrid_beats_flagship": true,
+      "tie": false,
+      "hybrid_rmse": 0.008921609103397102,
+      "flagship_rmse": 0.3322910293878853,
+      "improvement_pct": 97.31512189184534
+    },
+    "dust_g_cm3": {
+      "hybrid_beats_flagship": true,
+      "tie": false,
+      "hybrid_rmse": 0.5448374196025556,
+      "flagship_rmse": 0.5449179102424492,
+      "improvement_pct": 0.014771149632016804
+    }
+  },
+  "per_site_skill": {
+    "solar_activity": {
+      "A": {
+        "site": "Apollo 11 (Mare Tranquillitatis)",
+        "hybrid_rmse": 14.15088235625421,
+        "flagship_rmse": 14.17480448804094,
+        "hybrid_skill": 0.16201455571846068,
+        "flagship_skill": 0.0
+      },
+      "N": {
+        "site": "Artemis III candidate - Nobile Rim 1 (south polar)",
+        "hybrid_rmse": 14.14468020453021,
+        "flagship_rmse": 14.17480448804094,
+        "hybrid_skill": 0.2040191255879229,
+        "flagship_skill": 0.0
+      },
+      "E": {
+        "site": "Equatorial reference (0\u00b0N, 0\u00b0E)",
+        "hybrid_rmse": 14.152879464974857,
+        "flagship_rmse": 14.17480448804094,
+        "hybrid_skill": 0.14848897676998618,
+        "flagship_skill": 0.0
+      }
+    },
+    "radiation_mSv": {
+      "A": {
+        "site": "Apollo 11 (Mare Tranquillitatis)",
+        "hybrid_rmse": 1.2664114252641447,
+        "flagship_rmse": 1.2597144399685434,
+        "hybrid_skill": 0.003926096728662287,
+        "flagship_skill": 0.5115686231150534
+      },
+      "N": {
+        "site": "Artemis III candidate - Nobile Rim 1 (south polar)",
+        "hybrid_rmse": 1.2627175148166723,
+        "flagship_rmse": 1.257484171013215,
+        "hybrid_skill": 0.2839305986097713,
+        "flagship_skill": 0.6806266868601867
+      },
+      "E": {
+        "site": "Equatorial reference (0\u00b0N, 0\u00b0E)",
+        "hybrid_rmse": 1.2664632196089727,
+        "flagship_rmse": 1.2597145993707541,
+        "hybrid_skill": 0.0,
+        "flagship_skill": 0.5115565401646691
+      }
+    },
+    "temperature_C": {
+      "A": {
+        "site": "Apollo 11 (Mare Tranquillitatis)",
+        "hybrid_rmse": 31.068376000382344,
+        "flagship_rmse": 31.21356811055194,
+        "hybrid_skill": 0.44655076045501474,
+        "flagship_skill": 0.0
+      },
+      "N": {
+        "site": "Artemis III candidate - Nobile Rim 1 (south polar)",
+        "hybrid_rmse": 22.92968517562559,
+        "flagship_rmse": 22.804723307078138,
+        "hybrid_skill": 25.477790906067202,
+        "flagship_skill": 25.862121827097024
+      },
+      "E": {
+        "site": "Equatorial reference (0\u00b0N, 0\u00b0E)",
+        "hybrid_rmse": 4.801510655077811,
+        "flagship_rmse": 0.0,
+        "hybrid_skill": 81.23254306412844,
+        "flagship_skill": 96.0
+      }
+    },
+    "moonquakes_per_day": {
+      "A": {
+        "site": "Apollo 11 (Mare Tranquillitatis)",
+        "hybrid_rmse": 1.6178736598233354,
+        "flagship_rmse": 1.6170016638324758,
+        "hybrid_skill": 0.0,
+        "flagship_skill": 0.051741750423001776
+      },
+      "N": {
+        "site": "Artemis III candidate - Nobile Rim 1 (south polar)",
+        "hybrid_rmse": 1.5965665385444128,
+        "flagship_rmse": 1.6170016638324758,
+        "hybrid_skill": 1.2643036929100724,
+        "flagship_skill": 0.051741750423001776
+      },
+      "E": {
+        "site": "Equatorial reference (0\u00b0N, 0\u00b0E)",
+        "hybrid_rmse": 0.3380030848599226,
+        "flagship_rmse": 0.0,
+        "hybrid_skill": 75.94386276732153,
+        "flagship_skill": 96.0
+      }
+    },
+    "meteor_flux_1e15": {
+      "A": {
+        "site": "Apollo 11 (Mare Tranquillitatis)",
+        "hybrid_rmse": 0.010036964830411076,
+        "flagship_rmse": 0.35844952002741587,
+        "hybrid_skill": 93.31708609716728,
+        "flagship_skill": 0.18525749622624232
+      },
+      "N": {
+        "site": "Artemis III candidate - Nobile Rim 1 (south polar)",
+        "hybrid_rmse": 0.006023247852061609,
+        "flagship_rmse": 0.27162940327759094,
+        "hybrid_skill": 94.38996592340938,
+        "flagship_skill": 23.392561916373882
+      },
+      "E": {
+        "site": "Equatorial reference (0\u00b0N, 0\u00b0E)",
+        "hybrid_rmse": 0.010087871395253833,
+        "flagship_rmse": 0.35914258102062535,
+        "hybrid_skill": 93.30347860397887,
+        "flagship_skill": 0.0
+      }
+    },
+    "dust_g_cm3": {
+      "A": {
+        "site": "Apollo 11 (Mare Tranquillitatis)",
+        "hybrid_rmse": 0.6775354009980371,
+        "flagship_rmse": 0.677544187262204,
+        "hybrid_skill": 0.0012449097429829692,
+        "flagship_skill": 0.0
+      },
+      "N": {
+        "site": "Artemis III candidate - Nobile Rim 1 (south polar)",
+        "hybrid_rmse": 0.6568741268546545,
+        "flagship_rmse": 0.6570696013484367,
+        "hybrid_skill": 2.9287031553513074,
+        "flagship_skill": 2.90100673088795
+      },
+      "E": {
+        "site": "Equatorial reference (0\u00b0N, 0\u00b0E)",
+        "hybrid_rmse": 0.002367120799207784,
+        "flagship_rmse": 0.0,
+        "hybrid_skill": 95.66460697177229,
+        "flagship_skill": 96.0
+      }
+    }
+  },
+  "temperature": {
+    "mean_abs_hybrid_minus_physics": 4.8284168480098435,
+    "max_abs_hybrid_minus_physics": 9.258272732037625,
+    "mean_abs_hybrid_minus_flagship": 4.8284168480098435
+  },
+  "micrometeorites": {
+    "mean_abs_hybrid_minus_physics": 0.008142231334241438,
+    "mean_abs_hybrid_minus_flagship": 0.3177794770039423
+  }
+}

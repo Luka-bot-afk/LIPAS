@@ -1,0 +1,58 @@
+{
+  "nickname": "LIPAS Train4a GO-NIGHT",
+  "name": "lipas_train4a",
+  "purpose": "Beat train2 held-out test_rmse 4.9685 with channel_normalized Huber, solar+radiation priority, all blend shares > 0. GO-NIGHT ART-28.",
+  "baseline_gates": {
+    "train2_locked": {
+      "test_rmse": 4.9685,
+      "target_test_rmse": 4.0,
+      "stretch_test_rmse": 3.5
+    },
+    "promote_rule": "Promote only if held-out test_rmse < 4.9685 AND radiation ML blend > 0 AND window wins >=5/6 hazards."
+  },
+  "architecture": {
+    "sequence_length": 72,
+    "window_stride": 7,
+    "lstm_units": [256, 128, 64],
+    "dense_units": [256, 128],
+    "dropout": [0.3, 0.25, 0.2, 0.3, 0.25],
+    "l2_reg": 1e-4,
+    "learning_rate": 0.001,
+    "clipnorm": 1.0,
+    "use_attention": false,
+    "use_last_timestep_skip": false,
+    "physical_bounds": true,
+    "loss_type": "channel_normalized_huber",
+    "channel_priority": [3.0, 5.0, 1.0, 1.0, 1.5, 1.0],
+    "boost_radiation_priority": true,
+    "note": "T4a: channel_normalized + solar/rad priority. No attention (train3 failed). Stride 7."
+  },
+  "training": {
+    "seed": 42,
+    "epochs": 80,
+    "batch_size": 64,
+    "validation_split": 0.15,
+    "test_split": 0.15,
+    "storm_sample_weights": true,
+    "recency_sample_weights": false,
+    "cosine_decay": false,
+    "early_stopping_patience": 14,
+    "restore_best_weights": true,
+    "use_reduce_lr_on_plateau": true,
+    "reduce_lr_patience": 7,
+    "reduce_lr_factor": 0.5,
+    "reduce_lr_min": 1e-6,
+    "csv_pinned": "data/ingested_extended/train7_training_locked_y_ext_drivers.csv",
+    "model_dir_default": "saved_model_train4a",
+    "tf_determinism_best_effort": true
+  },
+  "hybrid_serve": {
+    "start_blend": [0.45, 0.35, 0.15, 0.15, 0.20, 0.15],
+    "rule": "All six channels ML share > 0. Never leave radiation at 0.0 as a fix."
+  },
+  "kaggle": {
+    "dataset_slug": "lipas-train4",
+    "kernel_slug": "lipas-train4a-kernel",
+    "model_dir_on_kaggle": "/kaggle/working/saved_model_train4a"
+  }
+}

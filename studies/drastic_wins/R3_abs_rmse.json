@@ -1,0 +1,156 @@
+[
+  {
+    "tag": "L20_may_dust_l16",
+    "A_wins": 6,
+    "B_wins": 5,
+    "A_solar_activity": 14.146468118427498,
+    "A_radiation_mSv": 1.255031696108609,
+    "A_temperature_C": 22.209442506427692,
+    "B_solar_activity": 18.6232705988475,
+    "B_radiation_mSv": 0.19009682378083395,
+    "B_temperature_C": 26.99375362366431
+  },
+  {
+    "tag": "R2m2_solar115_rad",
+    "A_wins": 6,
+    "B_wins": 6,
+    "A_solar_activity": 13.963038482992228,
+    "A_radiation_mSv": 1.2217799071588695,
+    "A_temperature_C": 22.201957145240282,
+    "B_solar_activity": 16.548775144338514,
+    "B_radiation_mSv": 0.09490585019171485,
+    "B_temperature_C": 26.999033678811394
+  },
+  {
+    "tag": "R3a2_m2_persist_med",
+    "A_wins": 5,
+    "B_wins": 5,
+    "A_solar_activity": 14.218685870328779,
+    "A_radiation_mSv": 1.2217998606057152,
+    "A_temperature_C": 22.211629277143917,
+    "B_solar_activity": 14.028835465196241,
+    "B_radiation_mSv": 0.09490185124639128,
+    "B_temperature_C": 26.992300582729037
+  },
+  {
+    "tag": "R3a3_persist_storm_cmax",
+    "A_wins": 6,
+    "B_wins": 5,
+    "A_solar_activity": 13.960271123034579,
+    "A_radiation_mSv": 1.2293186863862537,
+    "A_temperature_C": 22.217851064103,
+    "B_solar_activity": 16.548775144338514,
+    "B_radiation_mSv": 0.13441284601281062,
+    "B_temperature_C": 27.021363650295765
+  },
+  {
+    "tag": "R3a_m2_soft_persist",
+    "A_wins": 6,
+    "B_wins": 5,
+    "A_solar_activity": 14.109198672098398,
+    "A_radiation_mSv": 1.2218224825103943,
+    "A_temperature_C": 22.217677468243537,
+    "B_solar_activity": 14.762907946903592,
+    "B_radiation_mSv": 0.09489843272326264,
+    "B_temperature_C": 27.006390277162293
+  },
+  {
+    "tag": "R3b2_solar120_mq_soft",
+    "A_wins": 5,
+    "B_wins": 5,
+    "A_solar_activity": 13.941155114524323,
+    "A_radiation_mSv": 1.213152035993455,
+    "A_temperature_C": 22.213972188598046,
+    "B_solar_activity": 15.828986951619878,
+    "B_radiation_mSv": 0.09688017643829742,
+    "B_temperature_C": 26.988783719870213
+  },
+  {
+    "tag": "R3b_solar120_m2rad",
+    "A_wins": 6,
+    "B_wins": 6,
+    "A_solar_activity": 13.938603823146394,
+    "A_radiation_mSv": 1.2131670115764897,
+    "A_temperature_C": 22.203377515057255,
+    "B_solar_activity": 15.828986951619878,
+    "B_radiation_mSv": 0.09685990734279053,
+    "B_temperature_C": 27.009148098177707
+  },
+  {
+    "tag": "R3c_add_hard_cmax",
+    "A_wins": 6,
+    "B_wins": 5,
+    "A_solar_activity": 13.893816641292268,
+    "A_radiation_mSv": 1.2250347551522853,
+    "A_temperature_C": 22.22244775358709,
+    "B_solar_activity": 16.319361657484084,
+    "B_radiation_mSv": 0.1264290211056031,
+    "B_temperature_C": 27.011100500745435
+  },
+  {
+    "tag": "R3d_m2_soft_clim",
+    "A_wins": 6,
+    "B_wins": 6,
+    "A_solar_activity": 13.442273227938417,
+    "A_radiation_mSv": 1.192882521072393,
+    "A_temperature_C": 22.225523938669443,
+    "B_solar_activity": 16.741582825108164,
+    "B_radiation_mSv": 0.08935679435908678,
+    "B_temperature_C": 26.99577892239143
+  },
+  {
+    "tag": "R3e_m2_persist_clim",
+    "A_wins": 6,
+    "B_wins": 5,
+    "A_solar_activity": 13.938279633139516,
+    "A_radiation_mSv": 1.2082906082758573,
+    "A_temperature_C": 22.219703805015115,
+    "B_solar_activity": 14.585347980304732,
+    "B_radiation_mSv": 0.08978237975915819,
+    "B_temperature_C": 26.991522156281547
+  },
+  {
+    "tag": "R3f_temp_band_clip",
+    "A_wins": 6,
+    "B_wins": 6,
+    "A_solar_activity": 13.961216178353336,
+    "A_radiation_mSv": 1.2217793280781506,
+    "A_temperature_C": 22.217954509482357,
+    "B_solar_activity": 16.548775144338514,
+    "B_radiation_mSv": 0.09484461098572268,
+    "B_temperature_C": 27.002216679017025
+  },
+  {
+    "tag": "R3g_rad_climb_cmax",
+    "A_wins": 6,
+    "B_wins": 6,
+    "A_solar_activity": 13.9588404392578,
+    "A_radiation_mSv": 1.2110970257626914,
+    "A_temperature_C": 22.198004189853325,
+    "B_solar_activity": 16.548775144338514,
+    "B_radiation_mSv": 0.10174386840732853,
+    "B_temperature_C": 26.983972462229236
+  },
+  {
+    "tag": "R3h_persist_storm_hard",
+    "A_wins": 6,
+    "B_wins": 5,
+    "A_solar_activity": 13.960845370773985,
+    "A_radiation_mSv": 1.221744171942591,
+    "A_temperature_C": 22.215810182572945,
+    "B_solar_activity": 16.548775144338514,
+    "B_radiation_mSv": 0.09489685882775482,
+    "B_temperature_C": 27.001667877931933
+  },
+  {
+    "tag": "R3t_night_temp_025",
+    "A_wins": 6,
+    "B_wins": 5,
+    "A_solar_activity": 13.961680201497154,
+    "A_radiation_mSv": 1.22177703954754,
+    "A_temperature_C": 22.226653004781312,
+    "B_solar_activity": 16.548775144338514,
+    "B_radiation_mSv": 0.09488926774558826,
+    "B_temperature_C": 27.05584914197393
+  }
+]

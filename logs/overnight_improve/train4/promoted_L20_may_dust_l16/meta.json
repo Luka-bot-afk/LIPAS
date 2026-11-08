@@ -1,0 +1,93 @@
+{
+  "timestamp_utc": "2026-07-17T19:59:08.689533+00:00",
+  "source_csv": "data/ingested_extended/extended_training_1784310247.csv",
+  "schema": "extended_18_feature",
+  "input_columns": [
+    "solar_activity",
+    "radiation_mSv",
+    "temperature_C",
+    "moonquakes_per_day",
+    "meteor_flux_1e15",
+    "dust_g_cm3",
+    "lat",
+    "lon",
+    "local_solar_time",
+    "hour_of_day",
+    "day_of_month",
+    "month_of_year",
+    "solar_wind_speed",
+    "solar_wind_density",
+    "imf_bz",
+    "kp_index",
+    "regolith_depth",
+    "thermal_inertia"
+  ],
+  "target_columns": [
+    "target_solar_activity",
+    "target_radiation_mSv",
+    "target_temperature_C",
+    "target_moonquakes_per_day",
+    "target_meteor_flux_1e15",
+    "target_dust_g_cm3"
+  ],
+  "input_dim": 18,
+  "temporal": true,
+  "sequence_length": 72,
+  "window_stride": 7,
+  "physical_bounds": true,
+  "sites": [
+    "Apollo 11 (Mare Tranquillitatis)",
+    "Apollo 12 (Oceanus Procellarum)",
+    "Apollo 14 (Fra Mauro)",
+    "Apollo 15 (Hadley Rille)",
+    "Apollo 16 (Descartes Highlands)",
+    "Apollo 17 (Taurus-Littrow)",
+    "Artemis III candidate - Nobile Rim 1 (south polar)",
+    "Chang'e-3 (Mare Imbrium, near side)",
+    "Chang'e-4 / Statio Tianhe (Von K\u00e1rm\u00e1n crater, South Pole-Aitken basin, far side)",
+    "Chang'e-6 (Apollo basin, far side, sample-return site)",
+    "Shackleton crater rim vicinity (south pole)",
+    "Statio Shiv Shakti (Chandrayaan-3 Vikram lander, high southern latitude)"
+  ],
+  "rows": {
+    "train": 176544,
+    "val": 37824,
+    "test": 37824,
+    "total": 252192
+  },
+  "metrics": {
+    "loss": 2.4188129901885986,
+    "mae": 2.509101390838623,
+    "val_loss": 1.9732136726379395,
+    "val_mae": 2.0364387035369873,
+    "test_mse": 24.685997009277344,
+    "test_rmse": 4.9685004789450655,
+    "test_mae": 1.2845888137817383,
+    "test_mse_persistence": 186.67404174804688,
+    "test_rmse_persistence": 13.662870918955756,
+    "test_mae_persistence": 3.554271697998047
+  },
+  "blend_weights": [
+    0.4,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+  ],
+  "channel_ml_blend_weights": {
+    "solar_activity": 0.4,
+    "radiation_mSv": 0.0,
+    "temperature_C": 0.0,
+    "moonquakes_per_day": 0.0,
+    "meteor_flux_1e15": 0.0,
+    "dust_g_cm3": 0.0
+  },
+  "blend_policy_note": "Locked train-2 LSTM with overnight serve-policy upgrade: solar ML weight 0.40; radiation ML weight 0 (physics-only) after per-hazard sweeps; storm-aware adaptive blending zeros solar/radiation ML when regime is storm or live radiation input >=0.20 mSv.",
+  "improvement_source": "train2_weights_plus_blend_and_adaptive_storm_gate",
+  "study_windows_overnight": {
+    "A": "2026-06-17..2026-07-14",
+    "B": "2026-07-18..2026-08-14",
+    "C": "2024-05-04..2024-05-17"
+  }
+}

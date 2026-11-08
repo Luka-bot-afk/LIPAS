@@ -1,0 +1,165 @@
+{
+  "promote": "NOT_READY",
+  "wave": "R4",
+  "n_done": 8,
+  "L20": {
+    "A": {
+      "solar_activity": 14.146468118427498,
+      "radiation_mSv": 1.255031696108609,
+      "temperature_C": 22.209442506427692
+    },
+    "B": {
+      "solar_activity": 18.6232705988475,
+      "radiation_mSv": 0.19009682378083395,
+      "temperature_C": 26.99375362366431
+    },
+    "Aw": 6,
+    "Bw": 5
+  },
+  "R3b": {
+    "A": {
+      "solar_activity": 13.938603823146394,
+      "radiation_mSv": 1.2131670115764897,
+      "temperature_C": 22.203377515057255
+    },
+    "B": {
+      "solar_activity": 15.828986951619878,
+      "radiation_mSv": 0.09685990734279053,
+      "temperature_C": 27.009148098177707
+    },
+    "Aw": 6,
+    "Bw": 6
+  },
+  "cands": {
+    "R4d2_diviner_08": {
+      "A": {
+        "solar_activity": 13.939487102437361,
+        "radiation_mSv": 1.2131786944709233,
+        "temperature_C": 22.22030211739392
+      },
+      "B": {
+        "solar_activity": 15.828986951619878,
+        "radiation_mSv": 0.09688072890697215,
+        "temperature_C": 27.181229038906583
+      },
+      "Aw": 6,
+      "Bw": 5
+    },
+    "R4d3_diviner_15": {
+      "A": {
+        "solar_activity": 13.937407685933339,
+        "radiation_mSv": 1.2131907700557185,
+        "temperature_C": 22.820115014014352
+      },
+      "B": {
+        "solar_activity": 15.828986951619878,
+        "radiation_mSv": 0.09687342726129956,
+        "temperature_C": 27.454340196736567
+      },
+      "Aw": 5,
+      "Bw": 5
+    },
+    "R4d4_diviner_dn_mild": {
+      "A": {
+        "solar_activity": 13.933035206037367,
+        "radiation_mSv": 1.2131868793871403,
+        "temperature_C": 21.811908102519656
+      },
+      "B": {
+        "solar_activity": 15.828986951619878,
+        "radiation_mSv": 0.09688960727270352,
+        "temperature_C": 27.03214023907342
+      },
+      "Aw": 6,
+      "Bw": 5
+    },
+    "R4d_diviner_03": {
+      "A": {
+        "solar_activity": 13.937997699222526,
+        "radiation_mSv": 1.2131420413373213,
+        "temperature_C": 22.1185496873858
+      },
+      "B": {
+        "solar_activity": 15.828986951619878,
+        "radiation_mSv": 0.09689503188719362,
+        "temperature_C": 27.05724161596838
+      },
+      "Aw": 6,
+      "Bw": 5
+    },
+    "R4t2_dn_correct_med": {
+      "A": {
+        "solar_activity": 13.931545612550865,
+        "radiation_mSv": 1.213167142703279,
+        "temperature_C": 21.52899763523056
+      },
+      "B": {
+        "solar_activity": 15.828986951619878,
+        "radiation_mSv": 0.09688399220072313,
+        "temperature_C": 26.992099420316027
+      },
+      "Aw": 6,
+      "Bw": 6
+    },
+    "R4t3_dn_correct_optA": {
+      "A": {
+        "solar_activity": 13.940697713449993,
+        "radiation_mSv": 1.2131029029746858,
+        "temperature_C": 21.35244469676122
+      },
+      "B": {
+        "solar_activity": 15.828986951619878,
+        "radiation_mSv": 0.0969269410628309,
+        "temperature_C": 27.149705295990266
+      },
+      "Aw": 6,
+      "Bw": 6
+    },
+    "R4t4_dn_dawn_window": {
+      "A": {
+        "solar_activity": 13.941075816057332,
+        "radiation_mSv": 1.2131881029755458,
+        "temperature_C": 21.740595483062226
+      },
+      "B": {
+        "solar_activity": 15.828986951619878,
+        "radiation_mSv": 0.09685747764485922,
+        "temperature_C": 25.680403166824984
+      },
+      "Aw": 6,
+      "Bw": 5
+    },
+    "R4t_dn_correct_mild": {
+      "A": {
+        "solar_activity": 13.94235185526187,
+        "radiation_mSv": 1.2131739230391168,
+        "temperature_C": 21.798294884152114
+      },
+      "B": {
+        "solar_activity": 15.828986951619878,
+        "radiation_mSv": 0.09688587883782085,
+        "temperature_C": 26.962562363589992
+      },
+      "Aw": 6,
+      "Bw": 5
+    }
+  },
+  "best_so_far": {
+    "tag": "R4t3_dn_correct_optA",
+    "tempA_delta_vs_L20": 0.8569978096664705,
+    "row": {
+      "A": {
+        "solar_activity": 13.940697713449993,
+        "radiation_mSv": 1.2131029029746858,
+        "temperature_C": 21.35244469676122
+      },
+      "B": {
+        "solar_activity": 15.828986951619878,
+        "radiation_mSv": 0.0969269410628309,
+        "temperature_C": 27.149705295990266
+      },
+      "Aw": 6,
+      "Bw": 6
+    }
+  }
+}

@@ -1,0 +1,38 @@
+{
+  "window": {
+    "start": "2026-07-05",
+    "end": "2026-07-18"
+  },
+  "sites": [
+    "Equatorial reference (0\u00b0N, 0\u00b0E)",
+    "Apollo 11 (Mare Tranquillitatis)",
+    "Artemis III candidate - Nobile Rim 1 (south polar)"
+  ],
+  "n_site_days": 42,
+  "fill": "Window A mean of each hazard channel",
+  "baseline_solar_rmse": 5.11321441566501,
+  "baseline_radiation_rmse": 0.10491680322243713,
+  "worst_one_away_for_radiation": {
+    "config": "remove solar",
+    "removed": "solar",
+    "n_removed": 1,
+    "solar_rmse": 3.2735105850194683,
+    "radiation_rmse": 0.10608728978399161,
+    "solar_rmse_increase": -1.8397038306455418,
+    "radiation_rmse_increase": 0.0011704865615544818,
+    "solar_pct_worse": -35.9793992798222,
+    "radiation_pct_worse": 1.1156330784048953
+  },
+  "worst_one_away_for_solar": {
+    "config": "remove dust",
+    "removed": "dust",
+    "n_removed": 1,
+    "solar_rmse": 5.149517790349888,
+    "radiation_rmse": 0.10492848758440725,
+    "solar_rmse_increase": 0.03630337468487799,
+    "radiation_rmse_increase": 1.1684361970118462e-05,
+    "solar_pct_worse": 0.709991244913528,
+    "radiation_pct_worse": 0.011136788017974691
+  },
+  "note": "Ablation mean-fills removed hazard inputs before refine_prediction. Higher RMSE = worse. Cross-hazard value = how much target skill drops."
+}

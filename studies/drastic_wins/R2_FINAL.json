@@ -1,0 +1,151 @@
+{
+  "wave": "R2_COMPLETE",
+  "promote": "NOT_READY",
+  "reason": "R2 best clears solar+rad substantial bars and A6/B6, but temp vs L20 still epsilon (not ~3\u00d7 / ops-useful). Persist family KILL (quiet A solar regress + rad overshoot). Climb R3 on temp/mq-safe solar or declare plateau on temp.",
+  "best_package": "R2m2_solar115_rad",
+  "checks": {
+    "storm_solar_tie_broken": true,
+    "solar_A_3x_L20_flag_margin": true,
+    "rad_A_3x": true,
+    "rad_B_3x": true,
+    "temp_A_improved_vs_L20": false,
+    "A6_B6": true,
+    "beats_R1c_composite": true
+  },
+  "beats_R1c": {
+    "solar_B": true,
+    "rad_B": true
+  },
+  "best": {
+    "tag": "R2m2_solar115_rad",
+    "A_wins": 6,
+    "B_wins": 6,
+    "A_map": {
+      "solar_activity": true,
+      "radiation_mSv": true,
+      "temperature_C": true,
+      "moonquakes_per_day": true,
+      "meteor_flux_1e15": true,
+      "dust_g_cm3": true
+    },
+    "B_map": {
+      "solar_activity": true,
+      "radiation_mSv": true,
+      "temperature_C": true,
+      "moonquakes_per_day": true,
+      "meteor_flux_1e15": true,
+      "dust_g_cm3": true
+    },
+    "A": {
+      "solar_activity": {
+        "hyb": 13.963038482992228,
+        "L20": 14.146468118427498,
+        "dL20": 0.18342963543526913,
+        "flag": 14.17480448804094,
+        "dFlag": 0.21176600504871068
+      },
+      "radiation_mSv": {
+        "hyb": 1.2217799071588695,
+        "L20": 1.255031696108609,
+        "dL20": 0.03325178894973946,
+        "flag": 1.258971509140414,
+        "dFlag": 0.037191601981544364
+      },
+      "temperature_C": {
+        "hyb": 22.201957145240282,
+        "L20": 22.209442506427692,
+        "dL20": 0.0074853611874097226,
+        "flag": 22.31846947638105,
+        "dFlag": 0.11651233114076831
+      },
+      "moonquakes_per_day": {
+        "hyb": 1.314258840714893,
+        "L20": 1.3134766939096632,
+        "dL20": -0.0007821468052298108,
+        "flag": 1.3202763298736608,
+        "dFlag": 0.006017489158767875
+      },
+      "meteor_flux_1e15": {
+        "hyb": 0.013109296353058774,
+        "L20": 0.013120576743190195,
+        "dL20": 1.128039013142089e-05,
+        "flag": 0.6059550779385455,
+        "dFlag": 0.5928457815854867
+      },
+      "dust_g_cm3": {
+        "hyb": 0.5428231024036181,
+        "L20": 0.5428230161571752,
+        "dL20": -8.624644287635874e-08,
+        "flag": 0.5428343117403359,
+        "dFlag": 1.1209336717832308e-05
+      }
+    },
+    "B": {
+      "solar_activity": {
+        "hyb": 16.548775144338514,
+        "L20": 18.6232705988475,
+        "dL20": 2.0744954545089875,
+        "flag": 18.6232705988475,
+        "dFlag": 2.0744954545089875
+      },
+      "radiation_mSv": {
+        "hyb": 0.09490585019171485,
+        "L20": 0.19009682378083395,
+        "dL20": 0.0951909735891191,
+        "flag": 0.19351511570659424,
+        "dFlag": 0.09860926551487939
+      },
+      "temperature_C": {
+        "hyb": 26.999033678811394,
+        "L20": 26.99375362366431,
+        "dL20": -0.0052800551470824075,
+        "flag": 27.189674022803636,
+        "dFlag": 0.19064034399224283
+      },
+      "moonquakes_per_day": {
+        "hyb": 1.2868247423059254,
+        "L20": 1.2870119176199268,
+        "dL20": 0.00018717531400147536,
+        "flag": 1.2870512480975975,
+        "dFlag": 0.00022650579167216023
+      },
+      "meteor_flux_1e15": {
+        "hyb": 0.012344199677960391,
+        "L20": 0.012357195882667362,
+        "dL20": 1.2996204706971354e-05,
+        "flag": 0.622335987852696,
+        "dFlag": 0.6099917881747355
+      },
+      "dust_g_cm3": {
+        "hyb": 0.5443047753338344,
+        "L20": 0.5443039450369191,
+        "dL20": -8.302969152218509e-07,
+        "flag": 0.548780642361896,
+        "dFlag": 0.004475867028061686
+      }
+    },
+    "score": 1088.4279975430877
+  },
+  "R1c_ref": {
+    "solar_B": 17.35240917842075,
+    "rad_B": 0.11534752346695669
+  },
+  "L20": {
+    "solar_A": 14.146468118427498,
+    "solar_B": 18.6232705988475,
+    "rad_A": 1.255031696108609,
+    "rad_B": 0.19009682378083395,
+    "temp_A": 22.209442506427692
+  },
+  "kill": [
+    "R2t_merge_temp_mild",
+    "R2p_* persist (A solar regress / B rad overshoot)",
+    "R2s_sep_heavy rad B lose",
+    "most R2m* mq tip-loss except R2m2"
+  ],
+  "keep": [
+    "R2m2_solar115_rad",
+    "R1c_storm_couple",
+    "R1a2_storm_solar_112"
+  ]
+}

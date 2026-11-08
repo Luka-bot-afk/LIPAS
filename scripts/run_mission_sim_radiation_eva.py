@@ -162,6 +162,7 @@ def main():
             'local_solar_time': lst,
             'regolith_depth': float(base.get('regolith_depth', 4.2)),
             'thermal_inertia': float(base.get('thermal_inertia', 48.0)),
+            'model_dir': args.model_dir,
         }
         pred = refine_prediction(inputs, lat=lat, lon=lon, local_time=lst, extra=extra)
         hyb = pred['hybrid']

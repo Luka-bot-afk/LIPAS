@@ -1,0 +1,41 @@
+{
+  "nickname": "LIPAS T4d train2-CSV rematch",
+  "purpose": "Targeted climb after T4a-c miss: rematch train-2 data (1784310247) with plain Huber, solar+rad priority, all blend >0.",
+  "architecture": {
+    "sequence_length": 72,
+    "window_stride": 7,
+    "lstm_units": [256, 128, 64],
+    "dense_units": [256, 128],
+    "dropout": [0.3, 0.25, 0.2, 0.3, 0.25],
+    "l2_reg": 1e-4,
+    "learning_rate": 0.001,
+    "clipnorm": 1.0,
+    "use_attention": false,
+    "use_last_timestep_skip": false,
+    "physical_bounds": false,
+    "loss_type": "huber",
+    "channel_priority": [3.0, 5.0, 1.5, 1.0, 1.5, 1.0],
+    "boost_radiation_priority": true
+  },
+  "training": {
+    "seed": 42,
+    "epochs": 80,
+    "batch_size": 64,
+    "validation_split": 0.15,
+    "test_split": 0.15,
+    "storm_sample_weights": true,
+    "recency_sample_weights": false,
+    "cosine_decay": false,
+    "early_stopping_patience": 14,
+    "use_reduce_lr_on_plateau": true,
+    "reduce_lr_patience": 7,
+    "reduce_lr_factor": 0.5,
+    "reduce_lr_min": 1e-6,
+    "csv_pinned": "data/ingested_extended/extended_training_1784310247.csv",
+    "model_dir_default": "saved_model_train4d",
+    "tf_determinism_best_effort": true
+  },
+  "hybrid_serve": {
+    "start_blend": [0.40, 0.25, 0.10, 0.10, 0.15, 0.10]
+  }
+}

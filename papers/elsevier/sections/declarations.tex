@@ -1,15 +1,35 @@
 \section*{Acknowledgements}
 
-I thank Kyle Kennedy for support throughout this work. I thank Dr.~Simon Good for his outstanding help at the University of Helsinki. I thank Prof.~Minna Palmroth and Prof.~Emilia Kilpua for their support at the University of Helsinki. I thank Benjamin Irani Fey for assistance below that group. Any remaining errors are my own.
+The author thanks Benjamin Irani-Fey for coding support during the NASA Space Apps Challenge, and thanks NASA, NOAA, and other agencies for public lunar-mission and space-weather data. The author also thanks Polygence research mentor Kyle Kennedy for support in redesigning and re-evaluating the studies, methods, and conclusions, and thanks Dr.~Simon Good, Prof.~Minna Palmroth, and Prof.~Emilia Kilpua for support at the University of Helsinki. Any remaining errors are the author's own.
 
-\section*{Competing interests}
+\section*{CRediT authorship contribution statement}
 
-I declare that I have no known competing financial interests or personal relationships that could have appeared to influence the work reported in this paper.
+\textbf{Luka Takki:} Conceptualization, Methodology, Software, Validation, Formal analysis, Investigation, Data curation, Visualization, Writing --- original draft, Writing --- review and editing.
+
+\section*{Funding}
+
+This research received no specific grant from funding agencies in the public, commercial, or not-for-profit sectors.
+
+\section*{Declaration of competing interest}
+
+The author declares that there are no known competing financial interests or personal relationships that could have appeared to influence the work reported in this paper.
 
 \section*{Data availability}
 
-Public NASA, NOAA, OMNI, and lunar archive products underpin the forecasts. Locked window tables, reconstructed series where noted, and figure sources are in the accompanying GitHub package under \texttt{papers/appendix\_numerical\_tables/} and \texttt{papers/elsevier/figures/}. Parts of the numerical record were reconstructed from locked \texttt{summary.json} and CSV exports; see Appendix~A and Appendix~D for where those files live and how to regenerate matching tables. Qualitative rubric files and reference lists are in Appendix~B.
+\begin{sloppypar}
+Public NASA, NOAA, OMNI, and lunar archive products underpin the forecasts.
+Locked window tables, reconstructed series where noted, and figure sources are in the accompanying GitHub package under \path{papers/appendix_numerical_tables/} and \path{papers/elsevier/figures/}.
+Parts of the numerical record were reconstructed from locked \texttt{summary.json} and CSV exports; see Appendices~\ref{app:A} and~\ref{app:D}.
+Qualitative rubric files are summarised in Appendix~\ref{app:B}.
+Public project page: \url{https://lipas.netlify.app}.
+Source repository: \url{https://github.com/Luka-bot-afk/LIPAS}.
+Reproduction notes are at \url{https://github.com/Luka-bot-afk/LIPAS/blob/main/papers/appendix_numerical_tables/REPRODUCTION.md}.
+\end{sloppypar}
 
 \section*{Code availability}
 
-Study runners, locked-model loaders, and reproduction steps are in the GitHub package under \texttt{studies/} with pointers in Appendix~D. Some scripts and tables were reconstructed to match the locked paper numbers; regenerated outputs should match or closely match the reported RMSE values when the locked blend and window definitions are used.
+Study runners, locked-model loaders, and reproduction steps are summarised in Appendix~\ref{app:D}. Regenerated outputs should match the reported RMSE values when the locked blend and window definitions are used.
+
+\section*{Declaration of generative AI and AI-assisted technologies in the writing process}
+
+The author used Cursor with Gemini assistance for drafting support, layout checks, and wording alternatives. The author checked every scientific claim against the locked study outputs, removed unsupported phrasing, and made the final edits. The scientific content, locked numbers, and conclusions remain the author's responsibility.

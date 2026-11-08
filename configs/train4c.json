@@ -1,0 +1,44 @@
+{
+  "nickname": "LIPAS Train4c capacity",
+  "name": "lipas_train4c",
+  "purpose": "T4c: more capacity / longer seq if T4a/b miss the bar.",
+  "architecture": {
+    "sequence_length": 96,
+    "window_stride": 5,
+    "lstm_units": [320, 160, 80],
+    "dense_units": [256, 128],
+    "dropout": [0.35, 0.3, 0.25, 0.35, 0.3],
+    "l2_reg": 1.5e-4,
+    "learning_rate": 0.0007,
+    "clipnorm": 1.0,
+    "use_attention": false,
+    "use_last_timestep_skip": false,
+    "physical_bounds": true,
+    "loss_type": "channel_normalized_huber",
+    "channel_priority": [3.5, 5.5, 1.2, 1.0, 1.5, 1.0],
+    "boost_radiation_priority": true
+  },
+  "training": {
+    "seed": 7,
+    "epochs": 100,
+    "batch_size": 48,
+    "validation_split": 0.15,
+    "test_split": 0.15,
+    "storm_sample_weights": true,
+    "recency_sample_weights": true,
+    "cosine_decay": true,
+    "early_stopping_patience": 18,
+    "use_reduce_lr_on_plateau": false,
+    "csv_pinned": "data/ingested_extended/train7_training_locked_y_ext_drivers.csv",
+    "model_dir_default": "saved_model_train4c",
+    "tf_determinism_best_effort": true
+  },
+  "hybrid_serve": {
+    "start_blend": [0.5, 0.35, 0.15, 0.15, 0.20, 0.15]
+  },
+  "kaggle": {
+    "dataset_slug": "lipas-train4",
+    "kernel_slug": "lipas-train4c-kernel",
+    "model_dir_on_kaggle": "/kaggle/working/saved_model_train4c"
+  }
+}
